@@ -1,0 +1,228 @@
+\TNchapter[Agentic systems represent a shift from static automation to adaptive, goal-directed intelligence embedded across the enterprise.]{Evaluation Framework Design }
+\begin{TNtwocol}
+\section{Evaluation Objectives and Success Criteria }
+\subsection{Introduction}
+Evaluation objectives and success criteria form the foundation of any robust AI agent evaluation framework. Without clear objectives, evaluation becomes subjective guesswork rather than a systematic process for improving agent performance. This section explores how to define meaningful evaluation goals that align with business requirements while ensuring agents behave reliably, ethically, and efficiently across diverse scenarios.
+
+\subsection{Defining Evaluation Objectives}
+\subsubsection{Core Purpose of Agent Evaluation}
+AI agent evaluation is the process of systematically assessing how well an autonomous agent, typically powered by large language models (LLMs), performs across defined tasks, user intents, and interaction flows. The primary objectives include:
+
+\begin{enumerate}
+    \item \textbf{Performance Validation}: Ensuring the agent accomplishes intended tasks correctly and efficiently
+    \item \textbf{Failure Point Identification}: Pinpointing where and why the agent fails to meet expectations
+    \item \textbf{Comparative Analysis}: Comparing different model versions or configurations to drive data-driven decisions
+    \item \textbf{Continuous Improvement}: Establishing feedback loops that inform training, prompting, and routing strategies
+\end{enumerate}
+
+\subsection{Key Evaluation Dimensions}
+\subsubsection{Reasoning Layer Evaluation}
+The reasoning layer, powered by your LLM, is responsible for planning and decision-making. Evaluation objectives for this layer include:
+
+\textbf{Plan Quality Assessment}
+\begin{itemize}
+    \item Is the agent creating effective plans that are logical, complete, and efficient?
+    \item Is the plan appropriately scoped (not too granular, not too high-level)?
+    \item Does the plan account for dependencies between sub-tasks?
+\end{itemize}
+\textbf{Plan Adherence}: Is the agent following its own plan during execution?
+
+\subsubsection{Action Layer Evaluation}
+The action layer is where agents interact with external systems through tools, APIs, and databases. Evaluation objectives include:
+
+\begin{itemize}
+    \item \textbf{Tool Selection Correctness}: Is the agent selecting the right tool from available options for each sub-task?
+    \item \textbf{Argument Generation Accuracy}: Are tool arguments correctly formatted according to schemas?
+    \item \textbf{Execution Sequencing}: Are tools called in the correct order when dependencies exist?
+\end{itemize}
+
+\subsubsection{Overall Execution Evaluation}
+Beyond individual layers, holistic evaluation objectives assess the complete agent workflow: task completion, execution efficiency, and error handling.
+
+\subsection{Establishing Success Criteria}
+\subsubsection{Metrics and KPIs}
+Success criteria must translate objectives into measurable metrics:
+\begin{itemize}
+    \item \textbf{Task-Oriented Metrics}: Accuracy, Task Completion Rate, Latency, Resource Efficiency.
+    \item \textbf{User Experience Metrics}: User Satisfaction, Engagement Metrics, Trust Indicators.
+    \item \textbf{Ethical, Safety \& Trust Metrics}: Hallucination Rate, Bias Detection, Fairness Indicators.
+\end{itemize}
+
+\subsubsection{Setting Performance Thresholds}
+Evaluation objectives require concrete thresholds:
+\begin{enumerate}
+    \item \textbf{Minimum Viable Performance}: The baseline below which the agent is not production-ready.
+    \item \textbf{Target Performance}: The desired performance level for deployment.
+    \item \textbf{Excellence Benchmark}: Aspirational performance for future iterations.
+\end{enumerate}
+
+\subsection{Aligning Objectives with Business Goals}
+Evaluation objectives must align with the specific domain (e.g., safety-critical, commercial) and stakeholder priorities (Product Managers, SMEs, Engineering).
+
+\subsection{Evaluation-Driven Development}
+Evaluation objectives should support continuous improvement. The cycle includes: Define Objectives $\rightarrow$ Create Test Sets $\rightarrow$ Run Evaluations $\rightarrow$ Analyze Results $\rightarrow$ Implement Changes $\rightarrow$ Re-evaluate $\rightarrow$ Deploy $\rightarrow$ Monitor.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Evaluation Taxonomy (Offline, Online, Continuous)}
+\subsection{Introduction}
+AI agent evaluation is not a monolithic activity but rather a multifaceted process that operates across different stages of the development lifecycle. Understanding the evaluation taxonomy---specifically the distinctions and relationships between offline, online, and continuous evaluation---is essential for building robust, production-ready agents.
+
+\subsection{Evaluation Taxonomy Overview}
+Modern AI agent evaluation encompasses three primary approaches:
+\begin{enumerate}
+    \item \textbf{Offline Evaluation}: Controlled testing with curated datasets before deployment.
+    \item \textbf{Online Evaluation}: Assessment during live operation with real user interactions.
+    \item \textbf{Continuous Evaluation}: Ongoing monitoring and iterative improvement across the agent lifecycle.
+\end{enumerate}
+
+\subsection{Offline Evaluation}
+Offline evaluation involves testing agents in controlled environments using predefined test datasets and scenarios.
+\subsubsection{Benefits}
+\begin{itemize}
+    \item \textbf{Repeatability and Control}: Consistent environment eliminates external variables.
+    \item \textbf{Cost-Effective Testing}: No risk to real users or production systems.
+    \item \textbf{Clear Ground Truth}: Known correct answers facilitate automated scoring.
+\end{itemize}
+\subsubsection{Methodologies}
+Dataset-Based Testing (Golden Prompt Sets, Benchmark Datasets) and Simulated Environments.
+
+\subsection{Online Evaluation}
+Online evaluation assesses agent performance during live operation with real users in production environments.
+\subsubsection{Benefits}
+\begin{itemize}
+    \item \textbf{Real-World Accuracy}: Reflects actual user behavior and inputs.
+    \item \textbf{Discovery of Unknown Issues}: Identifies edge cases not anticipated during development.
+    \item \textbf{User-Centric Metrics}: Direct user feedback and satisfaction scores.
+\end{itemize}
+\subsubsection{Methodologies}
+User Feedback Collection (Explicit/Implicit), Automated Monitoring (Real-Time Metrics, LLM-as-Judge in Production), and Shadow Testing.
+
+\subsection{Continuous Evaluation}
+Continuous evaluation represents an ongoing process that integrates both offline and online approaches throughout the agent's lifecycle.
+\subsubsection{The Continuous Evaluation Cycle}
+The process follows a cyclical pattern: Offline Benchmarking $\rightarrow$ Production Deployment $\rightarrow$ Online Monitoring $\rightarrow$ Failure Analysis $\rightarrow$ Test Set Augmentation $\rightarrow$ Agent Refinement $\rightarrow$ Re-evaluation.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Deterministic vs. Non-Deterministic Evaluation Approaches }
+\subsection{Introduction}
+One of the fundamental challenges in AI agent evaluation is that these systems are inherently non-deterministic. Unlike traditional software where the same input consistently produces the same output, AI agents powered by large language models can generate different responses for identical inputs.
+
+\subsection{The Challenge of Non-Determinism}
+AI agents introduce variability at the model level (temperature, sampling), system level (tool sequencing), and environmental level (external API changes). Traditional exact-match testing often fails because agents may take different valid paths to a destination, or produce semantically identical but syntactically different outputs.
+
+\subsection{Deterministic Evaluation Approaches}
+Despite challenges, deterministic methods remain valuable for:
+\begin{itemize}
+    \item \textbf{Format and Structure Validation}: JSON schema compliance, required fields.
+    \item \textbf{Tool Usage Verification}: Checking if correct tools/parameters were used.
+    \item \textbf{Guardrail Testing}: PII detection, safety boundary enforcement.
+    \item \textbf{Efficiency Metrics}: Token counts, execution time.
+\end{itemize}
+Implementation involves code-based evaluators, string similarity metrics, and categorical matching.
+
+\subsection{Non-Deterministic Evaluation Approaches}
+\subsubsection{LLM-as-Judge Methodology}
+Using capable LLMs to evaluate agent outputs addresses the semantic understanding gap. This is useful for open-ended tasks, semantic similarity, and qualitative criteria (helpfulness, coherence).
+\subsubsection{Semantic Distance and Groundedness}
+Evaluating meaning preservation and whether answers are grounded in provided context to detect hallucinations.
+
+\subsection{The Innovation: Soft Failures}
+To handle non-determinism in CI/CD, "soft failures" allow for a graduated system rather than binary pass/fail.
+\begin{itemize}
+    \item \textbf{Score Ranges}: 0-0.5 (Hard failure), 0.5-0.8 (Soft failure), 0.8-1.0 (Pass).
+    \item \textbf{Aggregation Rules}: Individual soft failures don't block merges, but too many will.
+\end{itemize}
+
+\subsection{Hybrid Evaluation Strategies}
+The most robust frameworks use a layered architecture: First Pass with deterministic filters (cheap/fast), followed by a Second Pass with non-deterministic assessment (LLM-as-judge).
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Evaluation Pipeline Architecture }
+\subsection{Introduction}
+A robust evaluation pipeline is the technical infrastructure that transforms evaluation theory into practice. It ensures quality, catches regressions, and enables confident iteration.
+
+\subsection{Core Components}
+\begin{itemize}
+    \item \textbf{Data Layer}: Test datasets, golden examples, production traces.
+    \item \textbf{Execution Layer}: Agent invocation, tracing, and resource management.
+    \item \textbf{Evaluation Layer}: Metric computation, evaluator orchestration.
+    \item \textbf{Integration Layer}: CI/CD hooks, monitoring systems.
+\end{itemize}
+
+\subsection{Development Pipeline Architecture}
+The offline evaluation pipeline focuses on rapid iteration. Key components include Test Dataset Management, Agent Execution Harness, Metric Computation, and Results Reporting. CI/CD integration involves Pre-Commit Hooks, Pull Request Gates, and Pre-Merge Validation.
+
+\subsection{Production Evaluation Pipeline}
+Production pipelines must be non-blocking. Evaluations run asynchronously after agent response. Real-time metrics tracking monitors latency, error rates, and user satisfaction, with alert configurations for threshold violations.
+
+\subsection{Evaluation Platform Architecture}
+Organizations may use cloud-based services (centralized management, distributed tracing) or self-hosted infrastructure (using OpenTelemetry, time-series DBs) depending on data requirements.
+
+\subsection{Pipeline Optimization Strategies}
+\begin{itemize}
+    \item \textbf{Execution Efficiency}: Parallel test execution, selective evaluation, caching.
+    \item \textbf{Cost Management}: Evaluation budget control, using cheaper models for simple metrics.
+    \item \textbf{Quality Assurance}: Testing the pipeline itself and calibrating evaluators.
+\end{itemize}
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Ground Truth and Golden Dataset Development }
+\subsection{Introduction}
+Ground truth and golden datasets serve as the foundation for all evaluation activities. They define what "good" looks like and enable systematic comparisons.
+
+\subsection{Understanding Ground Truth and Golden Datasets}
+\textbf{Ground Truth} is the correct, verified answer or expected behavior. A \textbf{Golden Dataset} is a curated collection of test cases with known expected outcomes, including edge cases. They establish baselines and separate successful improvements from regressions.
+
+\subsection{Building Ground Truth Datasets}
+Sources include:
+\begin{itemize}
+    \item \textbf{Expert Annotation}: SMEs validate complex domain outputs (e.g., medical, legal).
+    \item \textbf{Existing Benchmarks}: Public sets like GAIA, WebArena (good for comparison, maybe not domain-specific).
+    \item \textbf{Production Data Mining}: Curating real user interactions (authentic but requires cleaning/privacy checks).
+    \item \textbf{Synthetic Generation}: LLM-assisted generation of diverse/adversarial scenarios, validated by humans.
+\end{itemize}
+
+\subsection{Developing Golden Datasets}
+\subsubsection{Composition Principles}
+Datasets should cover primary use cases, various scenarios (Happy Path, Edge Cases, Adversarial, Ambiguous), and known failure modes.
+\subsubsection{Size Considerations}
+\begin{itemize}
+    \item \textbf{Minimum Viable}: 20-50 examples (Smoke Tests).
+    \item \textbf{Production-Ready}: 200-500 examples (Comprehensive).
+\end{itemize}
+
+\subsection{Maintaining Golden Datasets}
+Datasets must be living artifacts. Strategies include continuous updates triggered by new failures or features, periodic reviews, and versioning.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Evaluation Environment Configuration }
+\subsection{Introduction}
+The evaluation environment significantly impacts the reliability and validity of results. It must balance isolation and control with realism and representativeness.
+
+\subsection{Evaluation Environment Fundamentals}
+Different environments serve different needs:
+\begin{itemize}
+    \item \textbf{Development}: Local/remote, for fast iteration.
+    \item \textbf{CI/CD}: Automated, containerized, for reproducible builds.
+    \item \textbf{Staging/Production-Like}: Full mirrors for pre-deployment validation and load testing.
+\end{itemize}
+
+\subsection{Core Configuration Components}
+\subsubsection{Infrastructure Setup}
+Compute resources (CPU/GPU) and containerization (Docker) ensure consistent environments.
+\subsubsection{Dependency Management}
+External services should be mocked (Full/Partial Mock, Record-Replay) or sandboxed. Databases should be isolated with fixtures/seed data.
+\subsubsection{Model and API Configuration}
+Environment variables manage API keys and model selection to prevent hardcoding. Model versions should be locked for reproducibility.
+\subsubsection{Logging and Observability}
+Tracing (OpenTelemetry) and structured JSON logging are essential for debugging and analysis.
+
+\subsection{Best Practices}
+\begin{enumerate}
+    \item Separate Development, Testing, and Production configurations.
+    \item Use Infrastructure as Code (Terraform, etc.).
+    \item Implement secure Secrets Management.
+    \item Ensure Reproducibility (seeds, dependency locking).
+    \item Monitor Environment Health.
+\end{enumerate}
+\end{TNtwocol}

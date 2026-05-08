@@ -1,0 +1,101 @@
+
+
+\TNchapter[Agentic systems represent a shift from static automation to adaptive, goal-directed intelligence embedded across the enterprise.]{Safety and Ethical Evaluation}
+\section{Harmful Output Detection }
+\subsection{Introduction}
+Harmful output detection assesses whether agents produce content or take actions that damage users/systems or violate ethical boundaries. This shifts focus from text harmlessness to action outcomes.
+
+\subsection{Evaluation Dimensions}
+\begin{enumerate}
+    \item \textbf{Content Safety}: Detecting toxic or inappropriate language.
+    \item \textbf{Behavioral Safety}: Identifying risky actions (e.g., file deletion) and tool misuse.
+    \item \textbf{Interaction Safety}: Vulnerability to prompt injection or goal hijacking.
+    \item \textbf{System Safety}: Compliance with privacy and security constraints.
+\end{enumerate}
+
+\subsection{Tools and Frameworks}
+\begin{itemize}
+    \item \textbf{Azure AI Foundry}: \texttt{ContentSafetyEvaluator} (harm categories), \texttt{IndirectAttackEvaluator} (prompt injection), \texttt{CodeVulnerabilityEvaluator}.
+    \item \textbf{Benchmarks}: \textbf{Agent-SafetyBench} (interaction risks), \textbf{AgentHarm} (malicious compliance/jailbreaking), \textbf{R-Judge} (safety awareness).
+\end{TNtwocol}
+\begin{TNtwocol}
+\end{itemize}
+\section{Bias and Fairness Assessment}
+\subsection{Introduction}
+Bias assessment ensures agents behave equitably across diverse populations, addressing representational, performance, and allocative disparities.
+
+\subsection{Sources and Manifestations}
+Bias arises from training data, RLHF, or tool outputs. It manifests as:
+\begin{itemize}
+    \item \textbf{Representation Bias}: Stereotypical or imbalanced content generation.
+    \item \textbf{Performance Disparities}: Differential accuracy across demographics (e.g., dialects).
+    \item \textbf{Allocative Bias}: Unequal distribution of resources (e.g., loan approvals).
+\end{itemize}
+
+\subsection{Evaluation Methodology}
+\begin{enumerate}
+    \item \textbf{Demographic Variation Testing}: Varying names/pronouns while holding tasks constant.
+    \item \textbf{Edge Case Analysis}: Testing non-standard dialects or intersectional identities.
+    \item \textbf{Adversarial Testing}: Probing for latent prejudices.
+\end{enumerate}
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Demographic Parity and Equal Opportunity Metrics}
+\subsection{Foundational Concepts}
+\begin{enumerate}
+    \item \textbf{Demographic Parity}: Requires outcome independence from group membership (e.g., equal acceptance rates). Useful when ground truth is unavailable but ignores qualification differences.
+    \item \textbf{Equal Opportunity}: Requires equal True Positive Rates (sensitivity) across groups. Focuses on qualified individuals having equal chances.
+    \item \textbf{Equalized Odds}: Requires parity in both True Positive and False Positive rates.
+\end{enumerate}
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\subsection{Measurement}
+Key metrics include Selection Rate differences (Demographic Parity Difference) and True Positive Rate differences (Equal Opportunity Difference). Statistical significance testing is crucial to rule out random variation.
+\section{Toxicity and Offensive Content Screening }
+\subsection{Introduction}
+Toxicity screening prevents agents from generating hate speech, harassment, or unsafe content. Unlike filtration, it must proactively detect harmful outputs before delivery.
+
+\subsection{Toxicity Types}
+Includes Hate Speech, Harassment, Profanity, Threats, Identity Attacks, and Sexually Explicit Content. Toxicity can be explicit or implicit (coded language).
+
+\subsection{Evaluation}
+\begin{itemize}
+    \item \textbf{Explicit Detection}: Using benchmarks like \textbf{RealToxicityPrompts} and \textbf{CivilComments}.
+    \item \textbf{Implicit/Contextual}: Identifying context-dependent microaggressions.
+    \item \textbf{False Positive Analysis}: Ensuring legitimate discussions (e.g., about discrimination) aren't flagged.
+\end{itemize}
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Privacy Leakage Detection }
+\subsection{Introduction}
+Privacy leakage involves inadvertent disclosure of sensitive data through memorization, inference, or tool outputs.
+
+\subsection{Leakage Categories}
+\begin{itemize}
+    \item \textbf{Training Data Memorization}: Regurgitating PII encountered during training.
+    \item \textbf{PII Disclosure}: Direct (SSN, email) or indirect identifiers.
+    \item \textbf{Cross-User Contamination}: Leaking one user's context to another in multi-tenant systems.
+    \item \textbf{Attribute Inference}: Deducing protected attributes (health, political) from inputs.
+\end{itemize}
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\subsection{Detection Tools}
+Automated PII scanners (Microsoft Presidio, LLM Guard) measure PII Exposure Rate and Precision/Recall of leakage detection. Attempts include Passive Inference and Active Extraction (jailbreaking).
+\section{Ethical Boundary Compliance }
+\subsection{Introduction}
+Ethical compliance ensures agents respect values and avoid prohibited behaviors (e.g., manipulation, deception) even when technically feasible.
+
+\subsection{Foundational Principles}
+\begin{itemize}
+    \item \textbf{Autonomy}: Respecting user self-determination and consent.
+    \item \textbf{Non-Maleficence}: Avoiding harm (illegal acts, dangerous instructions).
+    \item \textbf{Justice}: Equitable treatment across groups.
+    \item \textbf{Beneficence}: Promoting well-being without paternalism.
+\end{itemize}
+
+\subsection{Evaluation Framework}
+Assessment involves \textbf{Moral Dilemma Scenarios} (testing reasoning in trade-offs) and \textbf{Boundary Testing} (measuring refusal rates for unethical requests). Agents are judged on both decision outcomes and the quality of ethical reasoning.
+\end{TNtwocol}
+

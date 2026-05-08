@@ -1,0 +1,72 @@
+% filepath: chapters/transparency_and_explainability.tex
+\TNchapter[Decision explainability requirements, interpretability techniques, reasoning chain transparency, uncertainty communication, limitation disclosure, and user-facing transparency mechanisms for aligned agents.]{Transparency and Explainability for Alignment}
+
+\begin{TNtwocol}
+
+\section{Decision Explainability Requirements}
+Explainability is essential for building trust in AI systems and ensuring alignment with human values. Decision explainability requirements specify the level and type of information that must be provided to users, developers, and regulators about how and why an agent made a particular decision. These requirements vary by application domain, risk level, and stakeholder needs, but generally include clarity, completeness, and accessibility of explanations.
+
+\subsection{Key Requirements}
+\begin{itemize}
+    \item \textbf{Clarity}: Explanations should be understandable to non-experts.
+    \item \textbf{Relevance}: Focus on factors that influenced the decision.
+    \item \textbf{Traceability}: Enable users to trace outcomes back to inputs and reasoning steps.
+    \item \textbf{Actionability}: Provide information that supports user decisions or interventions.
+\end{itemize}
+
+\section{Interpretability Techniques Implementation}
+Interpretability techniques help reveal how AI models process information and reach conclusions. These techniques can be model-agnostic or model-specific, and are implemented to provide insights into internal mechanisms, feature importance, and decision boundaries.
+
+\subsection{Common Techniques}
+\begin{itemize}
+    \item \textbf{Feature Attribution}: Identifying which inputs most influenced the output (e.g., SHAP, LIME).
+    \item \textbf{Saliency Mapping}: Visualizing attention or activation patterns in neural networks.
+    \item \textbf{Surrogate Models}: Using simpler models to approximate and explain complex model behavior.
+    \item \textbf{Example-Based Explanations}: Presenting similar cases or counterfactuals.
+\end{itemize}
+
+\section{Reasoning Chain Transparency}
+Reasoning chain transparency involves making the sequence of steps, logic, or inferences that led to a decision visible and understandable. This is particularly important for complex tasks, multi-step reasoning, or when agents must justify their actions.
+
+\subsection{Approaches}
+\begin{itemize}
+    \item \textbf{Step-by-Step Explanations}: Breaking down the decision process into discrete steps.
+    \item \textbf{Intermediate Output Disclosure}: Showing intermediate states or sub-decisions.
+    \item \textbf{Logic Traceability}: Mapping outputs to explicit rules or reasoning paths.
+\end{itemize}
+
+\section{Uncertainty Communication}
+Communicating uncertainty is crucial for responsible AI deployment, especially in high-stakes or ambiguous situations. Agents should indicate when their confidence is low, when multiple plausible answers exist, or when data is insufficient.
+
+\subsection{Methods}
+\begin{itemize}
+    \item \textbf{Confidence Scores}: Quantitative measures of certainty in outputs.
+    \item \textbf{Qualitative Statements}: Phrases indicating uncertainty or ambiguity.
+    \item \textbf{Alternative Suggestions}: Presenting multiple possible answers or actions.
+\end{itemize}
+
+\section{Limitation Disclosure}
+Limitation disclosure requires agents to inform users about their own boundaries, weaknesses, and areas of potential failure. This transparency helps manage expectations and supports safe, informed use.
+
+\subsection{Disclosure Practices}
+\begin{itemize}
+    \item \textbf{Capability Statements}: Outlining what the agent can and cannot do.
+    \item \textbf{Known Failure Modes}: Listing scenarios where the agent may perform poorly.
+    \item \textbf{Scope Warnings}: Alerting users when requests fall outside the agent’s expertise or training.
+\end{itemize}
+
+\section{User-Facing Transparency Mechanisms}
+User-facing transparency mechanisms are tools and interfaces that make explanations, reasoning, and limitations accessible to end users. These mechanisms foster trust, support oversight, and empower users to make informed decisions.
+
+\subsection{Mechanism Examples}
+\begin{itemize}
+    \item \textbf{Explanation Panels}: Interactive displays of decision rationales.
+    \item \textbf{Audit Logs}: User-accessible records of agent actions and justifications.
+    \item \textbf{Feedback Channels}: Allowing users to query, challenge, or correct agent outputs.
+    \item \textbf{Visualization Tools}: Graphical representations of reasoning chains or uncertainty.
+\end{itemize}
+
+\section{Conclusion}
+Transparency and explainability are foundational for aligned AI systems. By implementing robust explainability requirements, interpretability techniques, reasoning chain transparency, uncertainty communication, limitation disclosure, and user-facing mechanisms, developers can ensure that agents remain understandable, trustworthy, and accountable.
+
+\end{TNtwocol}

@@ -1,0 +1,76 @@
+% filepath: chapters/training_time_alignment.tex
+\TNchapter[RLHF, Constitutional AI, supervised fine-tuning, value-aligned datasets, reward model design, and capability trade-offs during model training phases.]{Training-Time Alignment}
+
+\begin{TNtwocol}
+
+\section{Reinforcement Learning from Human Feedback (RLHF)}
+Reinforcement Learning from Human Feedback (RLHF) is a cornerstone technique for aligning advanced AI systems with human values and preferences. RLHF augments traditional reinforcement learning by replacing or supplementing the reward signal with feedback from human evaluators. The process typically involves three stages: (1) supervised fine-tuning on human demonstrations, (2) training a reward model using human preference comparisons, and (3) optimizing the agent’s policy via reinforcement learning to maximize the learned reward. RLHF has been widely adopted in large language models, improving their helpfulness, harmlessness, and honesty. However, RLHF is limited by the scalability and consistency of human feedback, potential biases in annotator judgments, and the risk of overfitting to superficial preferences rather than deep value alignment.
+
+\subsection{RLHF Workflow}
+\begin{enumerate}
+    \item \textbf{Supervised Fine-Tuning}: The model is trained on a dataset of human demonstrations to imitate desirable behaviors.
+    \item \textbf{Reward Model Training}: Human evaluators compare model outputs, and a reward model is trained to predict these preferences.
+    \item \textbf{Policy Optimization}: The model is further trained using reinforcement learning to maximize the reward model’s output.
+\end{enumerate}
+
+\subsection{Challenges}
+RLHF faces challenges such as feedback inconsistency, reward hacking, and the difficulty of capturing nuanced values. Research is ongoing to improve feedback collection, reward modeling, and robustness to adversarial behaviors.
+
+\section{Constitutional AI and Self-Supervision}
+Constitutional AI is an emerging paradigm that seeks to encode alignment principles directly into the training process. Instead of relying solely on human feedback, a set of guiding principles or a “constitution” is used to critique and revise model outputs. The model is trained to self-supervise, using these principles to evaluate and improve its own responses.
+
+\subsection{Principle-Based Critique}
+A constitution may include ethical guidelines, safety constraints, or domain-specific rules. The model generates outputs, critiques them according to the constitution, and revises its responses. This process can be iterated, allowing the model to internalize the principles.
+
+\subsection{Benefits and Limitations}
+Constitutional AI can scale alignment efforts and reduce reliance on costly human annotation. However, its effectiveness depends on the clarity, completeness, and enforceability of the constitutional principles. Ambiguities or omissions in the constitution can lead to misaligned behaviors.
+
+\section{Supervised Fine-Tuning for Alignment}
+Supervised fine-tuning is a foundational step in aligning AI models. After pre-training on large, general datasets, the model is further trained on curated, labeled data that reflects desired behaviors and values. This process enables the model to specialize for specific tasks, follow instructions, and avoid unsafe outputs.
+
+\subsection{Data Quality and Generalization}
+The effectiveness of supervised fine-tuning depends on the quality, diversity, and representativeness of the labeled data. While this approach can teach models to avoid certain failure modes, it may not generalize to novel or ambiguous scenarios. Ongoing research explores methods for improving data coverage and robustness.
+
+\section{Value-Aligned Dataset Curation}
+Curating value-aligned datasets is critical for effective training-time alignment. This involves selecting, filtering, and annotating data to ensure it reflects desired values, norms, and behaviors.
+
+\subsection{Curation Techniques}
+\begin{itemize}
+    \item \textbf{Data Audits}: Systematic review of datasets to identify and remove harmful or biased content.
+    \item \textbf{Adversarial Filtering}: Identifying and excluding data that could lead to misaligned behaviors.
+    \item \textbf{Human-in-the-Loop Annotation}: Leveraging human expertise to label and validate data.
+\end{itemize}
+
+\subsection{Challenges}
+Ensuring diversity, inclusivity, and value alignment in datasets is challenging. Biases in data sources or annotation processes can propagate into model behaviors, making careful curation essential.
+
+\section{Reward Model Design and Training}
+Reward models are central to RLHF and related alignment techniques. A reward model predicts the quality or desirability of model outputs based on human feedback or constitutional principles.
+
+\subsection{Design Considerations}
+\begin{itemize}
+    \item \textbf{Feedback Quality}: High-quality, representative feedback is essential for accurate reward modeling.
+    \item \textbf{Model Robustness}: Reward models must be robust to adversarial manipulation and distributional shifts.
+    \item \textbf{Generalization}: Reward models should generalize beyond the specific examples seen during training.
+\end{itemize}
+
+\subsection{Failure Modes}
+Poorly designed reward models can lead to reward hacking, specification gaming, or misaligned behaviors. Ongoing research focuses on improving reward model architectures, training protocols, and evaluation methods.
+
+\section{Alignment Tax and Capability Trade-offs}
+Alignment interventions during training often introduce an “alignment tax”—a reduction in model capabilities, efficiency, or generality due to constraints imposed for safety or value alignment.
+
+\subsection{Trade-Offs}
+\begin{itemize}
+    \item \textbf{Expressiveness vs. Safety}: Restricting outputs to avoid harm may limit creativity or utility.
+    \item \textbf{Performance vs. Robustness}: Alignment constraints can reduce performance on some tasks.
+    \item \textbf{Generalization vs. Specificity}: Highly aligned models may generalize less well to novel scenarios.
+\end{itemize}
+
+\subsection{Minimizing Alignment Tax}
+Research aims to minimize the alignment tax while achieving robust and scalable alignment. Techniques include improved reward modeling, scalable oversight, and principled regularization.
+
+\section{Conclusion}
+Training-time alignment is a dynamic and rapidly evolving field. Techniques such as RLHF, Constitutional AI, supervised fine-tuning, and value-aligned dataset curation are central to aligning advanced AI systems with human values. Reward model design and the management of capability trade-offs remain active areas of research. Continued progress depends on interdisciplinary collaboration, rigorous evaluation, and the development of scalable, robust alignment methods.
+
+\end{TNtwocol}

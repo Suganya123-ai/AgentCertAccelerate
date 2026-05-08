@@ -1,0 +1,52 @@
+
+\TNchapter[True agent intelligence requires more than speed—test reasoning, planning, and tool use with established suites like AgentBench, τ-Bench, and SWE-bench. Measure task success rates, multi-step proficiency, and real-world correlation to identify and close critical capability gaps.
+]{Capability Benchmarking}
+\begin{TNtwocol}
+\section{Standard Agent Benchmarks (AgentBench, τ-Bench, SWE-bench)}
+Standardized benchmarks provide consistent, reproducible evaluation frameworks that enable objective comparison of agent capabilities across different systems, organizations, and time periods. These benchmarks have been carefully designed by research communities to assess critical agent capabilities including reasoning, planning, tool use, and domain-specific expertise \cite{liu2023,jimenez2024,putta2024,mialon2023}.
+
+AgentBench is a comprehensive evaluation suite that tests multi-domain reasoning and generalist agent performance across diverse task types. It includes operating system interactions, database querying, knowledge-intensive question answering, and multi-step problem solving. AgentBench's strength lies in its breadth of coverage, assessing whether agents can generalize capabilities across different domains rather than specializing narrowly \cite{liu2023}.
+
+SWE-bench focuses specifically on code generation and software engineering tasks, evaluating agents' ability to resolve real-world GitHub issues across popular open-source repositories. Each task involves understanding an issue description, navigating a codebase, implementing a solution, and passing existing tests. SWE-bench is particularly valuable for assessing practical programming capabilities in realistic software development contexts \cite{jimenez2024}.
+
+GAIA (General AI Assistants) benchmark assesses general-purpose AI assistants on multi-modal, multi-step tasks that require integrating information from different sources and modalities including text, images, and structured data. GAIA tasks are designed to be challenging for current systems while remaining solvable by non-expert humans, providing a target for human-level generalist capability \cite{mialon2023}.
+
+τ-Bench evaluates tool use and API interaction capabilities, testing agents on their ability to select appropriate tools, construct correct API calls with proper parameters, handle authentication and errors, and integrate results. As agents increasingly augment language model capabilities with external tools, benchmarks like τ-Bench that specifically assess tool use proficiency become essential \cite{putta2024}.
+
+WebArena tests agents on web navigation and the completion of web-based workflows across realistic website environments. Tasks include e-commerce shopping, social media interaction, content management, and form submission. WebArena is particularly valuable for assessing agents intended for web automation, where navigation, information extraction, and interaction with dynamic content are critical capabilities \cite{zhou2023}.
+
+\section{Task Success Rate Across Domains}
+Task success rate measures the percentage of tasks an agent completes correctly according to specified criteria, serving as a primary indicator of agent capability and the most directly interpretable benchmark metric. However, seemingly simple success rate calculations involve important subtleties in task definition, success criteria, and evaluation methodology that significantly impact the validity and utility of results \cite{liu2023,jimenez2024}.
+
+Task success criteria must be carefully defined to balance strictness and practicality. Overly strict criteria that require perfect execution may underestimate agent capabilities by penalizing minor errors that don't affect ultimate task goals. Conversely, overly lenient criteria may overestimate capabilities by accepting superficially correct but fundamentally flawed responses. The appropriate strictness level depends on the application domain and the consequences of different error types \cite{liu2023}.
+
+For many tasks, binary success metrics (correct/incorrect) discard valuable information about partial progress and near-misses. Partial credit scoring awards points for partially correct responses, providing more granular performance assessment and clearer signals for improvement. For example, a code generation task might award partial credit for syntactically correct code that fails some test cases, code with minor bugs easily fixed, or code that implements most but not all required functionality \cite{jimenez2024}.
+
+\section{Reasoning and Planning Capability Assessment}
+Reasoning and planning capabilities are critical for agents tasked with complex, multi-step objectives that require breaking down high-level goals into executable steps, maintaining logical consistency, adapting to unexpected situations, and integrating information from multiple sources. These capabilities distinguish truly intelligent agents from pattern-matching systems that can only handle narrowly defined tasks \cite{valmeekam2023,wei2022,yao2023}.
+
+Benchmarks that assess reasoning capabilities typically require logical inference, causal understanding, counterfactual reasoning, and analogy. For example, a reasoning task might present a set of premises and ask the agent to derive valid conclusions, or provide a causal chain and ask the agent to predict the effects of interventions. Mathematical reasoning tasks require multi-step derivations, equation solving, and proof construction \cite{valmeekam2023,wei2022}.
+
+Planning benchmarks evaluate agents' ability to decompose complex goals into achievable subgoals, sequence actions appropriately considering dependencies and resource constraints, adapt plans when initial actions fail or conditions change, and reason about tradeoffs between different plan options. Chain-of-thought prompting and ReAct-style evaluation are useful techniques for assessing and eliciting structured reasoning \cite{wei2022,yao2023}.
+
+\section{Tool Use Proficiency Benchmarks}
+Modern AI agents increasingly augment their core language model capabilities with external tools and APIs that enable actions such as web search, calculation, code execution, database queries, and interaction with external services. Tool use proficiency is essential for practical agent applications that must go beyond text generation to accomplish concrete tasks in the real world \cite{putta2024,qin2024}.
+
+Tool use evaluation encompasses several key capabilities. Tool selection requires identifying which tools are appropriate for a given task from a potentially large repertoire, understanding tool capabilities and limitations, and recognizing when a task requires multiple tools in combination. API understanding involves correctly interpreting documentation, constructing proper requests with required and optional parameters, and handling authentication, rate limits, and other API constraints \cite{putta2024,qin2024}.
+
+Error handling is particularly critical for tool use, as real-world APIs frequently return errors due to malformed requests, authentication failures, rate limiting, temporary unavailability, or invalid inputs. Robust agents must detect errors, interpret error messages, and take appropriate corrective actions such as retrying with backoff, reformulating requests, or falling back to alternative approaches \cite{putta2024}.
+
+\section{Multi-Step Task Completion Metrics}
+Multi-step tasks require agents to maintain context across extended interactions, plan sequences of actions, monitor progress toward goals, and recover from errors or unexpected situations. These capabilities are essential for real-world agent applications where tasks rarely decompose into simple, independent steps \cite{zhou2023,deng2023}.
+
+Completion rate measures the percentage of multi-step tasks that agents complete successfully, providing the most direct measure of end-to-end capability. However, completion rate alone provides limited insight into why tasks succeed or fail. Tasks may fail at any step, and agents that make good progress before failing demonstrate more capability than agents that fail immediately \cite{zhou2023}.
+
+Progress metrics track how far agents advance through multi-step tasks before failing or getting stuck, providing more nuanced assessment of partial capabilities. Step-wise accuracy measures the percentage of individual steps agents complete correctly, and recovery metrics assess agents' ability to detect and correct their own errors \cite{zhou2023,deng2023}.
+
+\section{Real-World vs. Synthetic Task Correlation}
+A persistent challenge in agent benchmarking is ensuring that synthetic evaluation tasks predict real-world performance. Synthetic benchmarks offer controlled evaluation conditions, reproducible results, and clear ground truth, but may not fully capture the complexity, ambiguity, and distributional characteristics of production environments \cite{recht2019,kiela2021,getmaximai2024}.
+
+Distribution shift between benchmark and production data is a primary cause of degraded real-world performance. Benchmark tasks may use cleaner, more structured data than what agents encounter in practice. Task authenticity requires that benchmark tasks reflect real user needs and priorities rather than academic constructs. Incorporating tasks derived from production logs improves authenticity \cite{googlecloud2024,getmaximai2024}.
+
+Hybrid evaluation strategies combine synthetic and real-world tasks in complementary ways. Synthetic tasks provide comprehensive, consistent evaluation across diverse capabilities, while real-world tasks validate that strong benchmark performance translates to production value. Organizations should regularly validate benchmark results against production metrics and refine benchmarks based on observed discrepancies \cite{liu2023,googlecloud2024}.
+\end{TNtwocol}

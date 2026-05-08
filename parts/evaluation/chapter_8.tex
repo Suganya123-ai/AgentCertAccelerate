@@ -1,0 +1,98 @@
+\TNchapter[Agentic systems represent a shift from static automation to adaptive, goal-directed intelligence embedded across the enterprise.]{Quality and Reliability Evaluation }
+\begin{TNtwocol}
+\section{Response Accuracy and Factual Correctness }
+\subsection{Introduction}
+Response accuracy forms the foundation of reliable AI agent evaluation. It requires calculating output accuracy, semantic accuracy (meaning preservation), and contextual accuracy across both final responses and reasoning paths.
+
+\subsection{Evaluation Methods}
+\begin{enumerate}
+    \item \textbf{Exact Match/Structural}: For deterministic tasks or JSON outputs.
+    \item \textbf{Semantic Similarity}: Using embeddings to measure distance, though threshold selection is domain-specific.
+    \item \textbf{LLM-as-a-Judge}: Using models (e.g., GPT-4o) to provide Likert scores (1-5) and reasoning for Intent Resolution and Completeness.
+    \item \textbf{Groundedness}: Ensuring answers are supported by context and declining when information is missing.
+\end{enumerate}
+
+\subsection{Best Practices}
+Evaluation should be multi-level (intent, tools, context), use configurable thresholds for binary pass/fail, and handle non-determinism via "soft failures" and automatic retries.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Hallucination Detection and Measurement}
+\subsection{Introduction}
+Hallucinations (factual, context, capability, temporal, computational) are critical failure modes where agents generate plausible but incorrect info.
+
+\subsection{Detection Methods}
+\begin{itemize}
+    \item \textbf{Groundedness Evaluation}: Verifying claims against evidence (e.g., Azure AI Foundry).
+    \item \textbf{Multi-Source Verification}: Cross-referencing outputs with trusted sources.
+    \item \textbf{Self-Consistency}: Checking consistency across multiple phrasings of the same question.
+    \item \textbf{LLM-as-a-Judge}: Using specialized prompts to detect unsupported claims.
+\end{itemize}
+
+\subsection{Metrics}
+\begin{itemize}
+    \item \textbf{Hallucination Rate}: Percentage of responses with hallucinations (Critical < 0.5\%).
+    \item \textbf{Groundedness Score}: Average score of how well claims are supported.
+\end{itemize}
+Mitigation involves anti-hallucination prompting, context expansion, and confidence calibration.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Consistency and Reproducibility Testing }
+\subsection{Introduction}
+Agents introduce non-determinism (model sampling, tool variability). Consistency measures the similarity of outcomes across runs, while Reliability ensures predictable performance.
+
+\subsection{Metrics}
+\begin{itemize}
+    \item \textbf{Pass\textsuperscript{k} Reliability}: Success rate across $k$ independent runs.
+    \item \textbf{Response Variability}: Semantic similarity of outputs across multiple trials.
+    \item \textbf{Plan/Tool Consistency}: Stability of reasoning paths and tool selection.
+\end{itemize}
+
+\subsection{Best Practices}
+Control temperature (lower for consistency), enforce structured output formats (JSON schemas), and use soft failure thresholds to tolerate minor non-determinism.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Reliability Metrics}
+\subsection{Pass\textsuperscript{k} Metrics}
+Pass\textsuperscript{k} evaluates consistency by measuring the percentage of successful completions across $k$ independent trials. It addresses the non-deterministic nature of LLMs where single-shot success is insufficient.
+
+\subsection{Theoretical Foundation}
+Based on the $\tau$-bench framework, comparisons against goal states in multi-turn conversations reveal that even advanced models may have low Pass\textsuperscript{8} scores despite decent single-run accuracy.
+
+\subsection{Implementation}
+\begin{itemize}
+    \item $k=3-5$: Initial development.
+    \item $k=8-10$: Pre-production validation.
+    \item $k=20+$: High-stakes applications.
+\end{TNtwocol}
+\begin{TNtwocol}
+\end{itemize}
+Applications include setting deployment thresholds (e.g., Pass\textsuperscript{8} > 80\%) and detecting model drift.
+\section{Edge Case and Boundary Condition Testing }
+\subsection{Introduction}
+Testing atypical scenarios (Rare Inputs, Extreme Values, Ambiguity) is critical for robustness.
+
+\subsection{Importance}
+Edge cases cause trust erosion and cascading failures. Compliance in valid domains (Healthcare, Finance) requires demonstrated robustness.
+
+\subsection{Identification & Testing}
+\begin{itemize}
+    \item \textbf{Sources}: Production logs, Domain Experts, Red Team exercises.
+    \item \textbf{Methodologies}: Golden Prompt Sets (Adversarial, Malformed), Metamorphic Testing (Input transformations), and Fuzzing.
+\end{itemize}
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\subsection{Metrics}
+\textbf{Graceful Degradation Score}: Evaluates error clarity and safety preservation when the task cannot be completed.
+\section{Robustness Under Varying Inputs }
+\subsection{Introduction}
+Measures ability to handle input variability (Linguistic, Contextual, Technical) and distributional shifts over time.
+
+\subsection{Evaluation Methodologies}
+\begin{itemize}
+    \item \textbf{Perturbation-Based Testing}: Character-level (typos), Word-level (synonyms), and Semantic (negation) modifications.
+    \item \textbf{Distributional Testing}: Out-of-Distribution (OOD) detection and Cross-Population testing (demographics).
+    \item \textbf{Stress Testing}: Volume/Scale stress and Adversarial stress (Prompt Injection).
+\end{itemize}
+\textbf{Metamorphic Testing} ensures invariance relative to rephrasing or ordering.
+\end{TNtwocol}

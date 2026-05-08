@@ -1,0 +1,359 @@
+\TNchapter[Quality and Reliability Evaluation]{Quality and Reliability Evaluation}
+
+\begin{TNtwocol}
+
+\section{Response Accuracy and Factual Correctness}
+Response accuracy and factual correctness form the foundation of reliable \textbf{AI agent} evaluation. Traditional \textbf{NLP metrics} like \textbf{BLEU scores} work for static outputs, but agents require evaluation of both final responses and the reasoning paths leading to them. This section explores methods for measuring and ensuring \textbf{response accuracy} across diverse agent architectures.
+
+\subsection*{Key Concepts}
+
+\paragraph{\textbf{Defining Response Accuracy}}
+
+\textbf{Response accuracy} in \textbf{AI agents} operates on multiple levels.
+
+\begin{itemize}
+\item \textbf{Output Accuracy}: Does the final response match the expected result?
+\item \textbf{Semantic Accuracy}: Is the meaning correct even if wording differs?
+\item \textbf{Contextual Accuracy}: Is the response appropriate given the conversation history?
+\item \textbf{Tool Output Accuracy}: Are tool calls returning valid and accurate data?
+\end{itemize}
+
+\paragraph{\textbf{Groundedness vs. Hallucination}}
+
+\textbf{Groundedness} refers to whether an agent's response is supported by retrieved context in \textbf{RAG systems}, tool outputs, provided documentation, or conversation history. When responses lack grounding in evidence, they constitute \textbf{hallucinations}—fabricated or unsupported claims that may sound plausible but are factually incorrect.
+
+\subsection*{Evaluation Methods}
+
+\paragraph{\textbf{Exact Match and Structural Comparison}}
+
+For deterministic tasks with well-defined outputs, \textbf{exact match} evaluates if predicted outputs equal expected ones. Limitations include inability to handle semantic variations, excessive strictness for natural language, and missing cases where wording differs but meaning is preserved.
+
+\paragraph{\textbf{Semantic Similarity Metrics}}
+
+Embedding-based approaches measure \textbf{semantic distance} between predicted and expected responses. Considerations involve domain-specific threshold selection, potential to miss factual errors with similar wording, and effectiveness for paraphrase detection.
+
+\paragraph{\textbf{LLM-as-a-Judge Evaluation}}
+
+More powerful models evaluate agent outputs, providing numerical scores on a 1-5 \textbf{Likert scale}, reasoning explanations, and binary pass/fail based on thresholds. This method assesses \textbf{semantic correctness} effectively.
+
+\paragraph{\textbf{Groundedness Evaluation}}
+
+This assesses if responses are supported by provided context, requiring agents to answer groundedly when context is present and decline when missing to avoid \textbf{hallucination}. It evaluates claims against tool outputs and detects fabricated facts.
+
+\paragraph{\textbf{Response Completeness}}
+
+This ensures responses fully address queries by checking all requirements, necessary details, and absence of critical omissions.
+
+\subsection*{Evaluation Frameworks \& Tools}
+
+\paragraph{\textbf{Azure AI Foundry}}
+
+Strengths include native support for \textbf{Microsoft Foundry agents}, converter utilities for schemas, reasoning model support, and integration with production monitoring. Key evaluators cover \textbf{intent understanding}, context fidelity, requirement coverage, logical flow, and language quality.
+
+\paragraph{\textbf{Monte Carlo Data Approach}}
+
+It uses \textbf{LLM-as-judge} with 0-1 scoring for semantic distance and deterministic tests for structured outputs. Challenges involve insufficient cosine similarity, wording-meaning disambiguation, and balancing cost with accuracy.
+
+\paragraph{\textbf{DeepEval Framework}}
+
+It provides metrics for \textbf{reasoning layer} like plan quality and adherence, and \textbf{action layer} like tool and argument correctness.
+
+\subsection*{Best Practices}
+
+ {\textbf{Multi-Level Validation}} - Evaluate accuracy at stages including \textbf{intent understanding}, tool selection, argument accuracy, context retrieval, and final response.
+
+{\textbf{Threshold Configuration}} - Set domain-specific thresholds for binary classification, considering risk tolerance, user expectations, and costs of false positives versus negatives.
+{\textbf{Explainability Requirements}} - Capture evaluation reasoning for debugging, trust building, pattern identification, and model improvement.
+
+{\textbf{Handle Non-Determinism}} - Implement \textbf{soft failures} with score ranges, automatic retries with exponential backoff, accounting for spurious errors.
+{\textbf{Continuous Monitoring}} - Track \textbf{accuracy drift}, edge cases, new failures, and user satisfaction correlation in production.
+
+\subsection*{Common Pitfalls}
+
+Combine deterministic checks, semantic similarity, \textbf{LLM-as-judge}, and human review instead of relying on single metrics. Include full conversation history in evaluations to avoid ignoring context dependencies. Test edge cases like ambiguous queries, missing information, conflicting instructions, out-of-scope requests, and malformed inputs to ensure sufficient test coverage. Evaluate \textbf{factual}, context, and capability \textbf{hallucinations} separately to address detection gaps.
+
+\section{Hallucination Detection and Measurement}
+
+
+\textbf{Hallucinations} represent one of the most critical failure modes in \textbf{AI agents} - generating plausible-sounding but factually incorrect or unsupported information. Unlike simple errors, \textbf{hallucinations} are often confident and coherent, making them particularly dangerous in production systems. This section explores methods for detecting, measuring, and mitigating \textbf{hallucinations} in \textbf{AI agent} workflows.
+
+\subsection*{Understanding Hallucinations}
+
+\paragraph{\textbf{Types of Hallucinations}}
+\begin{itemize}
+\item \textbf{Factual Hallucinations} involve false or fabricated information presented as fact, such as claiming The \textbf{Eiffel Tower} was built in 1923'' when it was actually built in 1889.
+\item \textbf{Context Hallucinations} occur when agents make claims not supported by provided context or sources, such as citing information not present in retrieved documents. 
+\item\textbf{Capability Hallucinations} involve claiming abilities the agent doesn't possess, like stating I can access your bank account'' when it cannot. \item \textbf{Temporal Hallucinations} present incorrect time-sensitive information, such as providing outdated flight prices as current. 
+\item \textbf{Computational Hallucinations} produce incorrect calculations or data transformations, including wrong mathematical results from tool outputs.
+\end{itemize}
+
+From a \textbf{business perspective}, hallucinations lead to loss of user trust, potential legal liability, financial consequences from wrong bookings or orders, brand damage, and regulatory compliance issues. The \textbf{technical challenges} include difficulty in automatic detection, plausible and coherent appearance, ability to pass simple accuracy checks, and requirement for deep contextual understanding.
+
+\subsection*{Detection Methods}
+\begin{itemize}
+\item{\textbf{Groundedness Evaluation}}: The core principle is to verify all claims are supported by evidence. \textbf{Azure AI Foundry} implements a two-part evaluation approach. When context is present, the system checks if responses are grounded in tool outputs. When context is missing, the agent should decline to answer rather than fabricate information.
+
+\item{\textbf{Multi-Source Verification}}: The \textbf{cross-reference strategy} involves verifying claims against multiple sources and requiring agreement from multiple sources to establish confidence in the information.
+
+\item{\textbf{Self-Consistency Checks}}: The principle is to ask the same question multiple ways and check for consistency across responses. Running the agent multiple times and calculating agreement scores helps identify likely hallucinations when consistency falls below acceptable thresholds.
+
+\item{\textbf{LLM-as-a-Judge for Hallucination Detection}}: Specialized prompting evaluates responses for factual claims not supported by context, made-up information presented as fact, overstated capabilities, and conflicting or contradictory statements.
+
+\item{\textbf{Retrieval Verification}}: For RAG-based agents, the approach involves extracting claims from responses, finding supporting evidence in retrieved documents, and calculating hallucination rates based on unsupported claims.
+\end{itemize}
+
+\subsection*{Measurement Metrics}
+\begin{itemize}
+
+\item{\textbf{Hallucination Rate}} measures the percentage of responses containing hallucinations. \textbf{Domain-dependent thresholds} include less than 0.5% for critical systems like healthcare and finance, less than 5% for general assistants, and less than 15% for experimental or beta systems.
+
+\item{\textbf{Groundedness Score}}: The \textbf{Azure AI Foundry approach} calculates average groundedness across test sets, providing both numerical scores and pass rates based on configured thresholds.
+
+\item{\textbf{Claim-Level Verification}}: Granular analysis tracks total claims, verified claims, unsupported claims, and contradicted claims to calculate verification rates and hallucination rates at the individual claim level.
+
+\item{\textbf{Severity-Weighted Scoring}}: Not all hallucinations are equally harmful. \textbf{Severity weighting} assigns different weights to low severity (minor factual errors), medium severity (significant misinformation), high severity (dangerous or critical errors), and critical severity (could cause serious harm).
+\end{itemize}
+
+\subsection*{Best Practices}
+
+Implement \textbf{defense-in-depth} with multiple layers including fast deterministic checks for prohibited patterns, context groundedness validation, thorough \textbf{LLM-as-judge} evaluation, and monitoring logs for continuous tracking. Teach agents to express uncertainty appropriately by using phrases like According to the provided context'' for supported claims, stating I don't have information about'' when context is insufficient, and expressing uncertainty with qualifiers when appropriate. Always link claims to sources by extracting claims from responses, finding supporting sources, calculating confidence based on source quality, and annotating responses with citations. Track \textbf{production hallucination} patterns through asynchronous hallucination checks, logging to monitoring systems, and alerting when hallucinations are detected based on severity levels. Learn from user reports by collecting feedback on incorrect information, adding verified hallucinations to training datasets, and triggering model updates when thresholds are exceeded.
+
+\subsection*{Mitigation Strategies}
+
+{\textbf{Prompt Engineering}}: Anti-hallucination prompts instruct agents to use only information from provided context, explicitly state when information is unavailable, never guess or make up information, express uncertainty when appropriate, and cite specific parts of context when making claims.
+
+{\textbf{Context Expansion}}: Provide richer context to reduce hallucinations by iteratively expanding context, checking context sufficiency, and retrieving additional information for identified gaps.
+
+{\textbf{Output Constraints}}: Structured outputs reduce hallucination risk by constraining generation to specific schemas and validating responses against predefined formats.
+
+{\textbf{Retrieval Quality Improvement}}: Better retrieval leads to fewer hallucinations through multi-stage retrieval processes including initial retrieval, reranking by relevance, filtering by quality scores, and verifying freshness of documents.
+
+\subsection*{Testing Strategies}
+
+Design tests to provoke \textbf{hallucinations} by providing incomplete context, asking about information not in context, or requesting unavailable data, with expected behavior of appropriate decline to answer or explicit statements of missing information. Inject known-false information to test if agents propagate it, where agents should question the context, express uncertainty, or refuse to answer rather than confidently repeat false information.
+
+
+
+\paragraph{\textbf{Hallucination}} detection and measurement require a \textbf{multi-method approach} combining automated checks, LLM judges, and human review. \textbf{Context awareness} verifies all claims against available context. \textbf{Severity classification} recognizes that not all hallucinations are equally harmful. \textbf{Continuous monitoring} tracks hallucination rates in production. \textbf{User feedback loops} enable learning from real-world reports. The goal is not to achieve zero hallucinations but to detect them reliably, measure their frequency and severity, implement appropriate guardrails, and continuously improve through monitoring and iteration.
+
+\section{Consistency and Reliability Testing}
+
+
+
+Consistency and reliability are critical quality dimensions for production \textbf{AI agents}. Unlike traditional software where the same input reliably produces the same output, \textbf{AI agents} introduce non-determinism that can manifest as inconsistent behavior across runs. This section explores methods for measuring and improving agent consistency while ensuring reliable behavior under varying conditions.
+
+\subsection*{Understanding Consistency vs. Reliability}
+
+\textbf{Consistency} is the degree to which an agent produces similar outcomes for the same or similar inputs across runs, covering \textbf{response consistency}, \textbf{plan consistency}, \textbf{tool selection consistency}, and \textbf{behavior consistency}. \textbf{Reliability} ensures correct predictable performance across varying conditions like edge cases, including \textbf{task completion reliability}, \textbf{error handling reliability}, \textbf{performance reliability}, and \textbf{temporal reliability}.
+
+\subsection*{The Non-Determinism Challenge}
+
+Sources of non-determinism include \textbf{model sampling} via temperature where lower values increase determinism, \textbf{tool output variability} from APIs, data, networks, and services, \textbf{context variations} in histories, timing, and inputs, plus \textbf{model updates}. Monte Carlo notes ``The unique evaluation challenge for AI agents is that they are non-deterministic. In other words, the same input can produce two different outputs. Traditional CI/CD evaluation frameworks with explicitly defined outputs don't work for agentic systems.''
+
+\subsection*{Consistency Measurement Metrics}
+
+\textbf{Pass$^k$} measures reliability requiring success in all $k$ runs per tau-bench, with lower scores signaling inconsistency; GPT-4o shows 45\% success but 23\% pass$^8$. \textbf{Response variability} computes semantic similarity averages across embeddings for consistency scores. Plan adherence checks standard deviations via DeepEval. Tool selection ratios unique sequences versus runs.
+
+\subsection*{Reliability Measurement Methods}
+
+DeepEval TaskCompletionMetric averages per-task rates across trials for task reliability. Error recovery tests consistent scenario recoveries. Load testing tracks concurrent success and latency degradation.
+
+\subsection*{Best Practices for Improving Consistency}
+
+Set temperature 0.0 with fixed seeds balancing determinism and creativity. Use structured Pydantic schemas for outputs. Cache and retry tools deterministically. Apply Monte Carlo soft failure thresholds. Retry verifying consistency selecting consensus.
+
+\subsection*{Testing Strategies}
+
+Repeated suite runs identify unreliable tests. Stress testing detects load degradation over time. Temporal tests over hours/days/weeks verify stability.
+
+\subsection*{Production Monitoring}
+
+Track query patterns alerting low consistency. Alert on pass$^k$, errors, latency thresholds.
+
+
+Accept non-determinism using pass$^k$, soft tolerances, monitoring, recovery. Insights: models inconsistent, pass$^k$ lags single-runs, retries essential. Testing preps production, sets expectations, builds mechanisms, maintains quality.
+
+\section{Pass$^k$ Reliability Metrics}
+
+
+As AI agents move from demonstrations to production, consistent reliable behavior is essential. Pass$^k$ metrics innovate evaluation for non-deterministic systems, where identical inputs yield varying outputs, offering a systematic measure of consistency in real-world use.[web:16][web:18]
+
+\textbf{Pass$^k$} assesses an agent's consistency by executing the same task $k$ times and computing the success rate across trials. Unlike single-run accuracy, it reveals probabilistic stability; e.g., Pass$^8 = 25\%$ indicates success in only 2 of 8 runs, signaling production risks.[web:21]
+
+Non-determinism arises from temperature-induced sampling randomness, model stochasticity, variable tool selection, and context processing differences, rendering single evaluations misleading.[web:5]
+
+\subsection*{Theoretical Foundation}
+
+The $\tau$-bench framework from Princeton University applies Pass$^k$ in multi-turn tool-agent-user interactions across retail and airline domains. It evaluates final goal states objectively, showing GPT-4o with <50\% success and Pass$^8$ <25\% in some areas.
+
+Pass$^k$ yields confidence intervals, detects variance, and predicts production failures.
+
+\subsection*{Implementation Strategies}
+
+Optimal $k$ balances validity and cost: $k=3$-$5$ for development, $k=8$-$10$ for validation, $k=20+$ for critical apps.[web:19]
+
+Design involves standardized isolated trials, clear success criteria, and failure analysis. Integrate into CI/CD with gates, regression detection, and selective full evaluations.[web:16][web:20]
+
+\subsection*{Practical Applications and Best Practices}
+
+\textbf{Pass$^k$} metrics enable production readiness assessment with deployment thresholds like Pass$^8$ >80\% (stratified by risk: >95\% for finance), model/prompt/architecture comparisons, and production monitoring via sampling for drift detection. Best practices combine Pass$^k$ with single-run metrics, component-level testing, and human evaluation within an iterative cycle: establish baselines, analyze root causes, apply targeted interventions, validate improvements, and track trends over time.
+
+\textbf{Challenges} include high computational costs from multiple $k$ inferences requiring careful budgeting, ensuring test set representativeness across edge cases and environmental variability, and contextual interpretation of failure distributions. Transparent reporting communicates business impact (e.g., "85\% consistency means 1 failure per 7 interactions") alongside visualizations.
+
+Pass$^k$ fundamentally shifts evaluation paradigms to embrace non-determinism, making it essential for building dependable production agents despite these implementation challenges.
+
+\section{Edge Case and Boundary Condition Testing}
+\label{sec:edge-case-boundary-testing}
+
+As AI agents transition from controlled laboratory environments to real-world production systems, they inevitably encounter inputs and scenarios outside the typical training distribution. \textbf{Edge case and boundary condition testing} addresses this by systematically identifying, designing, and evaluating agent behavior in atypical, extreme, or adversarial situations, helping teams build robust, production-ready agents that remain reliable under unexpected or challenging inputs.
+
+\subsection*{Understanding Edge Cases and Boundary Conditions}
+
+\subsubsection*{Defining Edge Cases}
+\textbf{Edge cases} are infrequent scenarios that expose weaknesses in agent design. They include rare input patterns (unusual combinations, malformed queries, special characters), extreme values (e.g., zero-duration flights or booking 1000 rooms), ambiguous instructions (contradictory or underspecified requests), and out-of-scope queries that test whether the agent appropriately declines rather than hallucinating.
+
+\subsubsection*{Boundary Conditions}
+\textbf{Boundary conditions} occur at the limits of an agent's operational envelope. Common boundaries include context window limits (near or beyond maximum token capacity), tool availability constraints (APIs unavailable, rate-limited, or erroring), temporal boundaries (deadline-adjacent or off-hours degradation), and resource constraints (low memory, high latency, restricted compute).
+
+\subsection*{Why Edge Cases Matter}
+
+\subsubsection*{Production Reliability}
+Even if edge cases represent only a small fraction of usage (often cited as 1--5\%), they can drive disproportionate frustration and failures. Key risks include \textbf{trust erosion} from a single catastrophic incident, \textbf{cascading failures} across interconnected components, and \textbf{hidden vulnerabilities} that adversaries exploit by targeting weak edge-case handling.
+
+\subsubsection*{Regulatory, Ethical, and UX Drivers}
+Robust edge-case handling is also required or strongly expected in many domains: healthcare systems must safely handle atypical presentations; finance systems must manage unusual patterns that may indicate fraud or anomalies; and legal/regulatory contexts may require evidence of thorough robustness testing (e.g., expectations aligned with the \textbf{EU AI Act}). From a user-experience perspective, users expect reasonable behavior in unusual situations and value \textbf{graceful degradation}: clear explanations, safe behavior, and helpful alternatives when tasks cannot be completed.
+
+\subsection*{Systematic Edge Case Identification}
+Edge cases can be identified through (i) \textbf{historical data mining} (log error patterns, long-tail input analysis, and support ticket mining), (ii) \textbf{domain expert consultation} (domain anomalies, regulatory boundary cases, realistic misuse patterns), and (iii) \textbf{adversarial scenario design} such as red teaming, chaos engineering-style fault injection, and boundary stress testing. Finally, \textbf{combinatorial coverage} is essential because failures often arise from unusual combinations of otherwise-normal factors, including feature interactions, multi-modal inputs, and unexpected temporal sequences of actions.
+
+\subsection*{Testing Methodologies}
+
+\begin{itemize}
+\item\textbf{{Structured Test Case Development}}: Structured testing typically combines \textbf{golden prompt sets} (adversarial prompts, malformed inputs, contradictory constraints, out-of-distribution examples) with \textbf{coverage-based generation} approaches such as decision boundary testing, equivalence partitioning with boundary values, and state transition testing for stateful agents.
+
+\item\textbf{{Automated Edge Case Discovery}}: Automated methods supplement manual design. \textbf{Metamorphic testing} checks consistency under semantics-preserving transformations (paraphrases, reorderings) and uses \textbf{property-based testing} to enforce universal constraints (e.g., never expose API keys). \textbf{Fuzzing} techniques mutate valid inputs (special-character injection, length manipulation, format perturbations) and explore parameter combinations developers might not anticipate.
+
+\item\textbf{{Execution Path Analysis}}: To understand propagation, teams use trace-based evaluation and structured risk analysis. \textbf{Trace-based evaluation} inspects tool-call sequences, agent interpretations, and how upstream errors affect downstream actions. \textbf{FMEA} (Failure Mode and Effects Analysis) enumerates component failures, estimates likelihood and severity, and prioritizes mitigations based on risk.
+\end{itemize}
+\subsection*{Evaluation Metrics for Edge Cases}
+
+A \textbf{graceful degradation score} can assess response quality when completion is impossible, focusing on error clarity, alternative suggestions, and safety preservation. \textbf{Boundary behavior consistency} evaluates near-boundary stability (small input changes yield appropriately small output changes) and threshold adherence (strict compliance with explicit caps such as maximum transaction amounts).
+
+\subsubsection*{Robustness, Safety, and Correctness}
+\textbf{Perturbation sensitivity} measures output stability under controlled input changes:
+\begin{verbatim}
+Sensitivity = 
+Σ |Output_perturbed - Output_original| / N
+\end{verbatim}
+\textbf{Recovery rate} measures successful returns to normal operation after disruptions:
+\begin{verbatim}
+Recovery Rate = 
+(Successful Recoveries) / 
+(Total Disruptions)
+\end{verbatim}
+For high-stakes contexts, \textbf{harm prevention} should approach 100\%:
+\begin{verbatim}
+Harm Prevention = 
+(Edge Cases Without Harmful Actions) / 
+(Total Edge Cases)
+\end{verbatim}
+Finally, track \textbf{hallucination rate in edge cases} by measuring invented facts, non-existent tools, or fabricated capabilities, and compare against typical-scenario baselines.
+
+\subsection*{Implementation Best Practices}
+A practical approach is progressive integration: start with core high-risk edge cases, expand to adversarial/boundary/combinatorial cases, add automated discovery (fuzzing/metamorphic), then continuously refine based on production incidents and new attack vectors. Maintain a balanced suite (often framed as \textbf{80\% happy path}, \textbf{15\% edge}, \textbf{5\% adversarial/extreme}) to avoid over-optimizing for rare conditions while still covering realistic risk. Use an iterative hardening cycle (identify failure, analyze root cause, implement mitigation, regression test, generalize) and institutionalize learning via an edge case catalog, failure-pattern library, and production runbooks.
+
+\subsection*{Domain-Specific Considerations}
+For \textbf{conversational agents}, common edge cases include conversation hijacking, context overflow, and topic drift beyond scope. For \textbf{tool-using agents}, handle API failures, malformed responses/schema changes, and dependency chains where one failure propagates across a tool sequence. For \textbf{autonomous decision-making agents}, pay attention to risk accumulation across many reasonable steps, goal misalignment from literal interpretations, and operation in uncertain environments with incomplete or contradictory information.
+
+% ------------------------------------------------------------
+% 8.6 Robustness Under Varying Inputs (Reduced + More Paragraphs)
+% ------------------------------------------------------------
+\section{Robustness Under Varying Inputs}
+\label{sec:robustness-varying-inputs}
+
+In production, AI agents receive a continuous stream of diverse, unpredictable, and noisy inputs that differ from clean development data. \textbf{Robustness under varying inputs} measures an agent's ability to maintain performance quality, behavioral consistency, and safety when facing input variability, perturbations, and distributional shifts, which is essential for reliable real-world deployment.
+
+\subsection*{Understanding Input Variability}
+
+Real-world inputs vary across several dimensions. \textbf{Linguistic variation} includes dialects and colloquialisms, wide stylistic range (formal to casual to technical), paraphrases that preserve meaning, and grammar quality spanning perfect sentences to abbreviations and errors. \textbf{Contextual variation} arises when the same request appears under different temporal references (e.g., ``tomorrow''), user expertise levels, conversation history positions, and environmental context such as time zones, locale, and culture. \textbf{Technical variation} includes modality shifts (text, speech transcripts with errors, structured data, or multimodal inputs), encoding/Unicode issues, format inconsistencies (JSON vs.\ plain text, schema changes), and noise artifacts from ASR/OCR or transmission corruption.
+
+\subsubsection*{Distributional Shifts}
+Over time, production inputs diverge from training data. In \textbf{covariate shift}, input feature distributions change while the correct input--output mapping remains stable (e.g., population changes, feature drift in phrasing, seasonal cycles). In \textbf{concept drift}, the mapping itself changes due to domain evolution (new products/capabilities), policy or regulatory updates, and emerging terminology that alters what constitutes ``correct'' behavior.
+
+\subsection*{Why Robustness Matters}
+Non-robust agents fail unpredictably, degrading user experience through inconsistent responses, increasing support burden via escalations and tickets, and creating business risk when failures correlate with particular input characteristics. Robustness is also tied to \textbf{fairness and equity}: sensitivity to linguistic or contextual differences can produce demographic disparities, accessibility barriers for users relying on assistive technologies, and systematic bias when input characteristics correlate with protected attributes. Finally, robustness is central to \textbf{security and safety} because adversaries can exploit perturbations, prompt injection, and boundary probing to induce unsafe or policy-violating behavior.
+
+\subsection*{Evaluation Methodologies}
+
+\subsubsection*{Perturbation-Based and Semantic Testing}
+Perturbation testing introduces controlled variations and compares outputs before and after change, expecting stable meaning and behavior under cosmetic edits. \textbf{Character-level} perturbations include typos, case changes, whitespace edits, and special-character injection; \textbf{word-level} perturbations include synonym substitution, reordering, filler addition/deletion, and paraphrasing; \textbf{semantic} perturbations target negation, quantities, temporal expressions, and introduced ambiguity that should trigger clarification when needed. For example:
+\begin{verbatim}
+Original:  "Book a flight to San 
+Francisco for next Monday"
+Perturbed: "I need to fly to SF next Mon 
+- can you book it?"
+Expectation: Same booking workflow 
+(or same clarification questions).
+\end{verbatim}
+
+\subsubsection*{Distributional and Cross-Population Testing}
+Distributional testing evaluates behavior across shifted or unfamiliar input regimes. For \textbf{out-of-distribution (OOD)} inputs (domain shift, unseen feature combinations, extreme-length/complexity), robust behavior is to acknowledge uncertainty, ask clarifying questions, or decline gracefully rather than respond confidently with incorrect information. \textbf{Cross-population testing} checks consistency across demographics, expertise levels (novice vs.\ expert), and communication styles (formal vs.\ casual vs.\ technical), and can quantify equity using:
+\begin{verbatim}
+Performance Parity = 
+min(Performance_group_i) / 
+max(Performance_group_i)
+\end{verbatim}
+Values near 1.0 indicate more consistent performance across groups.
+
+\subsubsection*{Stress, Adversarial, and Metamorphic Testing}
+Stress testing pushes beyond normal conditions: long-context interactions, complex multi-constraint queries, rapid successive requests, and concurrent operations that share state or resources. \textbf{Adversarial stress} includes prompt injection attempts, contradiction chains, resource exhaustion inputs, and boundary probing of policies and constraints. \textbf{Metamorphic testing} asserts properties across transformations: invariances (rephrasing/order/format should not change outcomes) and monotonicities (adding constraints should not enlarge solution space, clarifying ambiguity should improve or maintain quality, adding relevant context should not harm performance).
+
+\subsection*{Evaluation Metrics}
+
+\subsubsection*{Consistency and Degradation}
+Robustness can be measured via semantic consistency and action stability. A \textbf{semantic similarity score} averages semantic similarity between original and perturbed outputs:
+\begin{verbatim}
+Consistency Score = (1/N) × 
+Σ semantic_similarity(y, y_i)
+\end{verbatim}
+and an \textbf{action consistency rate} checks whether equivalent inputs trigger the same actions (tool calls, API invocations):
+\begin{verbatim}
+Action Consistency = (Matching Actions) / 
+(Total Perturbation Pairs)
+\end{verbatim}
+To quantify degradation, track relative performance drop:
+\begin{verbatim}
+Performance Drop = 
+(Perf_clean - Perf_perturbed) / 
+Perf_clean × 100%
+\end{verbatim}
+and study performance vs.\ perturbation severity (a \textbf{robustness curve}) to detect cliffs vs.\ graceful decline.
+
+\subsubsection*{Fairness and Safety Preservation}
+Equity can be assessed with \textbf{demographic parity} (difference in success rates) and \textbf{equal opportunity gap} (difference in true positive rates) when decisions are consequential:
+\begin{verbatim}
+Demographic Parity =|Success_A - Success_B|
+Equal Opportunity Gap = |TPR_A - TPR_B|
+\end{verbatim}
+Safety must remain stable under variation, so measure \textbf{safety violation rate under perturbation} and \textbf{constraint adherence consistency}:
+\begin{verbatim}
+Safety Violation Rate = 
+(Violating Perturbations) / 
+(Total Perturbations)
+Constraint Consistency = 
+(All-Constraints-OK) / 
+(Total Perturbations)
+\end{verbatim}
+For production systems, any non-zero safety violation rate warrants investigation.
+
+\subsection*{Implementation Strategies}
+
+\subsubsection*{Improving Robustness}
+Robustness can be improved through \textbf{data augmentation} (synthetic perturbations, paraphrases, multi-domain sampling, adversarial examples), \textbf{prompt engineering} that encourages clarification and consistent handling of semantically similar requests, and \textbf{ensemble/verification} (multi-prompt ensembling, self-consistency, cross-model checks) for high-impact decisions. A prompt guideline can explicitly state that ambiguous or errorful inputs should trigger clarification rather than assumptions, and that equivalent requests should be handled consistently.
+
+\subsubsection*{Guardrails, Fallbacks, and Monitoring}
+Defensive layers reduce harm when robustness fails. Use \textbf{input validation} (spell/format normalization, ambiguity detection), \textbf{output verification} (constraint checking, consistency validation, confidence thresholds for committing actions), and \textbf{fallback mechanisms} such as clarification requests, human handoff, and conservative reversible defaults. In production, apply \textbf{continuous monitoring} for drift (input distribution tracking, sliding-window performance, anomaly detection) and use A/B or canary deployments to validate robustness improvements with rollback if regressions appear.
+
+\paragraph{Robustness}under varying inputs separates fragile demos from dependable production agents by ensuring consistency, fairness, and safety under real-world variability. Systematic perturbation, distributional, stress, and metamorphic testing---paired with strong metrics, guardrails, and monitoring---reduces incidents, improves trust, and strengthens resilience against adversarial manipulation.
+
+\end{TNtwocol}

@@ -1,0 +1,224 @@
+\TNchapter[As agentic AI transitions from prototypes to production, robust evaluation frameworks become essential to validate reliability, scalability, and business alignment across complex workflows.]{Evaluation Framework Design}
+
+\begin{TNtwocol}
+\section{Evaluation Objectives and Success Criteria}
+
+\textbf{Evaluation objectives} and \textbf{success criteria} form the foundation of a robust \textbf{AI agent evaluation framework}. They convert subjective assessment into systematic analysis aligned with business requirements, ensuring agents perform reliably, ethically, and efficiently.
+​
+
+The central purpose of \textbf{AI agent evaluation} is to assess how well autonomous systems powered by \textbf{LLMs} perform across defined tasks, intents, and interactions. Core goals encompass \textbf{performance validation}, \textbf{failure identification}, \textbf{comparative analysis}, and \textbf{continuous improvement}. Unlike static LLM outputs, agents operate in reasoning-action loops, requiring objectives that capture \textbf{reasoning quality}, \textbf{tool usage}, and \textbf{execution efficiency}. As of 2026, frameworks like Maxim AI emphasize multi-turn trajectory evaluation for goal completion across full conversations.
+​
+
+\textbf{Evaluation dimensions} span layered assessments: the \textbf{reasoning layer} (plan quality, adherence, and strategic reasoning), the \textbf{action layer} (tool selection accuracy, argument generation, and sequencing), and \textbf{overall execution} (task completion, efficiency, and error handling). Each layer ensures the agent not only answers correctly but operates coherently within dynamic workflows, including multi-agent collaborations increasingly common in enterprise deployments.
+​
+
+\subsection*{Establishing Success Criteria}
+Success criteria must translate objectives into measurable \textbf{metrics and KPIs}. \textbf{Task-oriented metrics} include accuracy, task completion rate, latency, and resource efficiency. \textbf{User experience metrics} measure satisfaction, engagement, and trust, while \textbf{ethical metrics} track hallucination rate, bias, fairness, and explainability.
+
+Setting clear \textbf{performance thresholds} defines readiness:
+\begin{itemize}
+\item \textbf{Minimum Viable:} 70% completion, $<10%$ harmful responses.
+\item \textbf{Target:} 85% completion, $<2%$ harmful responses.
+\item \textbf{Excellence:} 95% completion, $<0.5%$ harmful responses.
+\end{itemize}
+Updated 2026 benchmarks from platforms like LangSmith target 90%+ in multi-turn coherence for production agents.
+​
+
+\subsection*{Aligning Objectives with Business Goals}
+Evaluation objectives differ by domain:
+\begin{itemize}
+\item \textbf{Safety-critical:} prioritize reliability, fail-safes, and edge-case coverage.
+\item \textbf{Commercial:} emphasize satisfaction, cost-efficiency, and scalability.
+\item \textbf{Creative/Research:} balance originality, accuracy, and diversity.
+\end{itemize}
+
+Stakeholders share responsibility—\textbf{product managers} define metrics, \textbf{SMEs} validate domain accuracy, \textbf{engineering teams} automate pipelines, and \textbf{executives} assess ROI and compliance.
+
+\subsection*{Evaluation-Driven Development}
+The \textbf{iterative improvement cycle} involves defining objectives, building test sets, running evaluations, analyzing results, implementing updates, re-testing, deploying, and monitoring for drift. \textbf{Pre-launch} efforts focus on baselines and quality standards, while \textbf{post-launch} tracking ensures sustained performance and adaptation to new scenarios, with tools like Galileo's action-chain tracing for logical flow analysis.
+​
+
+\subsection*{Best Practices and Pitfalls}
+Best practices include:
+\begin{itemize}
+\item Start with clear use cases and desired outcomes.
+\item Make objectives quantifiable through rubrics and thresholds.
+\item Cover multiple dimensions—accuracy, safety, UX, and efficiency.
+\item Iterate using real-world feedback and production data.
+\item Balance automated evaluation with human review.
+\end{itemize}
+
+Common pitfalls: overly simplistic metrics, misaligned incentives, static datasets, neglected edge cases, or over-optimization. Robust evaluation evolves with data and user experience, driving measurable, trustworthy improvement, as seen in 2026 platforms integrating simulation for edge-case stress-testing.
+​
+
+Clear \textbf{evaluation objectives} and \textbf{success criteria} enable data-driven agent development across reasoning, action, and execution layers.
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Evaluation Taxonomy (Offline, Online, Continuous)}
+
+\textbf{AI agent evaluation} is not a monolithic activity but a multifaceted, lifecycle-spanning process. A clear \textbf{evaluation taxonomy} across \textbf{offline}, \textbf{online}, and \textbf{continuous} paradigms is essential for robust, production-ready agents, with each mode addressing different reliability and observability needs.
+
+Modern evaluation strategies typically combine three primary approaches: \textbf{offline evaluation} (controlled testing with curated datasets before deployment), \textbf{online evaluation} (assessment in live production with real user interactions), and \textbf{continuous evaluation} (ongoing monitoring and iterative improvement across the agent lifecycle). These paradigms serve distinct purposes yet complement one another when integrated into a cohesive strategy, as emphasized in 2026 production guides.
+​
+
+\subsection*{Offline Evaluation}
+
+\textbf{Offline evaluation} tests agents in controlled environments using predefined datasets and scenarios before deployment. It emphasizes \textbf{repeatability}, \textbf{deterministic conditions}, and detailed debugging, often integrated into \textbf{CI/CD} pipelines for regression prevention and safe experimentation.
+
+Typical use cases include initial capability development, adding new tools or skills, changing \textbf{LLM} models, modifying prompts, and pre-release validation. Benefits include controlled comparison of versions, cost-effective experimentation without impacting users, and metrics grounded in clear \textbf{ground truth} such as exact-match accuracy and benchmark scores.
+
+Methodologies span \textbf{dataset-based testing} (golden prompt sets, edge cases, adversarial inputs, and benchmark datasets) and \textbf{simulated environments} (mock APIs, sandboxed tools, and synthetic user flows). However, offline evaluation faces limitations such as incomplete real-world coverage, evaluation data drift, and artificial constraints that may underrepresent production complexity; 2026 advancements include Maxim AI's simulation engines for realistic scenarios.
+​
+
+\subsection*{Online Evaluation}
+
+\textbf{Online evaluation} measures agent behavior in production with real traffic, capturing emergent behaviors, edge cases, and authentic \textbf{user experience} signals. It prioritizes \textbf{real-world accuracy}, \textbf{business impact}, and detection of issues that controlled tests fail to surface.
+
+Common objectives include production monitoring, \textbf{model drift detection}, UX validation, edge case discovery, and \textbf{A/B testing} alternative agents or configurations. Methods combine explicit and implicit \textbf{user feedback} (ratings, comments, abandonment, conversions), automated monitoring of latency, error rates, and tool success, and \textbf{LLM-as-judge} scoring of live responses for quality and safety.
+
+Challenges include lack of predefined ground truth, production risk from poor behavior, and complex measurement in noisy, multi-step journeys. These constraints motivate careful rollout strategies, guardrails, and observability infrastructure to balance innovation and reliability, with tools like Phoenix for trace visualization.
+​
+
+\subsection*{Continuous Evaluation}
+
+\textbf{Continuous evaluation} links offline and online methods into a \textbf{perpetual feedback loop} across the agent lifecycle. It relies on automated pipelines, scheduled benchmarks, and real-time observability to maintain performance as data, usage patterns, and business requirements evolve.
+
+A typical \textbf{continuous evaluation cycle} moves from offline benchmarking to deployment, online monitoring, failure analysis, test-set augmentation with production failures, agent refinement, and re-evaluation before the next release. Supporting strategies include CI/CD-integrated evaluation, periodic regression runs, dynamic test-set updates from production logs, and observability-driven improvements powered by tracing and structured metrics.
+
+Infrastructure requirements include comprehensive \textbf{tracing and logging}, metric collection and dashboards, anomaly detection, and scalable evaluation automation that ties into existing MLOps stacks. Best practices recommend starting with core metrics, automating wherever possible, retaining human-in-the-loop oversight, versioning code and test assets together, and documenting learnings to inform future design.
+
+\subsection*{Combining the Three Paradigms}
+
+The three paradigms offer \textbf{complementary strengths}: offline evaluation enables fast, controlled regression prevention; online evaluation validates real-world performance and user impact; continuous evaluation ensures long-term reliability through proactive monitoring and iteration. Effective strategies align evaluation mode with development stage—offline-heavy during development, online plus continuous during deployment, and continuous plus offline during maintenance.
+
+Industry surveys indicate that a majority of teams adopt some form of observability and \textbf{offline evaluations}, with a growing share also running \textbf{online evals} and combining \textbf{human review} with automated methods such as LLM-as-judge to cover both breadth and depth of quality assessment. Mature teams treat the evaluation taxonomy as an integrated system rather than isolated techniques, using it to guide agents from prototype to reliable production services, as per February 2026 rankings.
+​
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Deterministic vs. Non-Deterministic Evaluation Approaches}
+\textbf{AI agents} are inherently \textbf{non-deterministic}: the same input can yield different valid outputs, unlike traditional software where fixed input-output mappings enable exact-match testing. This variability extends to \textbf{evaluation itself}, demanding approaches that span a spectrum from \textbf{deterministic} to \textbf{non-deterministic} methods while still supporting reliable, production-grade quality gates.
+\subsection*{From Deterministic Testing to Non-Deterministic Reality}
+Classical \textbf{software testing} assumes deterministic behavior: given input $X$, the system always returns output $Y$, enabling binary \textbf{pass/fail} assertions, clear regression checks, and strict CI/CD gates. This model works poorly for \textbf{LLM-based agents}, where temperature, sampling strategies, tool choices, and external dependencies induce variability in reasoning paths, outputs, and even evaluation results themselves.
+
+In AI agents, multiple different reasoning paths can still achieve the same goal (for example, completing a task in 3 versus 7 steps), and rigid exact-match checks misclassify such valid variations as failures. Moreover, \textbf{LLM-as-judge} evaluators are also probabilistic, introducing \textbf{spurious failures} where correct outputs may be scored incorrectly, making purely deterministic CI/CD gates brittle for agentic systems; 2026 frameworks address this with simulation and trajectory evals.
+​
+
+\subsection*{Deterministic Evaluation Approaches}
+
+Despite these challenges, \textbf{deterministic evaluation} remains highly valuable for specific, objective dimensions. It works well for \textbf{format and structure validation} (JSON schema compliance, required fields, type checks), \textbf{tool usage verification} (correct tools called, parameters present, forbidden tools avoided), \textbf{guardrail testing} (safety, PII masking, policy adherence), and \textbf{efficiency metrics} (latency, token counts, API calls, resource usage).
+
+Deterministic checks often rely on \textbf{code-based evaluators}, exact or regex-based string matching, and categorical comparisons (e.g., intent, sentiment, or classification label correctness). However, purely deterministic methods struggle to capture \textbf{semantic meaning}, contextual appropriateness, reasoning quality, and user satisfaction, frequently resulting in false negatives when acceptable alternative phrasings or strategies appear.
+
+\subsection*{Non-Deterministic Evaluation Approaches}
+
+\textbf{Non-deterministic evaluation} techniques address semantic and subjective aspects that deterministic checks cannot. In \textbf{LLM-as-judge} setups, a stronger model evaluates agent outputs against prompts and rubrics, returning scores and rationales for dimensions like helpfulness, relevance, coherence, reasoning quality, and task success even when no single ground truth exists. These methods are well-suited for open-ended tasks, qualitative judgments, and \textbf{semantic similarity} where multiple answers may be correct.
+
+Beyond LLM judges, teams use \textbf{semantic distance} assessments (LLM-based comparisons, embedding similarity with human validation, and NLI models) and \textbf{groundedness checks} to ensure answers are properly supported by retrieved context and that agents avoid hallucination when information is missing. This includes verifying that agents decline out-of-scope questions instead of inventing facts, and that all critical claims map back to evidence in the knowledge base.
+
+\subsection*{Soft Failures: Making Non-Deterministic Testing Practical}
+
+Because both agents and evaluators are non-deterministic, approaches like Monte Carlo's soft failures adapt CI/CD pipelines for agents. Rather than treating every failing test as a hard blocker, evaluations return a \textbf{score} (for example, 0–1 from an LLM-judge), with thresholds such as: scores below 0.5 as \textbf{hard failures}, 0.5–0.8 as \textbf{soft failures}, and above 0.8 as \textbf{passes}. Aggregation logic then enforces rules like “≥33% soft failures or more than 2 soft failures” triggering an overall hard failure, while smaller numbers of soft failures do not block merges.
+
+This scheme provides “breathing room” for non-deterministic variance while still catching meaningful quality regressions. Teams often add \textbf{automatic retries} for aggregated soft failures (recognizing that roughly one in ten tests can be spurious), and require evaluators to produce \textbf{explanations} alongside scores so engineers can debug and assess evaluator reliability over time.
+
+\subsection*{Hybrid Evaluation Strategies}
+
+In practice, the most robust frameworks adopt a \textbf{hybrid} architecture that layers deterministic and non-deterministic methods. A common pattern is:
+\begin{itemize}
+\item \textbf{First pass (deterministic):} fast checks for format, guardrails, tool constraints, and basic correctness.
+\item \textbf{Second pass (non-deterministic):} LLM-as-judge scoring of semantic quality, contextual alignment, and reasoning.
+\item \textbf{Final pass (human):} targeted manual review of low-confidence or high-impact cases for calibration and edge-case analysis.
+\end{itemize}
+
+Choosing the right approach depends on the evaluation target: \textbf{deterministic} methods are ideal where ground truth is clear, reproducibility and cost-efficiency matter, and rules capture requirements; \textbf{non-deterministic} methods shine when semantic nuance, multiple valid outputs, and subjective quality are central; \textbf{hybrid} strategies are essential for complex agent workflows that mix objective and subjective criteria in production.
+
+\subsection*{Managing Variability and Best Practices}
+
+To manage variability, teams apply \textbf{statistical techniques} such as multiple-run analysis, pass@k metrics, and averaging or ensembling evaluator scores, treating results as distributions rather than single-point truths. Variance reduction tactics include controlling randomness (temperature, seeds), stabilizing evaluation prompts and rubrics, and anchoring judges with examples of good and bad outputs.
+
+Best practices emerging across the industry emphasize: accepting non-determinism as fundamental, using \textbf{soft failures} and automatic retries in CI/CD, requiring evaluator explanations, continuously validating evaluators against human judgment, and balancing cost with coverage by localizing tests and triggering full suites only when needed. Real-world systems combine \textbf{semantic distance}, \textbf{groundedness}, and \textbf{tool usage} checks under this hybrid, soft-failure-aware framework, enabling reliable evaluation of large, non-deterministic agent ecosystems in production.
+​
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Evaluation Pipeline Architecture}
+
+A robust \textbf{evaluation pipeline} is the infrastructure that turns evaluation theory into repeatable practice, much like CI/CD underpins reliable software deployment. For \textbf{AI agents}, these pipelines ensure quality, catch regressions, and support rapid, safe iteration from development to production.
+
+\subsection*{Core Components of Evaluation Pipelines}
+
+Modern pipelines are typically organized into four layers: a \textbf{data layer} (test datasets, golden examples, production traces, historical results), an \textbf{execution layer} (agent invocation, test iteration, parallelism, scheduling), an \textbf{evaluation layer} (metric computation, evaluator orchestration, score aggregation, benchmarking), and an \textbf{integration layer} (CI/CD hooks, development tooling, monitoring systems, alerts). Effective pipelines emphasize \textbf{automation}, \textbf{scalability}, \textbf{reliability}, \textbf{observability}, and \textbf{flexibility} so they can grow with evolving evaluation needs, with 2026 platforms like Maxim AI offering end-to-end workflows.
+​
+
+\subsection*{Development Pipeline Architecture}
+
+In development, \textbf{offline evaluation pipelines} focus on fast feedback and comprehensive testing. Core components include \textbf{test dataset management} (versioned cases, golden sets, categorized smoke/regression/edge tests), an \textbf{agent execution harness} (isolated environment, mocked tools, tracing, timeouts), \textbf{metric computation} (deterministic checks plus LLM-as-judge, parallelized), and \textbf{results reporting} (structured outputs, baseline comparison, regression detection, pass/fail decisions).
+
+CI/CD integration patterns typically use \textbf{pre-commit hooks} for lightweight smoke tests, \textbf{pull request gates} for broader evaluation suites, and \textbf{pre-merge validation} for full regression runs, including more expensive evaluators before changes reach production. Pipelines should also support \textbf{structured experiments}, where baselines and variations (prompts, models, configurations) are run against the same test sets to compare quality, latency, and cost, with results documented to guide prompt and model evolution.
+
+\subsection*{Component-Level and End-to-End Evaluation}
+
+Well-designed pipelines support both \textbf{component-level} and \textbf{end-to-end} evaluation. Component-level evals attach metrics to specific building blocks (for example, individual LLM calls, retrievers, routers) to isolate and debug failure modes efficiently. End-to-end evals run full traces through the agent and compute holistic metrics such as plan quality, task completion, and user experience proxies, better reflecting real-world behavior and integration issues; Galileo's chain-tracing analyzes action flows for inefficiencies.
+​
+
+\subsection*{Production Evaluation Pipeline}
+
+In production, evaluation must be \textbf{asynchronous} and non-blocking so user latency is unaffected. A common pattern is to instrument agents with tracing, export execution traces after responses, and process them in the background through an evaluation platform that computes metrics, stores results, and triggers alerts when thresholds are breached. Real-time monitoring tracks latency percentiles, error rates, tool success, cost per interaction, and quality signals (for example, LLM-as-judge scores or user feedback), with alert rules defining conditions for notifications or escalation.
+
+Production pipelines also power the \textbf{feedback loop}: traces and failures are collected, clustered, and analyzed, then converted into new test cases that augment offline datasets and prevent regressions on previously observed issues. This closes the loop between \textbf{online} and \textbf{offline} evaluation, keeping test sets aligned with current user behavior and edge cases.
+
+\subsection*{Evaluation Platform and Infrastructure}
+
+Many teams use \textbf{cloud evaluation platforms} (such as Maxim AI, LangSmith, Phoenix, Galileo, or AWS Agent Evaluation) offering centralized metric management, distributed trace processing, collaborative dashboards, and integrations with CI/CD and observability stacks. These platforms provide reusable evaluation harnesses, auto-evals, human review queues, and experiment tracking to standardize how agents are tested across teams; Maxim leads 2026 rankings for multi-agent support.
+​
+
+Organizations with strict data or compliance requirements may instead build \textbf{self-hosted infrastructure} using OpenTelemetry collectors for traces, time-series or analytical stores for metrics, distributed processing (for example, Spark or Kubernetes jobs), and visualization tools like Grafana. This approach offers maximum control and customization but comes with higher implementation and maintenance overhead.
+
+\subsection*{Pipeline Optimization and Advanced Patterns}
+
+To manage cost and performance, pipelines leverage \textbf{parallel execution}, selective or risk-based test selection, and caching or memoization of evaluation results, especially for expensive LLM-as-judge calls. Cost management strategies include tiered evaluation (fast deterministic checks first, deeper semantic evals later), budget controls, and choosing lighter models for simpler metrics. Quality assurance for pipelines themselves requires testing evaluation logic, calibrating evaluators against human judgment, and monitoring for evaluation drift.
+
+Advanced patterns include \textbf{multi-stage evaluation} (fast filters, standard suites, extended testing with human review), continuous \textbf{benchmark tracking} with scheduled runs and historical trend analysis, and \textbf{human-in-the-loop} workflows where low-confidence or high-impact cases are routed to experts whose annotations improve future evaluations. Best practices emphasize designing for observability, versioning code/prompts/models/tests together, separating evaluation concerns from agent logic, optimizing developer experience with fast feedback, and growing pipeline sophistication incrementally rather than over-engineering from day one.
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Ground Truth and Golden Dataset Development}
+
+The quality of \textbf{AI agent evaluation} is bounded by the quality of its \textbf{ground truth} and \textbf{golden datasets}, which define what “good” looks like and anchor all metrics, comparisons, and regressions. Well-designed datasets provide representative, comprehensive, and maintainable reference points that support systematic improvement and reliable deployment over time.
+
+\subsection*{Understanding Ground Truth and Golden Datasets}
+
+\textbf{Ground truth} refers to the correct, verified output or behavior for a given input, typically established through expert validation or authoritative sources, and forms the basis for deterministic accuracy measurement and factual correctness checks. A \textbf{golden dataset} (or golden set) is a curated, versioned collection of test cases with known expected outcomes and rich metadata, covering typical scenarios, edge cases, and challenging situations that serve as canonical benchmarks before deployment.
+
+These assets enable \textbf{baseline establishment} (comparison across versions, regression detection, benchmarking), \textbf{systematic improvement} (failure pattern discovery and targeted fixes), and \textbf{team alignment} around shared definitions of success and objective decision-making criteria. For modern agents, golden sets often combine both end-to-end sessions and step-level cases to evaluate reasoning, tool use, and outcomes together, with 2026 tools like LangSmith enhancing versioning from production data.
+​
+
+\subsection*{Building Ground Truth Datasets}
+
+Ground truth can come from \textbf{expert annotation}, \textbf{existing benchmarks}, \textbf{production data mining}, and \textbf{synthetic generation}. Expert-labeled data is critical in complex domains (for example, medical, legal, financial), where subject matter experts follow clear guidelines, multi-rater review, and consensus processes to produce high-confidence labels and documented reasoning. Public benchmarks like GAIA, WebArena, CoQA, GSM8K, and HumanEval offer immediate baselines and standardized comparisons but rarely match domain-specific needs and can encourage overfitting if overused.
+
+Production logs, when collected with appropriate privacy safeguards, provide authentic real-world interactions that reflect actual user behavior and emergent use cases, which can be curated into labeled test examples. Synthetic generation using LLMs helps create diverse and adversarial scenarios at scale but must be validated by humans to ensure correctness and usefulness. Across all sources, \textbf{validation} relies on multi-rater agreement, calibration of annotators, and quality criteria such as clarity, correctness, relevance, balanced difficulty, and coverage.
+
+\subsection*{Developing Golden Datasets}
+
+Golden datasets should be designed with explicit \textbf{coverage dimensions}: use-case coverage (core workflows, user personas, contexts), scenario types (happy paths, edge cases, adversarial, ambiguous, out-of-scope), and failure modes (known regressions, anticipated weaknesses, safety and security risks). Size grows over time: teams often start with 20–50 high-quality examples for core functionality, then expand to hundreds of cases as complexity and coverage needs increase, structured into tiers like smoke tests, core suites, and comprehensive sets.
+
+A rigorous construction workflow typically includes: defining scope and success criteria, collecting candidate examples from production, brainstorming, and research; curating and annotating them with expected outputs, reasoning, and metadata; standardizing schema (IDs, categories, difficulty, required tools, must-include fields, tags, validators); and running pilot evaluations to verify that cases are informative and aligned with goals. This schema also supports more advanced use cases such as evaluating routing decisions, multi-step trajectories, and safety behaviors with specialized golden subsets.
+
+\subsection*{Maintaining Golden Datasets Over Time}
+
+Golden datasets must be treated as \textbf{living assets}, continuously updated as products, users, and risks evolve. New production failures, feature launches, and user feedback should trigger additions, while obsolete, redundant, or flaky tests are retired, with clear versioning (for example, v1.0, v1.1, v2.0) documenting changes and rationale. Periodic reviews ensure ground truth remains correct, coverage stays balanced, and demographic or linguistic diversity is maintained.
+
+Production-driven expansion uses observability and trace analysis to surface challenging or high-impact cases, which are anonymized, validated by experts, and then promoted into the golden set. Adversarial and red-team exercises further enrich datasets with targeted stress tests for safety, robustness, and boundary conditions. Throughout, strict separation between training and evaluation data, plus clear documentation and metadata (purpose, validation process, limitations, version history), prevent data leakage and support transparent, reproducible evaluation; Sigma AI highlights their role in bias detection for fine-tuned models.
+​
+
+\subsection*{Best Practices and Specialized Datasets}
+
+Best practices emphasize starting small and iterating, prioritizing \textbf{quality over quantity}, making datasets well-documented and easily accessible, separating training, development, and holdout evaluation sets, and enriching examples with metadata such as difficulty, expected reasoning paths, tools, and common failure modes. Balanced representation across easy and hard cases, functional areas, and user types helps avoid blind spots and over-optimistic metrics.
+
+Specialized golden datasets often target particular evaluation needs: \textbf{router evaluation sets} focus on correct tool or skill selection and parameter extraction; \textbf{trajectory evaluation sets} capture multi-step paths, valid and invalid sequences, and step limits; and \textbf{safety/ethical sets} stress-test refusal behavior, harmful content prevention, and policy adherence. By investing in robust ground truth and golden datasets and keeping them current, teams create a durable foundation for trustworthy, repeatable AI agent evaluation.
+
+\end{TNtwocol}
+

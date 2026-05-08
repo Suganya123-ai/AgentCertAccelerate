@@ -1,0 +1,186 @@
+
+\TNchapter[Operational hardening is the set of runtime controls that lets you see what an agent is doing, detect when it deviates, and recover safely when something goes wrong. In agentic systems—where an LLM plans, calls tools, and persists state—security failures often manifest as behavioral failures (unexpected tool sequences, abnormal data access, runaway autonomy) rather than single, isolated vulnerabilities. Operational hardening closes the loop between preventive controls (prompt, tool, identity, and data protections) and the realities of production: drift, misuse, compromised identities, and cascading failures.]{Operational Hardening }
+
+\begin{TNtwocol}
+
+    \section{Behavioral Baselines & Drift Monitoring }
+
+    Behavioral baselining establishes “normal” for an agent's runtime behavior—its typical tool call mix, call sequences, data access patterns, latency/cost envelopes, and decision outcomes—then drift monitoring flags statistically meaningful deviation from that baseline over time.
+
+    Agentic systems are non-static: prompts evolve, tools change, context sources shift, and models are upgraded. Even without adversarial pressure, these changes can create silent control failures (e.g., a planner begins overusing a privileged tool, or retrieval sources bias decisions). For agentic AI, the security issue is frequently behavioral: a system remains “available” but becomes less bounded, increasing the probability of sensitive data exposure or unsafe actions—risks explicitly called out for LLM applications.
+
+    \textbf{Common Drift Scenarios}:
+    \begin{itemize}
+        \item \textbf{Prompt and policy creep}: incremental prompt edits or "temporary exceptions" broaden permissible actions without explicit review.
+        \item \textbf{Toolchain evolution}: new tools are added, tool schemas change, or orchestration logic routes requests differently, shifting action patterns.
+        \item \textbf{Memory contamination}: persistent memory accumulates low-quality or misleading entries that bias planning.
+        \item \textbf{Data plane changes}: RAG sources, indexes, or access permissions change; agents start retrieving different classes of content.
+        \item \textbf{Identity and permission drift}: agent identities gain additional scopes over time (often unintentionally), increasing autonomy and potential impact—consistent with concerns about over-permissioning and excessive agency.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Behavioral SLOs/SKIs}: track tool-call rate, per-tool error rate and latency, tool-type mix (read/write/execute), frequency of high-impact actions (approvals, external comms), and token/cost ceilings per workflow.
+        \item \textbf{Versioned baselines}: maintain baselines by agent, prompt/policy, model, and tenant/environment; re-baseline only via change-control gates.
+        \item \textbf{Context-aware baselines}: separate baselines by intent/workflow (e.g., invoice triage vs HR Q&A) and by mode (interactive vs batch/autonomous).
+        \item \textbf{High-impact drift guardrails}: if drift affects privileged tools, external egress, or sensitive data, enforce step-up controls (human approval, tighter policies, or containment).
+        \item \textbf{Continuous evaluation loop}: surface drift signals into a Measure→Manage cycle (CI/CD gates, canaries, production monitors) for automated alerting and remediation.
+    \end{itemize}
+
+    \section{Anomaly Detection Systems}
+
+    Anomaly detection identifies behavior that is unlikely or explicitly disallowed: policy violations, unusual tool usage, suspicious data movement patterns, and signals consistent with exfiltration attempts.
+
+    Agents operate across multiple surfaces: prompts, tools, memory, connectors, and identities. This makes single-control detection insufficient; you need cross-signal correlation. Enterprise guidance for agent security emphasizes centralized monitoring, threat detection, and response across an agent fleet, including protections against data exfiltration caused by risky agent behavior.  Additionally, exfiltration is a well-defined adversary objective in enterprise threat models, and detection must consider outbound channels and volume/shape anomalies.
+
+    \textbf{Common Anomalous Behavior Patterns}:
+    \begin{itemize}
+        \item \textbf{Policy boundary probing}: repeated attempts that trigger “soft fails” (e.g., denied tool calls) until a permissive path is found.
+        \item \textbf{Unusual tool combinations}: sequences that rarely occur in legitimate workflows (e.g., “retrieve sensitive dataset” followed by “external send”).
+        \item \textbf{Out-of-profile destinations}: new domains, tenants, or storage locations not previously used by the agent or workflow.
+        \item \textbf{Data-shape anomalies}: spikes in payload size, frequency, or entropy (e.g., large attachments or unusually encoded-looking payloads), which are common indicators when monitoring for data theft/exfiltration. [attack.mitre.org]
+        \item \textbf{Identity abuse patterns}: agent tokens used at unusual times, from unusual IP ranges, or against unexpected resources—particularly relevant given the need to manage agent identities and conditional access. [learn.microsoft.com]
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Policy-first (deterministic)}: treat policy violations as security events; block high-risk tool calls by default and require explicit allowlists.
+        \item \textbf{Behavioral anomaly (probabilistic)}: detect sequence anomalies (tool-call patterns), rate spikes, and cost/token bursts via sequence models and embeddings.
+        \item \textbf{Exfiltration analytics}: enforce outbound allowlists/reputation checks, integrate DLP/redaction for classified data, and flag volume/shape patterns (chunking, repeated small sends, compression/encryption-like payloads).
+        \item \textbf{SOC correlation}: map detections to adversary tactics and triage playbooks; use correlation IDs to link agent reasoning, network, and identity logs.
+    \end{itemize}
+
+    \section{Audit Logging & Forensics}
+
+    Audit logging and forensics provide tamper-evident records of agent activity sufficient to reconstruct what happened, when, why, and under whose authority—supporting investigations, compliance, and post-incident learning.
+
+    Agent incidents are rarely explained by a single log source. The decisive evidence is often distributed across:
+    \begin{itemize}
+        \item Orchestrator steps ('reasoning trace' metadata)
+        \item Tool calls (inputs/outputs and authorization context)
+        \item Memory mutations
+        \item Data retrieval queries
+        \item Identity and token issuance
+        \item Network and egress telemetry
+    \end{itemize}
+
+    Without strong traceability, organizations cannot confidently answer: \textit{What did the agent access? What did it send? Which policy allowed it? Which prompt/model version produced the decision?} Enterprise agent security approaches emphasize centralized visibility and the ability to investigate and remediate risks for agents.  OWASP's LLM guidance highlights failure modes like sensitive information disclosure and improper output handling that require strong evidence trails to validate and contain.
+
+    \textbf{Common Logging Deficiencies}:
+    \begin{itemize}
+        \item \textbf{Non-unified identifiers:} no end-to-end request IDs, making correlation across services unreliable.
+        \item \textbf{Partial logging:} tool calls are logged but not the authorization decision or policy version that allowed them.
+        \item \textbf{Mutable logs:} logs stored in systems where administrators or compromised workloads can alter evidence.
+        \item \textbf{Over-redaction:} indiscriminate masking that removes security-relevant context (e.g., tool name, action type, sensitivity label).
+        \item \textbf{Privacy violations:} logging raw prompts/responses containing sensitive data without classification and retention controls.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Correlation IDs:} assign \texttt{trace\_id}, \texttt{span\_id}, \texttt{agent\_run\_id}, \texttt{tool\_call\_id} and propagate them through orchestrator -> tool adapters -> connectors -> egress.
+        \item \textbf{Structured event schema:} require actor (user/agent), tenant, environment; model/prompt/policy versions; tool name + parameter class (no raw secrets); action category (\texttt{read}/\texttt{write}/\texttt{execute}); data sensitivity label; policy decision (\texttt{allow}/\texttt{deny}/\texttt{step-up}) and reason code.
+        \item \textbf{Immutability \& integrity:} store logs in WORM/append-only sinks and protect with hash chains or signed log batches for tamper evidence.
+        \item \textbf{Privacy-aware logging:} default to metadata; log content only when authorized; integrate DLP/classification and apply retention/access controls.
+        \item \textbf{Forensic playbooks:} predefine evidence collection and retention steps for prompt injection, tool misuse, data disclosure, and identity abuse incidents.
+    \end{itemize}
+
+    \section{Incident Detection & Response}
+
+    Incident detection and response (IDR) operationalizes how you detect, triage, contain, eradicate, and communicate during agent-related security events—using playbooks tailored to agent behaviors and tool-driven blast radius.
+
+    Traditional incident response assumes relatively stable software behavior. Agents add complications:
+
+    \begin{itemize}
+        \item The 'actor' can be an agent identity operating autonomously.
+        \item Harm can occur via legitimate tools used in unintended sequences.
+        \item The root cause can involve prompt/policy/model changes, memory state, or orchestration logic.
+    \end{itemize}
+
+    Enterprise agent security control planes emphasize detection and response that provide a complete view of the attack chain and support rapid remediation for agents.  NIST AI RMF also frames risk management as ongoing operational practice, not a one-time design activity
+
+    \textbf{Common IDR Challenges}:
+    \begin{itemize}
+        \item Alerts lack context (no policy version, tool call chain, or data classification).
+        \item Ownership is unclear (product team vs. platform team vs. SOC).
+        \item Containment options are coarse (only “turn it off” exists).
+        \item Communications are ad hoc, increasing business impact and regulatory risk.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Detection \& triage:} Fast Tier-0 classification — policy violation / anomaly / confirmed data exposure; note privileged tool use, external egress, affected tenants/users, and time window. Capture an evidence bundle: \texttt{agent\_run\_id} timeline, tool-call graph + policy decisions, data sensitivity labels, and identity/context.
+        \item \textbf{Containment (graduated):} Prefer scoped measures before full shutdown — tool disablement, data-label blocks, revoke or step-up agent tokens, and workflow throttling or pause autonomous mode.
+        \item \textbf{Communications \& decisioning:} Use pre-approved templates for CISO, product, compliance, affected BUs, and external notices as required. Appoint a single incident commander with clear escalation paths.
+        \item \textbf{Eradication \& lessons learned:} Identify root cause (model update, prompt/policy change, tool schema, memory corruption, identity misconfig). Feed fixes into change control, detection/baseline updates, and recovery/rollback plans.
+    \end{itemize}
+
+    \section{Kill Switch & Emergency Shutdown}
+
+    A kill switch is a predefined, authorized mechanism to rapidly stop unsafe agent activity. It includes “stop-the-world” shutdown as well as scoped emergency controls such as revoking tokens, disabling tools, or enforcing read-only mode.
+
+    Agents can execute at machine speed across multiple systems. When a high-confidence incident occurs—especially involving privileged tools or sensitive data—you need immediate, reliable interruption paths. Microsoft's agent security guidance highlights runtime defense and the ability to prevent data exfiltration due to risky agent behavior, which presumes the platform can actively block and contain actions in real time.  The objective is not merely availability; it is bounded autonomy under crisis conditions.
+
+    \textbf{Common Kill Switch Limitations}:
+    \begin{itemize}
+        \item Single-point dependency: kill switch depends on the same compromised control plane.
+        \item Insufficient granularity: only full shutdown exists, causing business teams to resist using it.
+        \item Token persistence: long-lived tokens remain valid after “shutdown.”
+        \item Tool bypass paths: agents can reach the same external effect through alternate tools.
+        \item Lack of authorization controls: too many operators can trigger kill actions, or no one can during an emergency.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+
+    Core kill-switch patterns
+
+    \begin{itemize}
+        \item \textbf{Stop-the-world (global):} Pause orchestrator execution queues; disable all tool invocations; force all runs into ``safe response only'' mode (no side effects).
+        \item \textbf{Identity kill (agent principal):} Revoke agent tokens/credentials immediately; block issuance of new tokens via conditional access / identity governance.
+        \item \textbf{Tool kill (capability isolation):} Disable specific high-impact tools (email send, payments, code execution, external upload); set the tool gateway to deny-all except a tightly controlled break-glass allowlist.
+        \item \textbf{Data kill (sensitivity isolation):} Block access to labeled datasets or restrict access to masked views using DLP and classification enforcement.
+    \end{itemize}
+
+
+    Operational safeguards
+    \begin{itemize}
+        \item \textbf{Break-glass procedures}: Separate, tightly controlled emergency accounts and approvals.
+        \item \textbf{Deterministic activation criteria}: Predefined triggers (e.g., confirmed sensitive-data egress + privileged tool chain).
+        \item \textbf{Regular testing}: Quarterly kill-switch drills with measurable RTO/RPO targets for agent operations.
+        \item \textbf{Post-activation forensics}: Capture last-known run state and evidence snapshots before queue purge.
+    \end{itemize}
+
+    \section{Rollback & Recovery Procedures}
+
+    Rollback and recovery are controlled procedures to return the agent system to a known-good configuration after an incident or high-severity regression. In agentic systems, “configuration” includes model versions, system prompts, tool policies, connectors, and sometimes memory state.
+
+    Agents fail in ways that are not always fixed by redeploying code. A behavior regression may be caused by:
+
+    \begin{itemize}
+        \item a new model version
+        \item a changed prompt or instruction hierarchy
+        \item a revised tool policy
+        \item a connector update
+        \item corrupted or poisoned memory
+    \end{itemize}
+
+    OWASP's LLM security work explicitly recognizes that failures can lead to sensitive information disclosure or unsafe downstream actions, which increases the need for fast, auditable rollback to safe baselines.  NIST AI RMF emphasizes ongoing management actions after deployment, reinforcing the need for operational recovery mechanisms.
+
+    \textbf{Common Rollback Challenges}:
+    \begin{itemize}
+        \item No version pinning: prompts/policies/models are updated without immutable version references.
+        \item No deployment provenance: cannot prove what was running at incident time.
+        \item State entanglement: memory and context are shared across tenants or workflows without isolation.
+        \item Rollback gaps: rollback changes the model but leaves the tool policy in the risky state (or vice versa).
+        \item Unsafe re-entry: system resumes autonomous actions before validation checks pass.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Model rollback:} Pin production to explicit model versions (no ``latest''), run compatibility and safety tests pre-release, and use staged canary rollouts to compare behavior against baselines.
+        \item \textbf{Prompt rollback:} Treat prompts as code in version control with required reviews; deploy immutable prompt bundles (hashed) and record prompt hashes in runtime logs for traceability.
+        \item \textbf{Policy rollback:} Keep signed policy snapshots for tool, data, and egress controls; on rollback failure, revert to conservative defaults (read-only + approval) rather than full autonomy.
+        \item \textbf{Memory and state recovery:} Isolate memory per tenant/workflow, quarantine and rebuild suspected poisoned segments from curated sources, and use stateful checkpoints to resume from the last verified safe step.
+        \item \textbf{Validation gates before re-enabling autonomy:} After rollback, re-run safety and policy conformance checks, verify baselines and anomaly clearance, and progressively re-enable capabilities (read → write → external side effects).
+    \end{itemize}
+
+\end{TNtwocol}

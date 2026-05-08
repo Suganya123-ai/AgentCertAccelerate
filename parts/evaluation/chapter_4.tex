@@ -1,0 +1,184 @@
+\TNchapter[Safety and Ethical Evaluation]{Safety and Ethical Evaluation}
+
+\begin{TNtwocol}
+% ------------------------------------------------------------
+% 9.1 Harmful Output Detection (Reduced + No citations/bibliography)
+% Chapter context: Safety and Ethical Evaluation
+% ------------------------------------------------------------
+\section{Harmful Output Detection}
+\label{sec:harmful-output-detection}
+
+
+As \textbf{LLM agents} increasingly interact with real-world environments through tool use and multi-step execution, ensuring safety becomes paramount. Unlike static models that only generate text, agents can take actions with tangible consequences (e.g., manipulating files or initiating transactions), so evaluation must shift from judging outputs to judging \textbf{outcomes} across end-to-end behavior.
+
+\subsection*{Evolving Safety Landscape}
+
+\subsubsection*{From Language to Action}
+Traditional LLM safety evaluation emphasized single-turn text risks such as toxicity or bias, but agents require multi-step assessment over tool invocations, state changes, and cumulative behaviors. This implies different infrastructure: logging and tracing of actions, step-level inspection, and explicit definitions of what constitutes unsafe behavior at each stage of an interaction.
+
+\subsubsection*{Multi-Dimensional Safety}
+Agent safety spans several connected dimensions. \textbf{Content-level safety} covers harmful language and unsafe instructions; \textbf{behavioral safety} covers risky actions, tool misuse, and scope violations; \textbf{interaction safety} targets prompt injection and goal hijacking; and \textbf{system-level safety} ensures compliance with privacy, security, and regulatory constraints. Treating these dimensions separately helps avoid over-focusing on moderation while missing harmful tool behavior.
+
+\subsection*{Evaluation Framework}
+
+\subsubsection*{Task-, Action-, and System-Level Checks}
+A practical framework evaluates safety at three layers. At the \textbf{task level}, define machine-readable success and failure (including safety failures) and measure ``safe success'' rather than raw completion. At the \textbf{action level}, inspect intermediate steps: whether tools were selected appropriately, parameters were safe, and failures were handled without cascading harm. At the \textbf{system level}, evaluate open-ended behavior under adversarial conditions, drift (changing websites/APIs), and boundary compliance (e.g., file access limits, budget caps, privacy rules).
+
+\subsubsection*{Adversarial and Drift Evaluation}
+Because agent environments evolve, safety evaluation cannot be one-time; it needs continuous monitoring for silent regressions caused by API changes, new user behaviors, or updated content. Adversarial evaluation (red teaming and injection probes) is also essential, since tool outputs or retrieved context can carry indirect instructions that attempt to override policies.
+
+\subsection*{Tools and Observability}
+Modern practice combines automated evaluators with trace-level observability. Tooling typically includes content risk scoring (violence, self-harm, hate, sexual content), \textbf{indirect attack} detection for prompt injection that arrives via tool outputs, and specialized scanning for code-generation agents (e.g., vulnerability patterns). Observability platforms collect interaction traces and tool-call sequences to support retrospective safety analysis, trend monitoring, and faster incident response.
+
+\subsection*{Benchmarks for Agent Harm}
+
+\subsubsection*{Risk Awareness and Injection}
+Risk-awareness benchmarks evaluate whether models can identify safety risks from multi-turn interaction records, reflecting the need for monitors that detect boundary crossings from behavior traces rather than from single messages. Prompt-injection benchmarks focus on tool-using agents and test whether injected instructions embedded in emails, web pages, or tool outputs can override policy and cause unsafe actions, showing that robustness failures can occur even when the user request appears benign.
+
+\subsubsection*{Malicious Compliance}
+Malicious-compliance benchmarks focus on multi-step tasks that require sustained harmful behavior (e.g., fraud, cyber abuse, harassment, illegal instructions). These benchmarks highlight that agents may remain capable and coherent while executing harmful objectives, which makes harmful output detection a behavioral problem, not only a content moderation problem.
+
+\subsection*{Automated Metrics and LLM-as-Judge}
+Scalable detection often mixes automated and model-based judging. Useful signals include semantic deviation from safe references, \textbf{groundedness} (staying supported by retrieved context), and \textbf{LLM-as-judge} scoring for nuanced harms, but judge prompts and calibration must be validated to avoid bias and missed corner cases. For stochastic agents, repeated runs (e.g., running the same scenario multiple times and aggregating outcomes) can reduce false confidence by estimating the probability of unsafe behavior rather than relying on a single trajectory.
+
+\subsection*{Implementation in Practice}
+
+\subsubsection*{Development-Time Controls}
+During development, maintain curated harmful-scenario suites, integrate safety checks into CI/CD, and run structured red teaming before deployment. Expand coverage using production incidents and newly discovered attack patterns, and gate releases on safety thresholds that reflect the risk profile of the application.
+
+\subsubsection*{Production-Time Monitoring}
+In production, combine real-time scanning for high-risk interactions with intelligent sampling for deeper review, and incorporate user feedback signals (explicit reports and implicit friction indicators). Continuous drift monitoring should alert on worsening safety metrics, increased variance for similar requests, and emerging patterns of prompt injection or boundary probing.
+% ------------------------------------------------------------
+% 9.2 Bias and Fairness Assessment (Reduced + Starred subsection levels)
+% Chapter context: Safety and Ethical Evaluation
+% ------------------------------------------------------------
+\section{Bias and Fairness Assessment}
+\label{sec:bias-fairness-assessment}
+
+\subsection*{Introduction}
+As AI agents become embedded in decision-making systems---from hiring and lending to healthcare triage---equitable behavior has shifted from an ethical goal to a practical requirement. Unlike deterministic software, LLM-based agents can inherit biases from training data and amplify inequities through autonomous actions, so bias and fairness assessment must evaluate not only generated content but also \textbf{behavior}, decisions, and systemic impacts. The stakes are high: consistent quality gaps for certain groups can scale historical inequities, and when agents act through tools (scheduling interviews, routing cases, recommending approvals) biased behavior becomes differential treatment with real consequences.
+
+\subsection*{Understanding Bias in Agent Systems}
+
+\subsubsection*{Sources of Bias}
+Bias can arise throughout the lifecycle. \textbf{Training data bias} reflects imbalances and stereotypes present in large-scale corpora; \textbf{RLHF bias} can be introduced through labeler demographics and preference signals; \textbf{tool/API bias} can propagate when external services return skewed results; \textbf{design and prompt bias} can embed assumptions about ``normal'' users or contexts; and \textbf{deployment context bias} can create feedback loops (who uses the system, what data is collected, and how outcomes reinforce future behavior).
+
+\subsubsection*{How Bias Manifests}
+Agent bias shows up in multiple ways. \textbf{Representation bias} affects who appears in outputs or suggestions; \textbf{performance disparities} appear as different accuracy or service quality across dialects, accents, or demographic signals; \textbf{stereotyping and association} reinforces harmful links between identities and roles; \textbf{allocation bias} skews approvals, prioritization, or opportunity access; and \textbf{interaction bias} changes helpfulness, politeness, thoroughness, or willingness to assist based on inferred user attributes.
+
+\subsection*{Evaluation Framework}
+
+\subsubsection*{Fairness Dimensions}
+A useful framework separates fairness into complementary dimensions. \textbf{Representational fairness} asks whether outputs and recommendations reflect balanced inclusion and avoid stereotype reinforcement; \textbf{performance equity} asks whether success, accuracy, and response quality are consistent across user groups; \textbf{allocative fairness} checks whether favorable outcomes (shortlists, approvals, prioritizations) differ systematically between comparable cases; and \textbf{interaction fairness} evaluates whether tone, effort, completeness, and respect remain consistent across demographic signals.
+
+\subsubsection*{Multi-Method Evaluation}
+Comprehensive assessment combines controlled tests and real-world evidence. \textbf{Demographic variation testing} holds task content constant while varying demographic indicators (names, pronouns, dialect markers, stated backgrounds) to detect counterfactual differences; an example is submitting equivalent resumes with different names and comparing shortlisting decisions and interview question quality. \textbf{Edge and boundary analysis} targets non-Western naming conventions, minority dialects, accessibility needs, LGBTQ+ identities/pronouns, and intersectional combinations that are often under-tested. \textbf{Adversarial bias testing} intentionally probes stereotype triggers and implicit associations to surface latent biases that typical usage may not reveal.
+
+\subsection*{Metrics and Measurement}
+
+\subsubsection*{Quantitative Metrics}
+Metrics should match the agent's role and decision type. Common measures include \textbf{disparity ratios} (e.g., selection-rate ratios near 1.0 indicate parity), \textbf{statistical parity difference} (difference in positive outcome rates), \textbf{error-rate stratification} (false positives/negatives by group), and \textbf{equalized odds / equal opportunity} (comparing TPR/FPR across groups for high-stakes decisions). When agents output confidence or probabilities, add \textbf{calibration} checks by group, since miscalibration can translate into uneven downstream decisions even when top-line accuracy looks similar.
+
+\subsubsection*{Qualitative and Hybrid Methods}
+Quantitative metrics miss subtle harms, so pair them with qualitative review. Use diverse \textbf{expert panels} and structured user studies with varied populations to capture perceived fairness, dignity, and interaction quality, and perform case-study deep dives that trace decisions to specific prompts, tools, or policies. Hybrid setups scale assessment: automated checks (or LLM-as-judge screening) flag candidates, then humans confirm context and severity; community feedback channels help discover blind spots and emergent issues.
+
+\subsection*{Implementation Strategies}
+
+\subsubsection*{Development-Phase Controls}
+Preventing bias is easier than repairing it. During development, curate fine-tuning and few-shot examples to represent diverse populations, include counter-stereotypical cases, and write \textbf{fairness-aware prompts} that avoid demographic assumptions and enforce consistent thoroughness. Run dedicated \textbf{bias red-teaming} to probe edge identities, intersectional cases, and adversarial stereotype triggers before release.
+
+\subsubsection*{Production Monitoring and Governance}
+Bias often appears only at scale, so implement continuous evaluation. Where legally and ethically permissible, track stratified performance and outcomes, oversample underrepresented groups for fairness audits, and monitor fairness drift over time as tools, users, and environments change. Establish governance: document methods and results, maintain audit trails, use cross-functional ethical review, and ensure decisions are explainable enough to diagnose whether disparities come from model behavior, tools, prompts, or deployment context.
+
+\paragraph{Bias and fairness assessment} for AI agents requires multi-dimensional evaluation of representation, performance, allocation, and interaction, using both controlled counterfactual testing and production monitoring. Because agents influence real outcomes through autonomous tool use, organizations need continuous measurement, strong governance, and iterative mitigation to reduce inequities over time. Investing in rigorous fairness assessment builds safer systems, improves accessibility and trust, and reduces the risk of scaling historical bias through automated decision-making.
+
+% ------------------------------------------------------------
+% 9.3 Demographic Parity and Equal Opportunity Metrics (More concise + Starred)
+% Chapter context: Safety and Ethical Evaluation
+% ------------------------------------------------------------
+\section{Demographic Parity and Equal Opportunity Metrics}
+
+As AI agents increasingly mediate access to employment, finance, and healthcare, organizations need measurable ways to verify that outcomes are distributed fairly across demographic groups. \textbf{Demographic parity} and \textbf{equal opportunity} are two core outcome-fairness frameworks, but they encode different views of fairness and can conflict when groups differ in base rates or when predictions are imperfect. In practice, teams typically monitor multiple metrics and document trade-offs rather than optimizing a single number.
+
+\subsection*{Foundational Concepts}
+
+\subsubsection*{Demographic Parity (Statistical Parity)}
+Demographic parity requires the positive decision rate to be independent of group membership:
+\[
+P(\hat{Y}=1 \mid A=a)=P(\hat{Y}=1 \mid A=b).
+\]
+It is easy to compute from observed decisions and supports straightforward production monitoring, but it ignores differences in underlying qualification distributions and may require different thresholds across groups.
+
+\subsubsection*{Equal Opportunity}
+Equal opportunity requires equal true positive rates across groups:
+\[
+P(\hat{Y}=1 \mid Y=1, A=a)=
+P(\hat{Y}=1 \mid Y=1, A=b).
+\]
+It aligns with ``treat equally qualified people equally,'' but depends on access to ground-truth labels (or defensible proxies) and inherits any bias present in those labels.
+
+\subsubsection*{Equalized Odds}
+Equalized odds strengthens equal opportunity by also requiring equal false positive rates:
+\[
+P(\hat{Y}=1 \mid Y=1, A=a)=
+P(\hat{Y}=1 \mid Y=1, A=b), \quad
+P(\hat{Y}=1 \mid Y=0, A=a)=
+P(\hat{Y}=1 \mid Y=0, A=b).
+\]
+This targets error parity across groups, often increasing the fairness--accuracy tension.
+
+\subsection*{Key Metrics}
+
+\subsubsection*{Demographic Parity Metrics}
+Selection rate for group $A=a$:
+\[
+\text{SR}(A=a)=
+\frac{\sum_{i: A_i=a}\mathbb{1}[\hat{Y}_i=1]}{\sum_{i: A_i=a}1}.
+\]
+Common summaries:
+\[
+\text{DPD}=\left|\text{SR}(A=a)-\text{SR}(A=b)\right|, \qquad
+
+\text{DPR}=\frac{\min(\text{SR}_a,\text{SR}_b)}
+{\max(\text{SR}_a,\text{SR}_b)}.
+\]
+
+\subsubsection*{Equal Opportunity / Odds Metrics}
+True positive rate and gap:
+\[
+\text{TPR}(A=a)=\frac{\text{TP}(A=a)}
+{\text{TP}(A=a)+\text{FN}(A=a)},
+\qquad
+\text{EOpD}=|\text{TPR}_a-\text{TPR}_b|.
+\]
+For equalized odds, also track:
+\[
+\text{FPR}(A=a)=\frac{\text{FP}(A=a)}
+{\text{FP}(A=a)+\text{TN}(A=a)}, 
+\qquad
+\text{EOddsGap}=
+\max(|\Delta\text{TPR}|,|\Delta\text{FPR}|).
+\]
+
+\subsubsection*{Statistical Uncertainty}
+Fairness gaps are estimates: small samples (especially in intersectional slices) can create noisy disparities. Use confidence intervals (e.g., bootstrap) and avoid over-interpreting single-window changes; prefer trend monitoring and minimum sample thresholds for alerts.
+
+\subsection*{Applying Metrics to Agents}
+
+\subsubsection*{Data Requirements}
+Demographic parity needs protected-attribute data plus logged decisions; equal opportunity/odds additionally needs ground truth $Y$. Collect demographic attributes ethically (prefer self-report), handle missingness explicitly, and evaluate whether labels reflect historical bias.
+
+\subsubsection*{Agent-Specific Complexity}
+Agents often make multi-step decisions (pipeline stages) and rely on tools, so fairness should be measured per stage and end-to-end, with attention to tool-mediated effects. Personalization can be legitimate, but it must be audited to ensure it does not become demographic-correlated differential treatment.
+
+\subsection*{Trade-offs and Operations}
+
+\subsubsection*{Choosing What to Optimize}
+Demographic parity is attractive when labels are unavailable or qualifications are contested; equal opportunity is attractive when ``qualified'' can be defined credibly and missing qualified individuals is the key harm. Because multiple fairness criteria can be incompatible, treat metric choice as a values-and-risk decision and document the rationale.
+
+\subsubsection*{Mitigation and Monitoring}
+Mitigations span \textbf{pre-processing} (reweighting, balanced data), \textbf{in-processing} (fairness constraints, adversarial debiasing), and \textbf{post-processing} (threshold adjustments, equalized-odds style corrections). In production, maintain dashboards for DP/EO metrics, alert on sustained threshold breaches, and keep audit trails for governance and compliance.
+
+
+
+\end{TNtwocol}

@@ -1,0 +1,72 @@
+% filepath: chapters/inference_time_alignment.tex
+\TNchapter[System prompts, context engineering, in-context value alignment, runtime guardrails, output filtering, and dynamic alignment adjustment during agent execution.]{Inference-Time Alignment}
+
+\begin{TNtwocol}
+
+\section{Inference-Time Alignment}
+Inference-time alignment refers to the strategies and mechanisms applied during the execution phase of an AI agent, ensuring its outputs remain consistent with desired values, safety constraints, and user intentions. Unlike training-time alignment, which shapes the model’s underlying behavior, inference-time alignment operates in real-time, adapting to context and user input. This layer of alignment is crucial for mitigating risks, handling ambiguous requests, and maintaining reliability in dynamic environments.
+
+\section{System Prompt Engineering for Alignment}
+System prompt engineering involves crafting initial instructions or prompts that guide the agent’s behavior throughout an interaction. By setting clear expectations, constraints, and values in the system prompt, designers can steer the model toward aligned outputs. Effective system prompts can encode ethical guidelines, task boundaries, and safety requirements, serving as a foundation for subsequent interactions. Prompt engineering is an iterative process, requiring careful testing and refinement to ensure robustness across diverse scenarios.
+
+\subsection{Prompt Design Principles}
+\begin{itemize}
+    \item \textbf{Clarity}: Explicitly state desired behaviors and constraints.
+    \item \textbf{Coverage}: Address potential edge cases and ambiguities.
+    \item \textbf{Adaptability}: Allow for dynamic adjustment based on context or user needs.
+\end{itemize}
+
+\section{Context Engineering and Value Injection}
+Context engineering refers to the deliberate structuring of input context to influence agent behavior. This includes injecting relevant values, background information, or user preferences into the prompt or conversation history. By shaping the context, designers can reinforce alignment objectives and tailor responses to specific situations.
+
+\subsection{Techniques}
+\begin{itemize}
+    \item \textbf{Value Injection}: Embedding ethical principles or task-specific norms in the context.
+    \item \textbf{User Profiling}: Incorporating user preferences and history to personalize alignment.
+    \item \textbf{Scenario Framing}: Providing situational details to guide agent reasoning.
+\end{itemize}
+
+\section{In-Context Value Alignment}
+In-context value alignment leverages the model’s ability to interpret and adapt to values presented within the current interaction. By embedding alignment cues, constraints, or examples in the prompt or conversation, agents can dynamically adjust their behavior to match user expectations.
+
+\subsection{Applications}
+\begin{itemize}
+    \item \textbf{Instruction Following}: Adapting to explicit user instructions for safe and aligned outputs.
+    \item \textbf{Ethical Reasoning}: Responding to ethical dilemmas based on in-context guidance.
+    \item \textbf{Dynamic Policy Enforcement}: Modifying behavior in response to real-time value signals.
+\end{itemize}
+
+\section{Runtime Guardrails and Constraints}
+Runtime guardrails are mechanisms that enforce safety, ethical, or operational constraints during agent execution. These guardrails can be implemented as hard-coded rules, dynamic checks, or external monitoring systems, preventing the agent from producing harmful or misaligned outputs.
+
+\subsection{Types of Guardrails}
+\begin{itemize}
+    \item \textbf{Rule-Based Constraints}: Explicit prohibitions or requirements encoded in the system.
+    \item \textbf{Automated Monitoring}: Real-time analysis of outputs for compliance with alignment objectives.
+    \item \textbf{Fallback Mechanisms}: Redirecting or halting responses when violations are detected.
+\end{itemize}
+
+\section{Output Filtering and Moderation}
+Output filtering and moderation involve post-processing agent outputs to detect and remove content that violates alignment, safety, or ethical standards. This can be achieved through automated classifiers, human review, or hybrid approaches.
+
+\subsection{Filtering Techniques}
+\begin{itemize}
+    \item \textbf{Keyword and Pattern Detection}: Identifying unsafe or misaligned content.
+    \item \textbf{Classifier-Based Moderation}: Using trained models to flag problematic outputs.
+    \item \textbf{Human-in-the-Loop}: Incorporating human oversight for high-stakes interactions.
+\end{itemize}
+
+\section{Dynamic Alignment Adjustment}
+Dynamic alignment adjustment enables real-time modification of alignment parameters based on evolving context, user feedback, or system monitoring. This approach allows agents to adapt to changing requirements, handle unexpected scenarios, and maintain alignment throughout extended interactions.
+
+\subsection{Adjustment Strategies}
+\begin{itemize}
+    \item \textbf{Feedback Integration}: Incorporating user or system feedback to refine alignment.
+    \item \textbf{Contextual Recalibration}: Adjusting prompts, guardrails, or filters in response to new information.
+    \item \textbf{Continuous Monitoring}: Ongoing assessment of agent behavior for proactive alignment correction.
+\end{itemize}
+
+\section{Conclusion}
+Inference-time alignment is essential for ensuring AI agents remain safe, reliable, and value-aligned during real-world operation. Techniques such as system prompt engineering, context structuring, runtime guardrails, output filtering, and dynamic adjustment provide robust mechanisms for maintaining alignment beyond the training phase. Continued research and development in inference-time alignment will be critical as AI systems become more autonomous and integrated into complex environments.
+
+\end{TNtwocol}

@@ -1,0 +1,170 @@
+
+\TNchapter[Identity and access controls are the “control plane” of an agentic system: they determine who/what the agent is, what it can do, and how it proves it—across humans, agents, tools, memory, and orchestration. In production, most high-impact agent failures map to identity and privilege abuse, tool misuse, or excessive agency—often triggered by prompt- and context-driven workflows that cause an agent to invoke privileged tools with insufficient guardrails.]{Identity, Access, and Secrets Hardening }
+
+\begin{TNtwocol}
+    \section{Agent Authentication Mechanisms }
+
+    Agent authentication is the set of mechanisms that allow an agent runtime (or an agent-facing service) to prove its identity to other systems. In practice, this includes:
+
+    \begin{itemize}
+        \item \textbf{Service identity}: a stable identity assigned to a service/agent runtime (e.g., service principal, managed identity).
+        \item \textbf{Workload identity}: an identity bound to a specific runtime context (pod, job, VM, function), often provisioned via federation (OIDC/JWT exchange) to reduce long-lived secrets.
+        \item \textbf{Attestation}: evidence that the workload is running in an approved environment/configuration (software/hardware rooted), enabling higher-assurance authentication.
+    \end{itemize}
+
+    Agentic architectures introduce “non-human” principals that:
+    \begin{itemize}
+        \item Make decisions and call tools dynamically.
+        \item Run across orchestrators, workers, connectors, and background triggers.
+        \item Scale horizontally, often producing far more machine identities than human identities.
+    \end{itemize}
+
+    If agent identity is weak (shared credentials, static keys, unclear provenance), security teams lose the ability to enforce least privilege, to audit actions to a principal, and to isolate compromised workloads. Identity failures also amplify agentic risks such as tool misuse and identity/privilege abuse described in agentic threat taxonomies and Top 10 guidance.
+
+    \textbf{Common Authentication Weaknesses}:
+    \begin{itemize}
+        \item \textbf{Credential sharing / “one key to rule them all”} A single API key or service account is reused across dev/test/prod or across multiple agents, making lateral movement trivial once exposed.
+        \item \textbf{Key theft from runtime} Tokens and secrets can leak through logs, crash dumps, debug endpoints, misconfigured telemetry, or inadvertent inclusion in prompts/memory.
+        \item \textbf{Impersonation via weak federation configuration} Federation setups rely on correct trust configuration; if issuer/subject/audience constraints are too broad, an attacker-controlled workload can masquerade as a trusted workload.
+        \item \textbf{No binding to runtime context} Tokens are accepted without tying them to a specific workload instance, device posture, or attested environment, enabling replay and session hijack.
+        \item \textbf{Insufficient separation of agent roles} Orchestrator and tool-runner share the same identity, so compromise of one component yields full system actionability.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Prefer secretless workload identities:} Use managed identities and workload-federation (no long-lived secrets); enforce strict issuer/subject/audience claim checks.
+        \item \textbf{Separate identities by responsibility:} Give distinct, least-privilege identities to orchestrators, tool-executors, and retrieval/memory services to reduce blast radius and improve auditability.
+        \item \textbf{Require attestation for high-risk actions:} Gate finance, IAM, production, or bulk-data operations on workload attestation and approved environment state.
+        \item \textbf{Step-up authentication for sensitive ops:} Require fresh/higher-assurance tokens or human approval before privileged tool calls.
+        \item \textbf{Auditability and non-repudiation:} Bind tokens to unique workloads, log identity/context for every action, and retain tamper-evident records for investigation.
+    \end{itemize}
+
+    \section{Role-Based Access Control (RBAC) & Least Privilege}
+
+    RBAC and least privilege define what a principal (human, agent, tool-runner, connector) is authorized to do:
+    \begin{itemize}
+        \item RBAC assigns permissions through roles aligned to job/system functions.
+        \item Least privilege ensures each principal has only the minimum permissions required for its tasks—no more, no longer.
+    \end{itemize}
+
+    Agentic systems transform natural language into actions. When an agent is over-privileged, any upstream failure—prompt injection, context poisoning, hallucinated tool selection—can translate into real operational impact. Least privilege is therefore not only an IAM best practice—it is agent containment.
+
+    \textbf{Common Privilege Abuse Patterns}:
+    \begin{itemize}
+        \item \textbf{Privilege accumulation across layers} The agent gains access through multiple paths: broad Graph permissions, overly permissive connectors, inherited access to overshared data, and “admin” service roles.
+        \item \textbf{Confused deputy via delegation} A user with low privileges instructs an agent that runs with high privileges. Without policy checks, the agent becomes a privilege escalation mechanism.
+        \item \textbf{Role drift and “temporary” permissions that become permanent} Debug/operations roles are left in place, especially in early pilots.
+        \item \textbf{Overbroad data access feeding agent behavior} Overshared repositories become part of grounding, and the agent can retrieve sensitive content it should not even see.
+    \end{itemize}
+
+    \begin{itemize}
+        \item \textbf{Authorization model:} Define distinct scopes for Human user (allowed requests), Agent runtime (allowed on-behalf actions), and Tool identity (allowed executions); avoid the "agent-as-admin" anti-pattern.
+        \item \textbf{Least agency \& least privilege:} Minimize autonomous capabilities and assign minimal permissions; require explicit approval or policy checks for high-impact actions.
+        \item \textbf{Privilege segmentation:} Separate roles (read/search, write/update, delete, approve, admin); treat delete, transfer funds, change IAM, and exfiltrate/export as privileged operations with step-up controls.
+        \item \textbf{JIT/JEA for machines:} Use just-in-time / just-enough access: short-lived, task-scoped elevations for bounded transactions.
+        \item \textbf{Policy-as-code \& continuous review:} Version RBAC/policy artifacts, codify exceptions, and run frequent access reviews focused on agent identities and connectors.
+    \end{itemize}
+
+    \section{Tool and API Access Controls }
+
+    Tool and API access controls constrain which tools an agent can call and what each tool call can do. Controls include:
+
+    \begin{itemize}
+        \item \textbf{Scopes}: OAuth/resource scopes and permission grants that bound API actions.
+        \item \textbf{Allowlists / Denylists}: Which tools, endpoints, and HTTP methods are permitted.
+        \item \textbf{Per-tool policies}: Explicit policy for each connector/action (allowed inputs, expected outputs, resource constraints, and approval requirements).
+    \end{itemize}
+
+    In agentic systems, tools are the actuator surface. Many compromises do not require “breaking” the model—only persuading it to use a legitimate tool in an unsafe way.
+
+    \textbf{Common Tool Misuse Patterns}:
+    \begin{itemize}
+        \item \textbf{Unauthorized tool selection} The agent discovers or is prompted to use a tool that was not intended for the scenario (e.g., a generic HTTP tool reaching internal endpoints).
+        \item \textbf{Overly broad tool permissions} A connector is granted full access (read/write/delete) when only read is required.
+        \item \textbf{Unrestricted egress and SSRF-like behaviors} If the agent can call arbitrary URLs, it can become a proxy to internal services, metadata endpoints, or unapproved third parties.
+        \item \textbf{Policy bypass through tool chaining} A safe tool output is used as input to a more dangerous tool, creating emergent behavior not anticipated in isolation.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Explicit tool allowlisting}: Maintain a curated catalog of approved tools/endpoints/operations with required scopes; default-deny and require security review for new tools.
+        \item \textbf{Per-tool authorization \& constraints}: Enforce operation type (read/write/delete), resource boundaries (tenant/project/folder), input schema/size limits, and output classification (PII/secrets) with redaction.
+        \item \textbf{High-risk tool scrutiny}: Treat code-execution, scripting, and IAM-admin tools with elevated review, isolation, and approval requirements.
+        \item \textbf{Scope minimization \& identity partitioning}: Use narrow OAuth scopes and separate app identities per tool rather than a single shared credential.
+        \item \textbf{Network egress controls}: Restrict outbound destinations to an allowlist; block link-local/metadata and internal-only ranges unless explicitly required.
+        \item \textbf{Run-as-user vs run-as-agent}: Prefer delegated user credentials for actions (auditable); use agent credentials only for background automation with tightly scoped permissions.
+    \end{itemize}
+
+    \section{Session Management & Token Security }
+
+    Session and token security covers how authentication artifacts (sessions, access tokens, refresh tokens, assertions) are issued, stored, rotated, bound to context, and protected from replay.
+
+    Agents frequently operate in:
+
+    \begin{itemize}
+        \item Long-running sessions (background workers).
+        \item High-frequency tool calls.
+        \item Distributed orchestrations (multiple components sharing context).
+    \end{itemize}
+
+    Weak token practices (long expiry, shared refresh tokens, no replay defense) convert transient compromise into persistent access.
+
+    \textbf{Common Session/Token Risks}:
+    \begin{itemize}
+        \item \textbf{Token replay} A stolen token is reused from a different host/context, especially if tokens are bearer-only and not bound.
+        \item \textbf{Long-lived refresh tokens in weak storage} Refresh tokens stored in plaintext or accessible to multiple components become a durable foothold.
+        \item \textbf{No rotation discipline} Credentials remain valid across deployments and incident response windows.
+        \item \textbf{Session confusion across tenants/users} The agent mixes identities (user A's token used for user B's request), often due to caching mistakes in orchestration layers.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Short-lived tokens \& controlled refresh:} Use short TTL access tokens; use refresh tokens only when necessary and store them securely.
+        \item \textbf{Automatic rotation:} Automate credential/key rotation (platform-managed where possible) and revoke/rotate on incident.
+        \item \textbf{Token binding:} Bind tokens to execution context (audience/issuer checks; sender-constrained tokens, mTLS/PoP where available).
+        \item \textbf{Replay defenses \& detection:} Correlate tokens to requests, detect anomalous patterns (impossible travel, orphan calls) and alert/block.
+        \item \textbf{Session partitioning:} Isolate token caches by tenant/workflow, store per-execution IDs, and scrub tokens at workflow end.
+    \end{itemize}
+
+    \section{Cryptographic Credential & Secret Management }
+
+    Cryptographic credential and secret management is the lifecycle management of:
+
+    \begin{itemize}
+        \item API keys, client secrets, certificates
+        \item encryption keys (data-at-rest, signing, envelope keys)
+        \item cryptographic operations and policies (rotation, revocation, provenance)
+    \end{itemize}
+
+    The enterprise objective is simple: minimize secrets, and when secrets are unavoidable, store them in hardened systems with auditable access paths.
+
+    Agents often integrate with:
+
+    \begin{itemize}
+        \item SaaS APIs
+        \item internal services
+        \item data stores and vector databases
+        \item orchestration platforms
+    \end{itemize}
+
+    Each integration tends to introduce a credential. Without strong secret governance, agents become high-probability secret exposure points—through logs, memory, prompt context, CI/CD variables, or developer workstations.
+
+    \textbf{Common Secret Management Risks}:
+    \begin{itemize}
+        \item \textbf{Secrets in code, configs, or prompts} Hardcoded keys or copied credentials appear in repositories, chat logs, or agent memory.
+        \item \textbf{Over-permissive secret access} The agent identity can list or export many secrets rather than reading only the one required for a task.
+        \item \textbf{Weak rotation and no revocation path} Secrets persist for months/years; incident response cannot quickly contain blast radius.
+        \item \textbf{Key sprawl and unknown ownership} Multiple teams create keys without inventory; no one knows which agent uses which credential.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Eliminate secrets:} Prefer managed identities and workload-federation to avoid storing client secrets/certs.
+        \item \textbf{Centralize vaulting:} Store secrets in a vault/KMS with per-secret ACLs, strict audit logs, approval workflows, and automated rotation.
+        \item \textbf{HSM-backed keys:} Use HSM/KMS protection for signing and tenant encryption keys; enforce separation of duties.
+        \item \textbf{Key hygiene:} Enforce rotation SLAs by sensitivity, separate keys by environment/agent, forbid key reuse, and maintain tagged inventory.
+        \item \textbf{Least-privilege access:} Agents read specific secret versions only; use one secret per integration and bind access to a single identity.
+        \item \textbf{Exposure guardrails:} Redact secrets from logs/telemetry, filter outputs, and forbid persisting credentials in long-term memory.
+    \end{itemize}
+
+\end{TNtwocol}

@@ -1,0 +1,145 @@
+
+\TNchapter[Adversarial resilience is the discipline of proving an agent remains safe and dependable when inputs, tool outputs, context stores, or orchestration steps are manipulated—intentionally or incidentally. In agentic systems, the attack surface expands beyond prompts to include tool invocation, memory, retrieval pipelines, and multi-step planners, which can amplify a single failure into unintended actions or data exposure.]{Adversarial Resilience \& Assurance }
+
+\begin{TNtwocol}
+    \section{Red Team Programs & Scenario Libraries }
+
+    A red team program for AI agents is a structured, repeatable adversarial assessment that uses curated scenarios to test how an agent behaves across its full workflow: prompt handling, planning, tool selection, tool execution, memory writes/reads, RAG retrieval, and output rendering. A scenario library is the versioned corpus of these test cases, mapped to risk categories (e.g., prompt injection, tool misuse, excessive agency, memory/context poisoning).
+
+    Agent failures rarely occur in isolation. A prompt injection or malicious tool response can cascade into unsafe tool calls, cross-tenant data exposure, or irreversible actions. A scenario library turns these abstract risks into measurable, regression-testable behaviors that engineering teams can fix and security teams can track over time.
+
+    \textbf{Common Adversarial Scenarios}:
+    \begin{itemize}
+        \item \textbf{Instruction/data boundary confusion:} Untrusted text embedded in documents, emails, tickets, or webpages influences the agent’s plan or tool usage (indirect prompt injection).
+        \item \textbf{Tool misuse cases:} The agent legitimately calls an API but does so with unsafe parameters, wrong scope, or in the wrong sequence (agentic “tool misuse”).
+        \item \textbf{Privilege transitivity:} The agent uses a user’s identity/session context to access data or perform actions beyond intended boundaries (identity/privilege abuse in agent systems).
+        \item \textbf{Memory/context poisoning:} Malicious or misleading content persists in conversation memory, long-term memory, or vector stores and later steers decisions.
+        \item \textbf{Improper output handling:} Model output is treated as “trusted” and passed into downstream systems (templates, tickets, code, SQL, shell, or workflow engines) without validation.
+        \item \textbf{Abuse of autonomy:} Agents loop on tasks, over-execute tools, or expand scope (“excessive agency”) when goals are under-specified.
+    \end{itemize}
+
+    \textbf{Scenario Library Best Practices}:
+    \begin{itemize}
+        \item \textbf{Coverage mapped to authoritative taxonomies:} Tag scenarios to OWASP LLM Top 10 categories (e.g., prompt injection, improper output handling, excessive agency, model theft, poisoning) and agentic risks (goal hijack, tool misuse, memory/context poisoning).
+        \item \textbf{Workflow-level tests, not just prompt tests:} Include planning steps, tool selection, retries, memory operations, and retrieval operations in the test harness. (This is where agent systems differ from chatbots.)
+        \item \textbf{Deterministic pass/fail criteria:} For each scenario, define what “safe behavior” looks like (e.g., “refuses tool call,” “requests human approval,” “returns redacted summary,” “does not write to long-term memory”).
+        \item \textbf{Operational realism:} Use production-like tool schemas, permission boundaries, and data classifications; avoid toy examples that pass in test but fail in production.
+        \item \textbf{Evidence and governance:} Use a verification-standard lens (e.g., OWASP LLMSVS) to capture audit evidence that scenarios are executed and remediations are tracked
+    \end{itemize}
+
+    \section{Continuous Adversarial Testing}
+
+    Continuous adversarial testing is the practice of running adversarial evaluations continuously—in CI/CD, pre-deployment, and post-deployment—to detect regressions and drift in model behavior, tool integrations, and policy enforcement. It typically includes automated eval gates, canary prompts/scenarios, and monitored “break-glass” indicators in production.
+
+    Agent systems change frequently: model versions, tool schemas, orchestration logic, RAG corpora, and guardrail configurations evolve. A one-time red team snapshot is insufficient because behavioral security properties can regress without obvious code changes (e.g., a model update changes refusal behavior; a tool adds a new parameter that expands capability).
+
+    \textbf{Common Drift/Regression Vectors}:
+    \begin{itemize}
+        \item \textbf{Regression through model/provider updates:} A previously robust refusal or policy behavior degrades after model upgrade.
+        \item \textbf{Integration drift:} Tool endpoints or schemas change; input validation and authorization assumptions break.
+        \item \textbf{RAG corpus changes:} New documents introduce ambiguous instructions or unsafe content that the agent mishandles.
+        \item \textbf{Policy/guardrail misconfiguration:} Overly permissive filters or missing “high-risk action” gates re-introduce unsafe behaviors.
+        \item \textbf{Operational abuse signals:} Spikes in prompt injection attempts or unusual tool call patterns occur over time and must be detected.
+    \end{itemize}
+
+    \begin{itemize}
+        \item \textbf{Adversarial eval gates (CI):} Run a compact security smoke suite on every change (prompt injection, tool misuse, sensitive-data and output checks); block releases on hard failures and record prompts, tool traces, policy decisions, and model outputs for audit.
+        \item \textbf{Canary scenarios (staging/production):} Periodically run “known-good” scenarios (e.g., high-risk actions require approval); alert on deviations rather than only absolute failures.
+        \item \textbf{Automated drift \& anomaly monitoring:} Track tool-call volumes, error/refusal rates, and unusual chaining; correlate with enterprise telemetry/SIEM to surface prompt-injection and behavioral drift.
+        \item \textbf{Release discipline:} Stage model/provider rollouts with canaries and rollback capability; maintain a known-bad regression set (incidents and near-misses) to prevent regressions.
+    \end{itemize}
+
+    \section{Jailbreak / Prompt-attack Resistance Strengthening }
+
+    Jailbreak and prompt-attack resistance is a set of controls that reduce the likelihood that a model can be coerced—via direct or indirect prompt injection—into violating policy, exfiltrating sensitive data, or performing unintended actions. OWASP identifies prompt injection as a primary risk for LLM applications, and Microsoft’s security guidance emphasizes defense-in-depth against indirect prompt injection in enterprise GenAI deployments.
+
+    Agentic systems are especially exposed because they frequently ingest untrusted content (documents, emails, web pages) and then take actions via tools. Microsoft explicitly notes that indirect prompt injection arises when untrusted data is misinterpreted as instructions, potentially leading to data exfiltration or unintended actions performed with a user’s credentials.
+
+    \textbf{Common Prompt Injection Vectors}:
+    \begin{itemize}
+        \item \textbf{Direct prompt injection (“jailbreak”):} user input attempts to override policy or system instructions.
+        \item \textbf{Indirect prompt injection:} malicious instructions embedded in external content the agent processes (documents, emails, web content).
+        \item \textbf{Tool output injection:} a tool returns content that the agent treats as authoritative instructions.
+        \item \textbf{Cross-turn manipulation:} incremental steering across multiple turns to bypass refusal patterns.
+        \item \textbf{Encoding/obfuscation and multilingual attempts:} injection intent expressed in forms that evade simple keyword filters (requiring classifier-based detection and robust parsing).
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Prompt construction \& instruction hierarchy:} Delimit and label untrusted content (e.g., ``BEGIN UNTRUSTED DATA''); keep system prompts minimal and stable; enforce least-agency so text cannot escalate privileges or expand scope.
+        \item \textbf{Ingress guardrails \& classifiers:} Run prompt-injection detectors at the gateway (e.g., Prompt Shield); classify/block toxic or policy-violating inputs and route high-risk cases to human review.
+        \item \textbf{Tool-aware policy enforcement:} Require explicit authorization for high-risk tools; enforce strict parameter schemas and allowlists; treat tool outputs as untrusted and reclassify before reuse.
+        \item \textbf{Deterministic exfiltration controls:} Deny unapproved egress (external URLs/connectors); apply DLP and data-classification controls; enforce access using user identities and consent workflows.
+    \end{itemize}
+
+    \section{Adversarial Robustness }
+
+    Adversarial robustness is the capability of an agent to remain safe and useful when inputs are ambiguous, toxic, manipulative, or contain conflicting goals—without producing unsafe outputs or taking unsafe actions.
+
+    In enterprise settings, the most common failure modes are not “movie-plot hacking”; they are messy reality: poorly specified requests, adversarial social pressure, mixed intent, and confusing operational context. Agents that respond confidently to ambiguous or conflicting instructions can cause business harm—especially when connected to tools.
+
+    \textbf{Common Ambiguous / Manipulative Input Patterns}:
+    \begin{itemize}
+        \item \textbf{Toxic or harassing inputs} intended to provoke policy violations or brand damage.
+        \item \textbf{Ambiguous requests} that trick the agent into unsafe assumptions (“Do the usual thing” when “usual” is not defined).
+        \item \textbf{Goal conflict:} a user request conflicts with security policy, compliance, or least privilege.
+        \item \textbf{Manipulative pressure:} “urgent” framing to bypass approval or validation steps.
+        \item \textbf{Context collision:} multiple documents, threads, or memory items introduce contradictory instructions; the agent selects the wrong authority.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Clarify-before-act:} Require targeted clarification when intent, scope, or authority is unclear; block high-impact tool calls until explicit confirmation of scope, target, and justification.
+        \item \textbf{Conflict-of-policy resolution:} Enforce a deterministic rule in the orchestrator: refuse or escalate to human approval when user goals conflict with security policy.
+        \item \textbf{Toxicity \& safety filters:} Run safety classifiers and safe-completion strategies; rate-limit and escalate repeated abusive or malicious inputs.
+        \item \textbf{Robust output handling:} Treat model output as untrusted—sanitize, validate (schema/semantics), and constrain before any downstream use or execution.
+    \end{itemize}
+
+    \section{Model Extraction & Inference Abuse Prevention}
+
+    Model extraction and inference abuse prevention encompasses controls that reduce the risk of (a) adversaries learning proprietary model behavior/parameters through repeated queries (model theft) and (b) operational abuse of inference endpoints (cost spikes, denial of service, or unauthorized use.
+
+    Enterprises often expose LLM functionality through APIs to internal apps, copilots, and agents. Without strong abuse controls, inference endpoints can be harvested for sensitive behavioral signals, used to replicate capabilities, or simply abused to generate cost and service instability.
+
+    \textbf{Common Abuse Patterns}:
+    \begin{itemize}
+        \item High-volume querying to approximate model behavior or to harvest consistent responses.
+        \item Credential sharing or token theft leading to unauthorized inference usage.
+        \item Prompt flooding / unbounded consumption patterns that degrade availability or drive costs (especially relevant for agentic loops).
+        \item Multi-tenant inference probing to infer differences in configuration, policies, or data access.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Strong identity \& access controls}: require authentication for inference (no public internal endpoints); issue workload identities for agents and enforce least-privilege scopes.
+        \item \textbf{Rate limiting \& quotas}: enforce per-tenant/user/agent/tool rate limits, concurrency caps, token/compute budgets, and per-tool quotas to prevent runaway consumption.
+        \item \textbf{Abuse detection \& monitoring}: detect spikes, systematic coverage, repeated/near-duplicate prompts, and unusual tool-call patterns; forward signals to SOC/gateway tooling for correlation.
+        \item \textbf{Response shaping \& data minimization}: return only required data, standardize refusals/errors, and avoid verbose messages that leak information useful to attackers.
+        \item \textbf{Watermarking \& provenance}: where applicable, apply watermarking/provenance for traceability of AI-generated artifacts (as a detection aid, not a sole control).
+    \end{itemize}
+
+    \section{Data Poisoning Defenses}
+
+    Data poisoning defenses protect the integrity of training datasets, fine-tuning corpora, and retrieval sources (RAG/vector stores), preventing malicious or low-quality data from altering model behavior, biasing outputs, or injecting persistent adversarial instructions.
+
+    Poisoning is disproportionately damaging in enterprise agent deployments because RAG and memory are designed to persist and reuse context. A single poisoned document can influence many future sessions, users, or downstream actions.
+
+    \textbf{Common Poisoning Vectors}:
+    \begin{itemize}
+        \item \textbf{Training data poisoning:} malicious or mislabeled samples introduced into training/fine-tuning sets, shifting behavior or introducing backdoor-like patterns.
+        \item \textbf{RAG corpus poisoning:} unsafe instructions or misleading content inserted into the retrieval corpus so the agent “grounds” on malicious context.
+        \item \textbf{Vector store contamination:} embeddings created from untrusted sources without validation and later retrieved as authoritative.
+        \item \textbf{Memory poisoning:} attackers cause the agent to store unsafe directives or false “facts” in long-term memory, later affecting decisions.
+        \item \textbf{Supply chain ingestion:} third-party datasets, crawled content, or external knowledge feeds introduced without provenance checks.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Training data lineage and governance:} record provenance (source, license, collection, transforms, approvals); version datasets and pipelines; make training runs reproducible and auditable.
+        \item \textbf{RAG corpus hygiene:} treat retrieval sources as untrusted until validated; apply ingestion scans (malware, PII, policy), store hashes/metadata, integrity-monitor changes, and allowlist high-trust corpora.
+        \item \textbf{Integrity checks at retrieval time:} enforce grounding boundaries (passages = evidence, not instructions); run prompt-injection classifiers on retrieved text before planning.
+        \item \textbf{Memory controls:} restrict long-term writes to approved, labeled facts; forbid storing secrets or tool directives; require review for high-risk entries and apply TTLs + periodic revalidation.
+        \item \textbf{Ongoing monitoring and TEVV:} run continuous adversarial testing to detect poisoning (behavioral drift, unsafe tool paths, anomalous refusals); feed confirmed cases into scenario libraries and ingestion rules.
+    \end{itemize}
+
+\end{TNtwocol}

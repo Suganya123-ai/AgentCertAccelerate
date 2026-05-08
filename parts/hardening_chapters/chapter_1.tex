@@ -1,0 +1,513 @@
+\TNchapter[
+      Agentic AI systems introduce new forms of operational and security risk because they can independently plan, make decisions, and interact with business systems. This chapter provides a clear, standards-aligned blueprint for securing these systems at scale. It draws on the NIST AI Risk Management Framework, which highlights the unique risks created by advanced AI systems, including unpredictable behavior and misuse, and applies Zero Trust principles from NIST SP 800-207 to ensure every agent action is explicitly verified and least-privilege by design. To address real-world attack vectors, the chapter incorporates industry-recognized threats from the OWASP Top 10 for LLM Applications, such as prompt injection and excessive autonomy, and adversarial tactics cataloged in MITRE ATLAS. Together, these frameworks guide executives and architects in building a defense-in-depth model that reduces risk, strengthens governance, and enables the safe deployment of agentic AI across the enterprise.
+]{Security Architecture \& Risk Modeling}
+
+\begin{TNtwocol}
+
+      \section{Introduction}
+
+      Agentic AI systems—LLM-driven agents capable of planning, invoking tools, integrating with enterprise systems, and taking autonomous actions—introduce fundamentally new security challenges. Unlike traditional applications, these systems do not only process inputs; they interpret instructions, make decisions, and interact with external resources, expanding both operational scope and attackability.
+
+      This shift requires a security architecture that addresses model behavior, agent orchestration, tool interaction, data exposure, and runtime control, rather than relying on perimeter-based or static controls \cite{NIST_AI_RMF_100_1}.
+
+      \vspace{1em}
+
+      Modern risk management baselines describe why agentic systems require elevated scrutiny.
+
+      \textbf{\textsc{NIST AI Risk Management Framework (AI RMF 1.0)}} highlights that AI systems introduce risks beyond traditional software—such as emergent behavior, misuse, and resilience challenges—and emphasizes continuous governance, mapping, measuring, and managing of AI-specific risks \cite{NIST_AI_RMF_100_1}.
+
+      Its companion \textbf{\textsc{Generative AI Profile (2024)}} further details unique risks posed by generative and agentic systems \cite{NIST_GenAI_Profile_600_1}.
+
+      Likewise, \textbf{\textsc{ISO/IEC 23894:2023}} provides lifecycle-oriented guidance for identifying, assessing, and treating AI-related risks, aligning closely with general enterprise risk practices while accommodating AI-specific challenges \cite{ISO_23894_2023}.
+
+      \vspace{1em}
+
+      Security architecture for agentic AI must also integrate modern defensive philosophy.
+
+      \textbf{\textsc{Zero Trust}}, defined in \textsc{NIST SP 800-207}, assumes no implicit trust and requires explicit, continuous verification of every request based on identity, context, device posture, and policy \cite{NIST_SP800_207}.
+
+      This approach applies directly to agentic systems where each agent-initiated action—such as a tool call or data access—must be treated as a potentially sensitive operation requiring fine-grained authorization.
+
+      \textbf{\textsc{CISA's Zero Trust Maturity Model v2}} further describes how identity, device, network, workload, and data controls must work together to protect dynamic, distributed environments \cite{CISA_ZTMM_v2}.
+
+      \vspace{1em}
+
+      At the threat level, widely recognized community frameworks have documented concrete attack patterns now observed in generative and agentic systems:
+
+      \begin{itemize}
+            \item \textbf{\textsc{OWASP Top 10 for LLM Applications}} — identifies critical risks such as prompt injection, insecure output handling, supply-chain vulnerabilities in model components, excessive agent autonomy, and unintended disclosure of sensitive data \cite{OWASP_LLM_Top10}.
+            \item \textbf{\textsc{MITRE ATLAS}} — catalogs real-world adversarial tactics and techniques targeting AI systems, including poisoning, evasion, model theft, and agent-level manipulation \cite{MITRE_ATLAS}.
+      \end{itemize}
+
+      \vspace{1em}
+
+      Enterprises must also begin from robust security baselines.
+
+      \textbf{\textsc{CIS Critical Security Controls v8.1}} and its associated cloud companion guides provide practical, prioritized controls for identity, asset visibility, configuration hardening, logging, and data protection—controls directly extensible to AI systems and their supporting infrastructure \cite{CIS_Controls_v8_1, CIS_Cloud_Companion_v8_1}.
+
+      These offer a reliable minimum-security foundation upon which AI-specific measures can be layered.
+
+      \vspace{1em}
+
+      Bringing these authoritative references together, this chapter establishes a cohesive framework for securing agentic AI: a defense-in-depth architecture, Zero Trust enforcement for agent actions, threat modeling aligned with AI-specific risk patterns, attack surface reduction across prompts, tools and memory, layered control patterns, and baseline standards mapping.
+
+      Subsequent sections build on this introduction to translate standards and threat intelligence into actionable, enterprise-ready design and governance practices \cite{NIST_AI_RMF_100_1, NIST_GenAI_Profile_600_1, ISO_23894_2023, NIST_SP800_207, CISA_ZTMM_v2, OWASP_LLM_Top10, MITRE_ATLAS, CIS_Controls_v8_1, CIS_Cloud_Companion_v8_1}.
+
+      % ---------------------- Defense in Depth ----------------------
+
+      \section{Defense in Depth: Principles and Security Layers}
+
+      \medskip
+
+      Defense in Depth (DiD) is a strategic approach to cybersecurity that emphasizes the deployment of multiple, reinforcing safeguards across an organization. This model is designed to ensure that if one security mechanism fails, additional layers remain in place to mitigate the threat. The following sections outline the formally established principles and structural layers that define Defense in Depth.
+
+      \subsection{Principles of Defense in Depth}
+
+      \medskip
+
+      The foundational principles of Defense in Depth stem from authoritative security standards. These principles emphasize a comprehensive and resilient security posture built through diversity, redundancy, and multi-dimensional protection. The core principles are as follows:
+
+      \begin{enumerate}
+            \item \textbf{Layered Countermeasures.}
+                  Security controls are applied in a multi-step, layered manner to ensure that the failure of any single mechanism does not compromise the overall defense posture. This layered deployment enhances resilience across varying attack vectors.\cite{NIST_SP800_12R1}
+
+                  \smallskip
+
+            \item \textbf{Heterogeneous and Redundant Controls.}
+                  Effective protection requires the use of diverse and redundant controls such that different mechanisms compensate for one another. This ensures that an attack bypassing one defense is intercepted by another.\cite{NSA_IATF_3_1}
+
+                  \smallskip
+
+            \item \textbf{Integration of People, Technology, and Operations.}
+                  Defense in Depth incorporates not only technical safeguards but also operational and human elements. This integrated approach ensures that security is enforced through organizational processes and individual behavior in addition to technological measures.\cite{NSA_Defense_In_Depth,ISO_27002_2022}
+
+                  \smallskip
+
+            \item \textbf{Protection Across Organizational Dimensions.}
+                  Security barriers are distributed across multiple operational layers and functional domains, forming a comprehensive defensive structure that spans administrative, operational, and technical environments.\cite{NIST_SP800_12R1}
+
+                  \smallskip
+
+            \item \textbf{Assumption of Failure and Built-In Redundancy.}
+                  The model assumes that individual controls may fail and therefore incorporates redundant mechanisms to maintain security continuity. This principle underpins the requirement for layered and complementary defensive measures.\cite{NIST_SP800_207}
+      \end{enumerate}
+
+      \medskip
+
+      These principles collectively define Defense in Depth as a holistic, multi-dimensional strategy grounded in redundancy, diversity, and organizational integration.
+
+      \subsection{Layers of Security in Defense in Depth}
+
+      \medskip
+
+      The implementation of Defense in Depth is expressed through structured layers of security. These layers serve as the architectural representation of the principles described above and map directly to physical, technical, and procedural aspects of organizational security.
+
+      \subsubsection{Foundational Layer Structure}
+
+      \medskip
+
+      A foundational model of Defense in Depth segments security into three overarching categories:\cite{NIST_SP800_12R1}
+
+      \begin{itemize}
+            \item \textbf{Physical Controls} — Measures that prevent unauthorized physical access to information systems, facilities, and equipment.
+
+                  \smallskip
+
+            \item \textbf{Technical Controls} — Mechanisms implemented through hardware or software, such as encryption, firewalls, intrusion detection systems, and authentication technologies.
+
+                  \smallskip
+
+            \item \textbf{Administrative Controls} — Policies, procedures, governance frameworks, and risk management processes that establish rules and expectations for secure operations.
+      \end{itemize}
+
+      \subsubsection{Expanded Industry-Applied Layers}
+
+      \medskip
+
+      In practical cybersecurity deployments, these foundational categories are further expanded into more granular operational layers, reflecting the complexity of modern digital environments. These layers include:\cite{NSA_Network_Guide_2023}
+
+      \begin{itemize}
+            \item \textbf{Physical Security} — Protection of hardware, facilities, and supporting infrastructure.
+
+                  \smallskip
+
+            \item \textbf{Network Security} — Safeguards applied to data in transit within internal and external networks.\cite{NIST_SP800_52R2}
+
+                  \smallskip
+
+            \item \textbf{Perimeter Security} — Filtering and control of traffic entering or leaving the organizational boundary.\cite{NIST_SP800_41R1}
+
+                  \smallskip
+
+            \item \textbf{Application Security} — Controls embedded within or applied around software systems to prevent vulnerabilities and exploitation.\cite{NIST_SP800_218}
+
+                  \smallskip
+
+            \item \textbf{Data Security} — Mechanisms ensuring confidentiality, integrity, and availability of stored or transmitted data.\cite{FIPS_199}
+
+                  \smallskip
+
+            \item \textbf{User Awareness} — Human-centered controls such as training and awareness programs to mitigate risks stemming from user behavior.\cite{NIST_SP800_50R1}
+      \end{itemize}
+
+      \subsubsection{Functional Enterprise Layers}
+
+      \medskip
+
+      Modern enterprise environments further implement Defense in Depth by applying overlapping protections across endpoints, applications, datasets, and networks. These layers combine traditional technologies with advanced capabilities such as anomaly detection and secure communication channels to reinforce organizational resilience.\cite{NIST_SP800_137}
+
+      \medskip
+
+      Defense-in-depth provides the structural backbone for securing agentic systems, but these layers only become effective when paired with action-level trust boundaries. Accordingly, the next section expands this layered approach into a Zero Trust model specifically tailored for agent actions, ensuring that even within a multi-layer defense, no agent capability is implicitly trusted.\cite{CISA_ZTMM_v2}
+
+      \section{Zero Trust Principles for Agents}
+
+      Zero Trust for Agents is a policy-and-decision model in which every agent action---especially retrieval (RAG) and tool/API invocation---is explicitly authorized per request, with no implicit trust derived from network location or prior success. This framing binds the layered safeguards established in Defense in Depth by ensuring that each layer (identity, data, network segmentation, monitoring) is activated through consistent, resource-centric access decisions for agentic workflows \cite{NIST_SP800_207,CIS_Controls_v8_1}.
+
+      Zero Trust Architecture (ZTA) centers protection on resources and requires explicit authentication and authorization for each access, rather than relying on perimeter placement or assumed trust. In agentic systems, this translates to evaluating each tool call, retrieval request, and action execution as a discrete policy decision, continuously re-assessed at runtime \cite{NIST_SP800_207}.
+
+      For agents, ``resources'' include not only tool services and data stores, but also tool functions/methods (capabilities), retrieval indexes, tenant/workspace boundaries, secrets, and downstream action scopes (e.g., write vs.\ read). Authorization must therefore be granular---index plus document/field (or tenant) for RAG, and function-level for tools---to prevent capability escalation through broad endpoints \cite{NIST_SP800_207,OWASP_LLM_Top10}.
+
+      \subsection{Principles}
+
+      \begin{enumerate}
+            \item \textbf{Verify explicitly:} Re-evaluate authorization on each tool/RAG request using runtime signals (policy updates, sensitivity labels, anomaly/loop behavior, and request parameters), rather than caching trust across an agent run \cite{NIST_SP800_207,CIS_Controls_v8_1}.
+
+            \item \textbf{Least privilege:} Constrain agents to minimum capabilities per tool function and dataset, including time-bounded and purpose-bound permissions, to reduce blast radius when autonomy chains actions \cite{NIST_SP800_207}.
+
+            \item \textbf{Assume breach:} Treat prompts, retrieved passages, and tool outputs as untrusted inputs that may be adversarial or compromised, requiring containment and validation at every boundary \cite{NIST_SP800_207,OWASP_LLM_Top10}.
+      \end{enumerate}
+
+      \subsection{Enforcement Pattern}
+
+      Define ``agent identity'' as a workload identity for the agent process, optionally augmented by a per-run session identity, and---when acting for a human---a delegated identity that carries scoped claims (user, purpose, tenant/workspace, and duration). This explicit delegation boundary reduces ``confused deputy'' behavior in which the agent misuses authority granted for a different intent \cite{NIST_SP800_207,OWASP_LLM_Top10}.
+
+      Route all tool invocations through a Policy Enforcement Point (PEP) that consults a Policy Decision Point (PDP) to authorize each request at function/method level. Use short-lived, scope-restricted tokens and just-in-time secrets so permissions align tightly to the approved action, not to the overall tool surface \cite{NIST_SP800_207,CIS_Controls_v8_1}.
+
+      At the PEP, enforce parameter/schema validation, tenant/context binding, and output-handling guards before results can drive further actions. Telemetry must go beyond logging: use correlation IDs across tool calls, retrieval traces, and policy decisions to enable investigation, detection, and rapid revocation \cite{OWASP_LLM_Top10,CIS_Controls_v8_1}.
+
+      \subsection{Control Checklist}
+
+      \begin{itemize}
+            \item Assign a unique workload identity to each agent process; separate per-run session identity where needed \cite{NIST_SP800_207}.
+
+            \item If acting on behalf of a user, enforce explicit delegation with scoped claims (user, purpose, duration, tenant/workspace) \cite{NIST_SP800_207}.
+
+            \item Authorize per tool function/action (method-level), not merely per API/service \cite{NIST_SP800_207}.
+
+            \item Enforce RAG access at index + document/field (or tenant) granularity with sensitivity-aware policy \cite{NIST_SP800_207,CIS_Controls_v8_1}.
+
+            \item Use short-lived tokens and vault-backed, just-in-time secrets; avoid long-lived keys and scope secrets per tool \cite{CIS_Controls_v8_1}.
+
+            \item Validate tool parameters and treat tool outputs as untrusted; apply safe output handling before execution or rendering \cite{OWASP_LLM_Top10}.
+
+            \item Implement runtime safety controls: rate limits, loop circuit breakers, anomaly detection, and emergency revoke/kill switch \cite{CIS_Controls_v8_1}.
+
+            \item Maintain end-to-end telemetry with correlation IDs across PDP/PEP decisions, tool calls, and retrieval traces \cite{CIS_Controls_v8_1}.
+      \end{itemize}
+
+      Zero Trust controls must be validated against concrete agent attack chains, not assumed effective by design intent. Key chains include prompt injection leading to tool misuse (``confused deputy''), exfiltration via over-broad RAG access, and lateral movement across tool integrations through excessive capability grants---each requiring verification that PDP/PEP decisions, segmentation, and telemetry break the chain \cite{OWASP_LLM_Top10,NIST_SP800_207}.
+
+      Accordingly, the next subsection, Threat Modeling in AI Agents, should map these Zero Trust controls to agent-specific risks and test them under realistic adversary sequences and failure modes; this aligns with risk-based governance expectations articulated in the AI RMF \cite{NIST_AI_RMF_100_1,NIST_SP800_207}.
+
+      % ---------------------- Threat Modeling ----------------------
+
+      \section{Threat Modeling for AI Agents}
+
+      Threat modeling for AI agents provides a structured approach to anticipate how an agent may be manipulated into harmful actions, how such effects may propagate through tools or memory, and which controls must be strengthened to reduce risk. In this document, an \emph{AI agent} refers to a language-model–driven system capable of:
+      (1) planning and sequencing actions,
+      (2) invoking external tools or services, and
+      (3) retaining or retrieving information via memory or retrieval-augmented generation (RAG).\footnote{RAG retrieves documents dynamically at runtime to extend what the model can use as context.\cite{NIST_GenAI_Profile_600_1}}
+
+      \paragraph{Key Takeaway.}
+      AI agents fail in ways that differ fundamentally from traditional deterministic software. They merge instructions and data, make probabilistic decisions, and can transform natural-language inputs into real-world side effects through tool invocation.\cite{NIST_AI_RMF_100_1,MITRE_ATLAS}
+      Therefore, traditional threat modeling must be extended with AI-specific risk categories.
+      Zero Trust remains central—continuous verification, least privilege, and explicit policy enforcement—but must be adapted to the autonomous and tool-mediated nature of agent behaviors.\cite{NIST_SP800_207,CISA_ZTMM_v2}
+
+      % ---------------------------------------------------------------------------
+      \subsection{How Agent Threat Modeling Differs from Traditional Methods}
+      % ---------------------------------------------------------------------------
+
+      Classic techniques (e.g., STRIDE) remain useful, yet agents introduce non-deterministic, context-sensitive execution paths requiring additional AI-focused considerations.\cite{NIST_AI_RMF_100_1,NIST_GenAI_Profile_600_1}
+
+      \begin{itemize}
+            \item \textbf{Semantic trust boundaries.}
+                  Prompts combine system instructions, user data, and retrieved content, creating semantic trust boundaries beyond traditional network perimeters.\cite{OWASP_LLM_Top10,OWASP_Prompt_Injection_CS}
+
+            \item \textbf{Expanded input surface.}
+                  Retrieved documents, tool outputs, and even other agents become inputs, making indirect prompt injection a primary entry point.\cite{OWASP_Prompt_Injection_CS}
+
+            \item \textbf{RAG \& memory as delayed attack surfaces.}
+                  Poisoned or misleading content may persist in memory or vector stores, influencing future decisions.\cite{NIST_GenAI_Profile_600_1}
+
+            \item \textbf{Tooling as an actuation surface.}
+                  Tool invocation is effectively privileged code execution; misuse can lead to data exfiltration or system modification.\cite{MITRE_ATLAS}
+
+            \item \textbf{Multi-agent amplification.}
+                  Inter-agent communication increases risks such as impersonation, interference, or cascading failures.\cite{MITRE_ATLAS}
+      \end{itemize}
+
+      % ---------------------------------------------------------------------------
+      \paragraph{Example: Indirect Prompt Injection (Structured).}
+      % ---------------------------------------------------------------------------
+
+      \begin{quote}
+            \textbf{Situation:}
+            An agent retrieves a document containing hidden attacker-supplied instructions.
+
+            \textbf{Attack:}
+            The injected instructions are interpreted as system-level guidance (indirect prompt injection).
+
+            \textbf{Consequence:}
+            The agent executes unintended tool calls (e.g., file searches or emails), leaking sensitive information.
+
+            \textbf{Persistence:}
+            If leaked data enters the agent's memory or vector store, compromise may persist across sessions.\cite{OWASP_Prompt_Injection_CS,OWASP_LLM_Top10}
+      \end{quote}
+
+      % ---------------------------------------------------------------------------
+      \subsection{Core Threat Categories}
+      % ---------------------------------------------------------------------------
+
+      These categories reflect major risks emphasized across NIST AI RMF, the NIST GenAI Profile, MITRE ATLAS, and OWASP LLM security guidance.\cite{NIST_AI_RMF_100_1,MITRE_ATLAS,OWASP_LLM_Top10}
+
+      \begin{enumerate}
+            \item \textbf{Reasoning and Agency Threats (Goal Hijacking).}
+                  Attackers steer agent objectives through crafted context or subtle manipulation.\cite{MITRE_ATLAS}
+
+            \item \textbf{Memory Poisoning and Context Corruption.}
+                  Malicious content introduced into memory or vector stores shapes future reasoning.\cite{NIST_GenAI_Profile_600_1}
+
+            \item \textbf{Tool Misuse and Toolchain Exploitation.}
+                  Poorly scoped or insecure tool capabilities enable harmful or unintended operations.\cite{MITRE_ATLAS}
+
+            \item \textbf{Privilege, Identity, and Delegation Failures.}
+                  Overscoped credentials or insufficient identity controls enable privilege escalation.\cite{NIST_SP800_207,NIST_SP800_207A}
+
+            \item \textbf{Prompt Attacks (Direct, Indirect, Cross-Context).}
+                  Hidden or adversarial instructions manipulate agent behavior.\cite{OWASP_LLM_Top10_PDF,OWASP_Prompt_Injection_CS}
+
+            \item \textbf{Multi-Agent Risks.}
+                  Failures in coordination, impersonation, or communication result in systemic vulnerabilities.\cite{MITRE_ATLAS}
+      \end{enumerate}
+
+      % ---------------------------------------------------------------------------
+      \subsection{Applicable Frameworks}
+      % ---------------------------------------------------------------------------
+
+      \begin{enumerate}
+            \item \textbf{NIST AI RMF 1.0.} Foundational risk management functions for AI systems.\cite{NIST_AI_RMF_100_1}
+            \item \textbf{NIST GenAI Profile.} Supplements the AI RMF with generative- and retrieval-specific risks.\cite{NIST_GenAI_Profile_600_1}
+            \item \textbf{OWASP LLM Top 10 \& Prompt Injection Prevention.} Defines prompt manipulation and memory/context threats.\cite{OWASP_LLM_Top10,OWASP_Prompt_Injection_CS}
+            \item \textbf{MITRE ATLAS.} Catalog of adversarial behaviors and attack patterns targeting AI.\cite{MITRE_ATLAS}
+            \item \textbf{Zero Trust Guidance.} Identity-first security across AI toolchains.\cite{NIST_SP800_207,NIST_SP800_207A,CISA_ZTMM_v2}
+      \end{enumerate}
+
+      % ---------------------------------------------------------------------------
+      \subsection{Recommended Modeling Process}
+      % ---------------------------------------------------------------------------
+
+      \begin{enumerate}
+            \item \textbf{Scope the system and define invariants.}
+                  Identify “must-never-happen'' conditions across tools, memory, and orchestration.\cite{NIST_AI_RMF_100_1}
+
+            \item \textbf{Decompose the architecture.}
+                  Use DFDs and trust-boundary diagrams including semantic boundaries introduced by RAG.\cite{OWASP_LLM_Top10}
+
+            \item \textbf{List assets and entry points.}
+                  Prompt templates, tool schemas, memory pipelines, agent endpoints.\cite{MITRE_ATLAS}
+
+            \item \textbf{Enumerate threats across combined taxonomies.}
+                  Integrate STRIDE with AI-specific risks such as prompt injection and poisoning.\cite{NIST_GenAI_Profile_600_1}
+
+            \item \textbf{Define abuse cases.}
+                  Include indirect prompt injection, tool hijacking, and multi-agent propagation.\cite{OWASP_Prompt_Injection_CS}
+
+            \item \textbf{Prioritize by impact $\times$ likelihood $\times$ detectability.}
+                  Account for cascading and multi-agent failures.\cite{MITRE_ATLAS}
+
+            \item \textbf{Define enforceable mitigations.}
+                  Apply least privilege, policy-as-code for tool usage, and retrieval filtering.\cite{NIST_SP800_207}
+
+            \item \textbf{Continuous validation and red teaming.}
+                  Incorporate AI-specific testing aligned with NIST and MITRE guidance.\cite{NIST_SP800_218}
+      \end{enumerate}
+
+      With assets, trust boundaries, and high-risk scenarios mapped to enforceable controls, the next logical step is to conduct Attack Surface Analysis and Reduction.\cite{NIST_AI_RMF_100_1,NIST_SP800_207}
+
+      % ---------------------------------------------------------------------------
+
+      \section{Attack Surface Analysis \& Reduction}
+
+      Attack surface refers to the collection of system points where an attacker could attempt to enter, influence, or extract data. Foundational NIST security guidance emphasizes understanding these exposure points and the pathways that enable adversarial interaction with systems \cite{NIST_SP800_12R1}. In the context of AI agents, the attack surface extends beyond traditional endpoints to include prompts, tool calls, retrieval flows, identity artifacts, and stateful memory structures. The OWASP Top 10 for Large Language Model Applications highlights risks such as prompt injection, excessive agent autonomy, and system prompt leakage, reinforcing that these surfaces require explicit analysis \cite{OWASP_LLM_Top10}.
+
+      Attack surface analysis (ASA) is the practice of systematically mapping which system components must be reviewed for vulnerabilities, documenting which surfaces remain exposed, and identifying where surface-minimization efforts offer the greatest benefit. ASA outputs a living inventory of entry and exit points, high-risk interfaces, sensitive data interactions, and changes that expand risk. OWASP guidance underscores the importance of maintaining such an inventory to track exposure over time and ensure that security controls remain aligned with system evolution \cite{OWASP_LLM_Top10_PDF}.
+
+      Threat modeling identifies assets, trust boundaries, and threat events; ASA operationalizes these findings by converting them into an actionable inventory of attackable surfaces. NIST's risk management guidance emphasizes evaluating likelihood and impact, ensuring that organizations quantify exposure and reassess residual risk after applying controls \cite{NIST_SP800_12R1}. This ensures leaders understand what risk remains and where additional safeguards may be required.
+
+      \subsection{Taxonomy: Attack Surfaces in AI Agents}
+
+      A consistent taxonomy ensures comparable analyses across AI agents:
+
+      \begin{itemize}
+            \item \textbf{Input / prompt surface:} User prompts, system prompts, uploaded files, and documents ingested by the agent. These inputs can carry embedded instructions or malicious payloads, aligning with injection-related risks documented by OWASP \cite{OWASP_LLM_Top10}.
+            \item \textbf{Tool / action surface:} Function calls, plugins, workflow automations, email or ticketing actions, and code execution paths. Excessively permissive tool capabilities map directly to excessive-agency risks \cite{OWASP_LLM_Top10}.
+            \item \textbf{Integration / retrieval surface:} RAG connectors, vector stores, enterprise search APIs, internal microservices, and other integrations that expand the agent's information access. Many retrieval-based weaknesses are recognized in the OWASP LLM guidance \cite{OWASP_LLM_Top10_PDF}.
+            \item \textbf{Identity / secret surface:} API keys, OAuth tokens, managed identities, session cookies, and authorization scopes used by the agent or its tools. NIST guidance stresses maintaining strict, minimal access to reduce risk \cite{NIST_SP800_12R1}.
+            \item \textbf{State / memory surface:} Conversation history, long-term memory stores, cached plans, shared scratchpads, and cross-session artifacts. These persistent states can be influenced or poisoned, posing ongoing risk \cite{OWASP_LLM_Top10_PDF}.
+      \end{itemize}
+
+      Following NIST's risk-determination process, organizations evaluate likelihood and impact for each surface and reassess residual risk after applying controls \cite{NIST_SP800_12R1}. This ensures mitigation efforts align with overall enterprise tolerance levels.
+
+      \subsection{High-impact attack surface reduction levers}
+
+      The following levers typically provide the greatest reduction in enterprise exposure:
+
+      \begin{itemize}
+            \item \textbf{Reduce exposed interfaces / disable unused features:} Removing nonessential endpoints, connectors, and features significantly lowers exposure area. OWASP recommends eliminating unnecessary surfaces to prevent unintended attack vectors \cite{OWASP_LLM_Top10}.
+            \item \textbf{Least privilege:} Applying least privilege ensures the agent and its tools only receive permissions necessary to accomplish assigned tasks. NIST emphasizes restricting access rights and reducing unnecessary permissions \cite{NIST_SP800_12R1}.
+            \item \textbf{Secure configuration baselines (CIS Benchmarks):} Consensus-driven secure configuration baselines—such as CIS Controls v8.1 and its Cloud Companion Guide—help reduce misconfigurations and ensure consistent enforcement across systems \cite{CIS_Controls_v8_1,CIS_Cloud_Companion_v8_1}.
+            \item \textbf{Runtime/server hardening:} Baseline hardening of the servers and runtimes hosting agents prevents host-level weaknesses from undermining higher-level controls. NIST foundational security guidelines emphasize patching, service minimization, strong administrative control, and logging \cite{NIST_SP800_12R1}.
+      \end{itemize}
+
+      The deliverable from ASA is a prioritized attack surface inventory documenting: (1) what remains exposed, (2) how each surface can be influenced, (3) what data or actions the surface enables access to, and (4) what residual risks persist. Leaders can then select control layers—such as prompt isolation, tool gating, identity segmentation, secure baselines, and runtime protections—aligned with organizational risk tolerance and NIST AI RMF governance expectations \cite{NIST_AI_RMF_100_1,NIST_GenAI_Profile_600_1}.
+
+      % ---------------------------------------------------------------------------
+      \section{Security Control Layering \& Reference Patterns}
+
+      Security control layering is an architectural strategy that places multiple, independently administered safeguards across distinct planes so that no single weakness becomes a single point of failure. This reflects widely recognized defense-in-depth principles and secure architectural patterns emphasized across NIST, NSA, and CISA publications \cite{NSA_Defense_In_Depth,CISA_DiD_2024,NIST_SP800_12R1}. For agents, this means applying prevention, detection, and containment across identity, execution, network, data, and operational layers.
+
+      The prior chapter reduced what an Agentic AI can touch—fewer connectors, least-privilege permissions, hardened configuration, minimized exposure. However, workflow-driven risk often dominates: a sequence of plausible steps that individually appear acceptable but collectively result in harmful actions or data loss. NIST emphasizes designing systems for resilience under failure conditions and treating risk as a life-cycle responsibility \cite{NIST_AI_RMF_100_1,NIST_GenAI_Profile_600_1,ISO_23894_2023}.
+
+      This chapter shows how layered security controls and reference enforcement patterns convert a minimized attack surface into enforceable, repeatable protections, and prepares for later chapters covering baselines, tailoring, and overlays \cite{NIST_SP800_218,NIST_SP800_50R1}.
+
+      \subsection{Security Control Layering}
+
+      A key design move for agents is separating \textbf{recommendation} (model output) from \textbf{enforcement} (deterministic control). The model may propose actions, but cannot execute them without passing policy, identity, and risk checks. This parallels zero-trust and modern access-control models where verification precedes every action \cite{NIST_SP800_207,NIST_SP800_207A,CISA_ZTMM_v2}.
+
+      Layered controls are most effective when (a) independently administered, (b) fail-safe by default, and (c) observable. In practice, this means:
+
+      \begin{itemize}
+            \item \textbf{Tool gating \& allowlisting:} Restrict tool execution using explicit allowlists and verified software inventories, consistent with least privilege and secure execution guidance \cite{CIS_Controls_v8_1,CIS_Cloud_Companion_v8_1}.
+            \item \textbf{Sandboxing \& isolation:} Use isolated execution environments (containers, process sandboxes) to contain impact and enforce boundaries \cite{NIST_SP800_162,NSA_Network_Guide_2023}.
+            \item \textbf{Secrets isolation:} Prevent agents from directly accessing credentials and apply strong authentication and attribute-based access rules \cite{NIST_SP800_162,NIST_SP800_52R2}.
+            \item \textbf{Network egress controls:} Apply segmentation, allowlists, traffic inspection, and zero-trust path enforcement \cite{NIST_SP800_207,CISA_ZTMM_v2,NIST_SP800_41R1}.
+            \item \textbf{Retrieval \& data minimization controls:} Limit accessible data via collection-level permissions, result caps, and privacy-preserving design \cite{ISO_27002_2022,NSA_Data_Pillar_2024}.
+            \item \textbf{Telemetry \& auditability:} Emit structured logs for prompts, tool calls, decisions, and outcomes; ensure tamper resistance and centralized monitoring \cite{NIST_SP800_137,NIST_SP1800_35}.
+      \end{itemize}
+
+      \subsection{Layering Blueprint (Matrix)}
+
+      \begin{itemize}
+            \item \textbf{Identity (who/what is acting):} Use strong workload identities, least-privilege scopes, short-lived credentials, and step-up authentication for high-risk actions \cite{NIST_SP800_52R2,NIST_SP800_12R1}.
+            \item \textbf{Tools/Runtime (what can execute):} Enforce allowlisted verbs, deterministic policy evaluation, human-in-the-loop for high-impact actions, sandboxed execution, and secrets isolation \cite{NIST_SP800_162,NIST_SP800_218}.
+            \item \textbf{Network (where it can reach):} Egress restrictions, segmentation, and zero-trust routing; ``no direct internet'' modes for sensitive agents \cite{NIST_SP800_207,CISA_ZTMM_v2}.
+            \item \textbf{Data (what it can read/write):} Retrieval constraints, privacy-aligned data minimization, signing of state snapshots, and tamper-evident logging \cite{ISO_27002_2022,NSA_Data_Pillar_2024}.
+            \item \textbf{Operations (how it is monitored):} Continuous telemetry, anomaly detection, policy outcome audits, rapid credential-revocation playbooks \cite{NIST_SP800_137,NIST_SP800_50R1}.
+      \end{itemize}
+
+      \subsection{Risk Modelling \& Control Selection}
+
+      Control rigor should follow \textbf{workflow-based risk} rather than ``agent vs.\ non-agent'' classification. Scenario analysis (e.g., “agent reads tickets and executes remediation”) should be paired with abuse-case analysis (e.g., indirect prompt injection) and mapped to risk frameworks \cite{NIST_AI_RMF_100_1,NIST_GenAI_Profile_600_1,ISO_23894_2023}. The selected controls are then aligned with secure development and lifecycle practices \cite{NIST_SP800_218,NIST_SP800_50R1}.
+
+      For action-capable tools, tailoring typically increases enforcement rigor—sandboxing, egress allowlists, explicit human approvals—while lower-risk read-only tools receive minimal friction.
+
+      \subsection{Reference Patterns for Enforcement}
+
+      A repeatable enforcement pattern is \textbf{Propose \rightarrow Decide \rightarrow Enforce \rightarrow Record}. The model proposes an action; a policy decision point evaluates identity, verb, target, data sensitivity, and risk; the enforcement point permits, denies, or requires approval; and an immutable audit record is stored. This structure aligns with zero-trust enforcement and attribute-based access control \cite{NIST_SP800_207,NIST_SP800_162,NIST_SP800_207A}.
+
+      Verification requirements for authentication, authorization, input/output handling, and logging can be systematically assessed using secure-development frameworks \cite{NIST_SP800_218,ISO_27002_2022}. For adversary-aware coverage, techniques from MITRE ATLAS and OWASP LLM guidance highlight areas like prompt injection, model override attempts, retrieval poisoning, and excessive agency \cite{MITRE_ATLAS,OWASP_LLM_Top10,OWASP_LLM_Top10_PDF,OWASP_Prompt_Injection_CS}.
+
+      \subsection{Assurance \& Operations}
+
+      Layering must be demonstrably effective. Assessments should validate correctness and enforcement strength: prompt-injection test cases, retrieval leakage probes, tool-abuse tests, sandbox escapes, egress-bypass attempts, and log integrity checks. These align with structured assessment practices and secure-development validation \cite{NIST_SP800_218,NIST_SP800_50R1}.
+
+      Operationally, continuous monitoring treats agent telemetry as first-class data: denied actions, unusual tool chains, anomalous traffic patterns, or suspicious data sequences. Incident response should integrate credential rotation, connector disablement, policy rollback, version pinning, and post-incident updates \cite{NIST_SP800_137,NSA_Network_Guide_2023}.
+
+      Baselines and overlays turn design intent into measurable requirements: e.g., “tool gating required,” “retrieval constraints required,” “state integrity required,” “high-risk actions require approval and audit.” These bind responsibilities, test evidence, and continuous-monitoring expectations \cite{CIS_Controls_v8_1,CIS_Cloud_Companion_v8_1,NIST_SP1800_35}.
+
+      % ---------------------------------------------------------------------------
+
+      \section{Baseline Standards \& Benchmarks}
+
+      Previous sections established the architectural “shape” of hardened agentic systems: layered controls across trust boundaries, Zero Trust enforcement at control planes \cite{NIST_SP800_207}, and threat-driven reduction of the agent attack surface (tools, connectors, prompts, memory/state, and logs). This section turns those architectural principles into repeatable baseline standards (what must be true) and benchmarks (how to verify that posture over time).
+
+      \subsection{From Principles to Practice: Baselines and Benchmarks}
+
+      A \textbf{baseline} is a documented minimum set of security controls and required outcomes that apply to a defined scope (e.g., “all production AI agents and tool runtimes”). NIST SP~800-53B provides security and privacy control baselines alongside tailoring guidance \cite{NIST_SP800_53B}.
+
+      A \textbf{benchmark} is a prescriptive configuration standard with associated assessment methods—typically expressed as testable settings for OS, containers, Kubernetes, or cloud platforms. CIS Benchmarks are the canonical example, offering consensus-based secure configuration guidance and technical assessment methods \cite{CIS_Benchmarks}.
+
+      For AI agents, the “system” spans beyond model inference to include: identities for users/agents/workloads, tool execution sandboxes, connectors to data and SaaS systems, prompt/memory/state storage, and telemetry pipelines. These require explicit treatment in baselines and benchmarks because they represent common vectors for misuse, data exposure, or unintended action.
+
+      \subsection{Enterprise Foundations for Agent Security Baselines}
+
+      A practical approach is to anchor agent security requirements in a known enterprise baseline and tailor them to agentic risks. NIST SP~800-53B provides suitable baseline structure \cite{NIST_SP800_53B}. Zero Trust should be assumed by default because agents frequently operate across network, cloud, and SaaS boundaries. NIST SP~800-207 defines Zero Trust as disallowing implicit trust based on network location and requiring authentication and authorization before resource access—principles that map directly to tool invocation and connector access \cite{NIST_SP800_207}.
+
+      Benchmarks operationalize this foundation. CIS Benchmarks convert “secure configuration” into testable settings for OS, cloud, and Kubernetes—typical substrates for agent runtimes \cite{CIS_Benchmarks}.
+
+      \paragraph{Minimum Agent Hardening Baseline (Go-Live Checklist).}
+      The following represent the minimum viable security baseline for production agent deployment, extendable via tailored SP~800-53B controls and applicable CIS Benchmarks:
+
+      \begin{enumerate}
+            \item \textbf{Unique identities} for all users, agents, and workloads (prohibit shared service principals). Maps to identity-centric Zero Trust and SP~800-53B access control principles \cite{NIST_SP800_207, NIST_SP800_53B}.
+            \item \textbf{Strong authentication and conditional access} for consoles and high-risk operations; MFA recommended \cite{NIST_SP800_207}.
+            \item \textbf{Least-privilege scopes for tools and connectors}, with preference for short-lived/time-bound credentials. Aligns with Zero Trust and mitigates LLM “excessive agency” risks \cite{OWASP_LLM_Top10}.
+            \item \textbf{Approval gates / dual authorization} for high-impact or irreversible operations (payments, deletes, privilege changes) \cite{OWASP_LLM_Top10}.
+            \item \textbf{Allowlisted tools, domains, and APIs}, with deny-by-default for new tools/destinations \cite{NIST_SP800_207}.
+            \item \textbf{Prompt governance:} versioned system prompts, clear separation of system/user/retrieved content, and provenance tagging. Reduces context-manipulation risks \cite{OWASP_Prompt_Injection_CS}.
+            \item \textbf{Memory/state controls:} minimize retention, encrypt at rest/in transit, segregate per user/tenant, and define explicit expiration/deletion windows. Aligns with ISO/IEC 27002 information-lifecycle controls \cite{ISO_27002_2022}.
+            \item \textbf{Output handling:} treat model output as untrusted input; apply encoding/escaping and sandboxing as required. Mitigates OWASP “Improper Output Handling” \cite{OWASP_LLM_Top10}.
+            \item \textbf{Sensitive data protections:} redaction and policy-driven blocking of secrets and regulated data \cite{OWASP_LLM_Top10, ISO_27002_2022}.
+            \item \textbf{Comprehensive audit logging:} prompts (appropriately protected), tool parameters, connector targets, policy decisions, and outcomes. Aligns with SP~800-53B audit/control families and CIS logging benchmarks \cite{NIST_SP800_53B, CIS_Benchmarks}.
+            \item \textbf{Runtime isolation} for tool execution, including restricted egress and filesystem access; use hardened container/Kubernetes profiles \cite{CIS_Benchmarks}.
+            \item \textbf{Continuous configuration assessment} against CIS Benchmarks for host, container, Kubernetes, and cloud environments \cite{CIS_Benchmarks}.
+            \item \textbf{Secure SDLC aligned to NIST SSDF}, including design review, testing, and vulnerability response \cite{NIST_SP800_218}.
+            \item \textbf{Supply-chain controls aligned to NIST C-SCRM} for models, libraries, connectors, and external vendors \cite{NIST_SP800_161R1}.
+      \end{enumerate}
+
+      \subsection{Governing AI Agents: Lifecycle Risk, Accountability, and Oversight}
+
+      NIST's AI Risk Management Framework (AI RMF) defines four governance functions—\textbf{GOVERN}, \textbf{MAP}, \textbf{MEASURE}, \textbf{MANAGE}—which emphasize accountability, risk ownership, and continuous evaluation across the AI lifecycle \cite{NIST_AI_RMF_100_1}. ISO/IEC~42001:2023 complements this with requirements for an AI Management System (AIMS) that embeds responsible AI development and continual improvement \cite{ISO_42001_2023}.
+
+      For agentic systems, governance must explicitly formalize “agency”: what tools an agent may invoke, under what conditions, and how exceptions are granted. This requires versioned prompts, approved tool registries, and auditable policy decisions to ensure accountability.
+
+      \subsection{Threat-Driven Hardening Using LLM/Agent Risk Lists and Attack Knowledge Bases}
+
+      OWASP's Top 10 for LLM Applications identifies key risks for LLM-driven agents, including prompt injection, sensitive information disclosure, supply chain exposure, improper output handling, and excessive agency \cite{OWASP_LLM_Top10_PDF}. MITRE ATLAS provides a living repository of adversary tactics and techniques for AI-enabled systems—useful for mapping real-world attack behaviors to mitigations and telemetry needs \cite{MITRE_ATLAS}. Combined, they let teams prioritize \emph{what} to defend (OWASP) and understand \emph{how} attacks manifest (ATLAS).
+
+      \subsection{Locking Down Execution: Secure Configurations and Zero Trust Enforcement}
+
+      Tool execution is where agent intent becomes real-world impact. Zero Trust requires resource-centric protection, authentication and authorization before access, and removal of implicit trust \cite{NIST_SP800_207}. CIS Benchmarks provide prescriptive hardening guidance for the underlying execution substrates—OS, cloud, and Kubernetes—enabling continuous drift detection rather than one-time hardening \cite{CIS_Benchmarks}.
+
+      For agentic systems, four control themes dominate: (1) isolation (contain tool blast radius), (2) authorization (least privilege per tool/action), (3) validation (treat all inputs and model outputs as untrusted), and (4) observability (rich logs for actions and decisions). These align with both Zero Trust principles and OWASP LLM risk classes.
+
+      \subsection{Building and Operating Securely: SDLC, Supply Chain, and Continuous Compliance}
+
+      NIST's Secure Software Development Framework (SSDF) defines security practices for the entire software lifecycle \cite{NIST_SP800_218}. Supply chain risks compound for AI agents due to dependencies on models, libraries, tool plugins, and third-party services; NIST SP~800-161 Rev.1 provides guidance for integrating cybersecurity supply chain risk management throughout organizational risk processes \cite{NIST_SP800_161R1}. ISO/IEC~27002:2022 remains a foundational reference for operational-control domains such as access control, logging, and configuration management \cite{ISO_27002_2022}, while ISO/IEC~42001 ensures AI-specific governance across the lifecycle \cite{ISO_42001_2023}.
+
+      In practice, agent hardening succeeds when architectural decisions become both repeatable requirements (baselines) and verifiable configurations (benchmarks). Baselines define the “must be true”; benchmarks define “how it stays true.” Sustainable security requires threat-driven priorities—focusing on prompt injection, data disclosure, and excessive agency—supported by secure development and supply-chain disciplines \cite{OWASP_LLM_Top10, NIST_SP800_218, NIST_SP800_161R1}.
+
+      % ---------------------------------------------------------------------------
+
+      \section{Summary}
+
+      This chapter treated AI agents as distributed systems with agency, rather than standalone models.
+      \textbf{Defense-in-depth} established layered control planes and trust boundaries;
+      \textbf{Zero Trust} made verification and least privilege non-negotiable;
+      \textbf{threat modeling} focused on goal misuse, tool abuse, data exposure, and supply chain realities;
+      \textbf{attack surface reduction} constrained tools, connectors, prompts, memory, and logs;
+      and \textbf{reference patterns} provided reusable security building blocks for consistent implementations.
+
+      The chapter then anchored these patterns in recognized standards and verification mechanisms:
+      control baselines and tailoring (\textbf{NIST SP 800-53B}),
+      Zero Trust architecture (\textbf{NIST SP 800-207}),
+      AI governance and lifecycle risk (\textbf{NIST AI RMF} and \textbf{ISO/IEC 42001}),
+      configuration benchmarks (\textbf{CIS Benchmarks}),
+      threat-driven risk lists and techniques (\textbf{OWASP LLM Top 10} and \textbf{MITRE ATLAS}),
+      and secure engineering plus supply chain discipline (\textbf{NIST SSDF} and \textbf{NIST C-SCRM}).
+      Together, these establish a defensible minimum posture for enterprise deployment and ongoing assurance.
+
+      When agents are governed like other high-impact software systems—through tailored baselines, measurable benchmarks, and continuous compliance—organizations can capture automation benefits without accepting uncontrolled risk.
+
+\end{TNtwocol}

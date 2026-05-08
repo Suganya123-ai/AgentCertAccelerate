@@ -1,0 +1,157 @@
+
+\TNchapter[
+    Execution and runtime safety is the control layer that prevents an AI agent from turning language into unbounded capability. In real enterprise deployments, agents do not stop at generating text—they invoke tools, access files, call APIs, and orchestrate multi-step workflows. That action surface is where high-impact failures occur: improper handling of model output, unchecked autonomy (“excessive agency”), insecure plugin/tool integrations, and unbounded resource consumption are explicitly highlighted in OWASP's LLM guidance.  Agents add additional failure modes—tool misuse, identity and privilege abuse, unexpected code execution, and cascading failures—because planning and delegation happen at runtime and often under real permissions.]{Execution & Runtime Safety}
+
+\begin{TNtwocol}
+    \section{Execution Sandboxing and Isolation}
+
+    Execution sandboxing is the architectural practice of running agent-invoked tools (code interpreters, connectors, plugins, scripts, RPA actions) inside constrained environments that enforce strict process, filesystem, network, and identity boundaries. The sandbox is designed to treat tool execution as hostile-by-default even when requested by a “trusted” agent plan. This is a direct response to the agentic risk of unexpected code execution and tool misuse in multi-step systems.
+
+    When an agent can call tools, the primary risk shifts from “wrong answer” to “wrong action.” OWASP's LLM guidance warns that insecure tool/plugin integration and improper output handling can create downstream exploits, and that granting autonomy can produce unintended consequences.  Agentic systems amplify this because the agent can chain actions, select tools dynamically, and operate with live credentials, increasing both blast radius and the probability of compounding errors.
+
+    \textbf{Common Isolation Risks}:
+
+    \begin{itemize}
+        \item \textbf{Boundary overreach}: A tool execution context gains access to files, secrets, or network destinations outside its intended scope (e.g., broader file mounts or unrestricted egress).
+        \item \textbf{Transitive access and lateral movement}: Tool runtimes inherit permissions (tokens, managed identity, service account) that allow reaching other systems beyond the task's intent. This maps directly to agentic identity \& privilege abuse themes.
+        \item \textbf{Untrusted output becoming executable}: The agent's generated output is treated as safe instructions by a downstream interpreter or automation component (an instance of "improper output handling").
+        \item \textbf{Cross-tenant or cross-environment leakage}: Weak isolation allows data to cross boundaries that should remain separated (tenant, environment, project). Microsoft emphasizes encryption/isolation and governance controls as foundational for agent deployments.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+
+    \begin{itemize}
+        \item \textbf{Isolated runtimes per tool class}: Run code execution tools in hardened containers or microVMs with non-root users and minimal OS surface; separate read-only tools (search, retrieval) from side-effecting tools (email, ticket creation, updates).
+
+        \item \textbf{Explicit network boundaries}: Default-deny outbound connectivity with allowlisted domains/services only; use private endpoints/VPC integration for internal services; apply service-to-service authentication bound to sandbox identity.
+
+        \item \textbf{Filesystem and data boundaries}: Mount only minimum required files with ephemeral scratch storage; enforce brokered access for sensitive documents with access checks and auditing; prevent persistence unless explicitly needed to reduce memory/context poisoning.
+
+        \item \textbf{Identity isolation}: Assign each agent/tool-runner a distinct identity with least-privilege roles; avoid shared service accounts.
+
+        \item \textbf{Observability and forensic readiness}: Log tool invocations, sandbox policy decisions, and resource usage with correlation IDs; integrate with enterprise monitoring to detect anomalous activity in production operations.
+    \end{itemize}
+
+    \section{Action Scope Restriction}
+
+    Action scope restriction constrains what actions an agent may take and how tool calls may be parameterized. It is typically implemented through:
+
+    \begin{itemize}
+        \item Allowlisted actions (approved tool catalog)
+        \item Safe tool wrappers (validated inputs/outputs, schema enforcement)
+        \item Command policies (rules that define permitted verbs, targets, and side effects)
+    \end{itemize}
+
+    Even with sandboxing, an agent can still do the wrong thing safely—for example, emailing the wrong audience, modifying the wrong record, or issuing an irreversible request to an internal system. Agentic guidance explicitly calls out tool misuse as a primary category of risk, often triggered by poor scoping and unsafe delegation. Microsoft's governance model for agents emphasizes administrative controls over actions/connectors and warnings when secure defaults are weakened, reinforcing that scope management is a frontline control.
+
+    \textbf{Common Scope Violation Risks}:
+
+    \begin{itemize}
+        \item \textbf{Overbroad tool exposure}: The agent can access high-impact tools (delete, transfer, publish, share broadly) without guardrails.
+        \item \textbf{Argument confusion}: Tool arguments accept free-form strings that can be interpreted in unintended ways by downstream systems (a form of unsafe output handling crossing a trust boundary).
+        \item \textbf{Chaining and "capability escalation"}: A series of individually "safe" calls combine into an unsafe outcome (a common contributor to cascading failures).
+        \item \textbf{Shadow actions via generic connectors}: Broad HTTP/request tools or generic automation connectors provide a stealth path around intended restrictions.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+
+    \begin{itemize}
+        \item \textbf{Tool allowlisting with risk tiers}: Maintain approved catalog with explicit low-risk (read) vs high-risk (state-change) classifications; disable generic connectors without strong justification.
+
+        \item \textbf{Safe wrappers with schema validation}: Enforce typed parameters (IDs, enums, bounded strings); reject ambiguous targets (e.g., "all users"); validate tool outputs before chaining to downstream actions.
+
+        \item \textbf{Command policies and deny patterns}: Define rules for allowed recipients, data stores, record types; disallow destructive verbs by default; require dual authorization ("two-key") for sensitive operations.
+
+        \item \textbf{Secure defaults and governance warnings}: Prefer authenticated access and user credential delegation; flag high-risk configurations (no auth, org-wide sharing) via automated security scans.
+    \end{itemize}
+
+
+    \section{Dynamic Permission Management}
+
+    Dynamic permission management is the use of just-in-time and just-enough authorization for agent actions. It includes:
+
+    \begin{itemize}
+        \item Step-up authentication for sensitive actions
+        \item Time-bound scopes (short-lived tokens, expiring grants)
+        \item Approvals and human-in-the-loop for high-impact steps
+    \end{itemize}
+
+    Agents frequently operate across systems with real permissions. Agentic risk guidance calls out identity & privilege abuse—including ambiguous identity contexts and credential reuse—because it blurs accountability and enables escalation.  This is consistent with established security thinking: privilege escalation is a core adversary tactic and becomes more likely when permissions are broad, persistent, and poorly monitored.
+
+    \textbf{Common Permission Risks}:
+    \begin{itemize}
+        \item \textbf{Long-lived credentials} embedded in tool configurations or shared across agents, increasing exposure if compromised.
+        \item \textbf{Over-delegation} where an agent receives a role broader than required “to avoid friction,” enabling unintended actions.
+        \item \textbf{Transitive trust} across agent-to-agent workflows, where a lower-trust component can trigger higher-privilege actions indirectly.
+        \item \textbf{Misconfiguration by makers} (e.g., disabling authentication, switching to maker credentials, oversharing), which Microsoft explicitly warns about via pre-publish security scanning.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Unique agent identities and scoped roles:} give each agent a distinct identity per function/environment and assign minimal roles (dev/test/prod separation; least privilege).
+        \item \textbf{Just-in-time, time-bound authorization:} use short-lived, per-task credentials and expiring grants instead of static keys.
+        \item \textbf{Step-up authentication \& conditional access:} require additional verification and risk-based conditional access for high-impact actions.
+        \item \textbf{Granular, auditable approvals for irreversible actions:} require human approval tied to specific action parameters (not generic approvals) and record decisions for audit.
+    \end{itemize}
+
+
+    \section{Resource Guardrails}
+
+    Resource guardrails are runtime controls that prevent runaway execution, cost explosions, and cascading operational failures. They include:
+
+    \begin{itemize}
+        \item Timeouts and maximum step counts
+        \item Rate limits and quotas (per agent, per user, per tool)
+        \item Compute/memory caps for tool runtimes
+        \item Deadlock/loop detection and circuit breakers
+    \end{itemize}
+
+    Agents can generate long plans, spawn repeated tool calls, or get trapped in retry loops—especially when tools return partial failures or ambiguous responses. In multi-agent systems, small faults can amplify across message buses and shared context stores, producing systemic incidents.  Resource limits are therefore both a security and reliability control, and they should be treated as mandatory for production agent operations.
+
+    \textbf{Common Resource Risks}:
+
+    \begin{itemize}
+        \item Infinite or near-infinite planning/execution loops driven by ambiguous tool responses or repeated retries.
+        \item High-cost tool invocation patterns (large retrievals, repeated external calls, large embeddings/processing) that create cost and availability pressure (unbounded consumption).
+        \item Cross-agent amplification where one agent's output triggers other agents repeatedly (cascading failure patterns).
+        \item Noisy neighbors where one agent or tenant starves shared infrastructure due to missing quotas; governance systems emphasize centralized monitoring and controls for agents, including monitoring/visibility and policy management.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+
+    \begin{itemize}
+        \item \textbf{Execution budgets:} Cap tool calls per task, token/turn and wall-clock limits; enforce per-tool timeouts (e.g., retrieval 5s, transaction 10s) and fail safely.
+        \item \textbf{Circuit breakers \& loop control:} Stop on repeated identical failures, apply backoff, and escalate to human review for persistent errors.
+        \item \textbf{Quotas \& rate limits:} Apply per-agent and per-user quotas, rate-limit external and sensitive tool calls, and enforce concurrency caps.
+        \item \textbf{Sandbox resource caps:} Enforce CPU/memory limits, restrict temp/large file writes, and cap output sizes to protect downstream systems.
+    \end{itemize}
+
+    \section{Runtime Policy Enforcement}
+
+    Runtime policy enforcement is the systematic evaluation of “may I do this now?” at every decision point where the agent crosses a trust boundary—invoking a tool, accessing a data source, sending an external message, writing memory, or escalating privilege. It is commonly implemented through:
+
+    \begin{itemize}
+        \item Policy-as-code: versioned, testable rules that codify runtime authorization and safety policies.
+        \item Decision interceptors: pre-execution checks that evaluate intent, provenance, and risk before allowing actions.
+        \item Deny-by-default posture: explicit allow rules for permissible actions, with fail-safe rejection otherwise.
+    \end{itemize}
+
+    OWASP highlights that insecure integration, improper output handling, and excessive autonomy create practical exploit paths in LLM-based systems.  Agentic applications intensify this because tools are selected dynamically, and the agent may incorporate untrusted retrieved content into decisions.  NIST AI RMF emphasizes governance and lifecycle risk management, including post-deployment monitoring and iterative control improvements—runtime policy enforcement is a concrete mechanism to operationalize that guidance
+
+    \textbf{Common Policy Gaps}:
+
+    \begin{itemize}
+        \item \textbf{Policy gaps:} A new tool or connector is introduced without equivalent rules, creating an ungoverned execution path.
+        \item \textbf{Policy drift:} Policies exist, but they are not applied consistently across orchestrators, environments, or tool runners.
+        \item \textbf{Bypass via alternate route:} If policy checks only occur at the UI or only at the model prompt, an agent can reach the same operation through a different integration path.
+    \end{itemize}
+
+    \textbf{Mitigation Strategies}:
+    \begin{itemize}
+        \item \textbf{Central policy engine:} Single policy service with interception at the tool router; share a common policy library across all orchestrators to enforce pre-execution checks.
+        \item \textbf{Deny-by-default \& allowlists:} Block external egress, destructive/privileged actions, and sensitive data movement unless explicitly permitted; treat unrecognized tools as untrusted until onboarded.
+        \item \textbf{Context-aware policy inputs:} Evaluate agent identity, user identity, data sensitivity labels, environment, and action risk tier for each allow/deny decision.
+        \item \textbf{Versioning, testing \& auditability:} Store policies in version control, require reviews and tests, and emit tamper-evident logs for every decision to support audits and forensics.
+    \end{itemize}
+
+\end{TNtwocol}

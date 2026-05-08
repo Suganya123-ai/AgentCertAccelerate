@@ -1,0 +1,69 @@
+% filepath: chapters/human_oversight_and_control.tex
+\TNchapter[Human-in-the-loop design patterns, approval gates, escalation triggers, critical action approvals, override mechanisms, and audit structures for effective human oversight.]{Human Oversight and Control}
+
+\begin{TNtwocol}
+
+\section{Human-in-the-Loop Design Patterns}
+Human-in-the-loop (HITL) design patterns integrate human judgment and intervention into AI system workflows. These patterns ensure that critical decisions, ambiguous cases, or high-risk actions are subject to human review, enhancing safety and accountability. HITL can be implemented at various stages, from data labeling and model training to real-time decision-making and post-hoc review.
+
+\subsection{Common HITL Patterns}
+\begin{itemize}
+    \item \textbf{Pre-Action Review}: Humans validate or modify agent decisions before execution.
+    \item \textbf{Post-Action Audit}: Human review of actions after they occur for feedback and correction.
+    \item \textbf{Continuous Monitoring}: Ongoing human supervision with the ability to intervene as needed.
+\end{itemize}
+
+\section{Approval Gates and Checkpoints}
+Approval gates and checkpoints are predefined stages in an agent’s workflow where human approval is required before proceeding. These mechanisms are especially important for high-stakes or irreversible actions, ensuring that only validated decisions are executed.
+
+\subsection{Implementation Strategies}
+\begin{itemize}
+    \item \textbf{Sequential Gates}: Multiple approval points throughout a process.
+    \item \textbf{Conditional Checkpoints}: Gates triggered by specific risk factors or thresholds.
+    \item \textbf{Automated Alerts}: Notifications to human operators when approval is needed.
+\end{itemize}
+
+\section{Confidence-Based Escalation Triggers}
+Confidence-based escalation triggers use the agent’s self-assessed uncertainty or risk metrics to determine when human intervention is necessary. When the system’s confidence in its decision falls below a threshold, or when potential impact is high, the case is escalated to a human overseer.
+
+\subsection{Trigger Mechanisms}
+\begin{itemize}
+    \item \textbf{Uncertainty Thresholds}: Escalation when model confidence is low.
+    \item \textbf{Risk Scoring}: Escalation based on predicted impact or severity.
+    \item \textbf{Anomaly Detection}: Escalation in response to outlier or unexpected situations.
+\end{itemize}
+
+\section{Critical Action Human Approval}
+For actions with significant consequences, explicit human approval is mandated before execution. This includes financial transactions, safety-critical operations, or decisions affecting human welfare. Critical action approval ensures that responsibility remains with human operators for high-impact outcomes.
+
+\subsection{Best Practices}
+\begin{itemize}
+    \item \textbf{Clear Criteria}: Define which actions require approval.
+    \item \textbf{Traceable Records}: Log all approval decisions for accountability.
+    \item \textbf{Redundancy}: Require multiple approvals for especially sensitive actions.
+\end{itemize}
+
+\section{Override and Correction Mechanisms}
+Override and correction mechanisms empower humans to halt, reverse, or modify agent actions in real time. These controls are essential for mitigating errors, responding to unforeseen circumstances, and maintaining ultimate human authority over AI systems.
+
+\subsection{Types of Overrides}
+\begin{itemize}
+    \item \textbf{Manual Stop}: Immediate halt of agent activity.
+    \item \textbf{Rollback}: Reversal of recent actions or decisions.
+    \item \textbf{Parameter Adjustment}: Real-time tuning of agent behavior or constraints.
+\end{itemize}
+
+\section{Audit and Accountability Structures}
+Audit and accountability structures provide transparency and traceability for agent actions and oversight interventions. Comprehensive logging, regular audits, and clear documentation enable organizations to investigate incidents, ensure compliance, and foster trust.
+
+\subsection{Key Elements}
+\begin{itemize}
+    \item \textbf{Action Logging}: Detailed records of agent decisions and human interventions.
+    \item \textbf{Audit Trails}: Chronological documentation of all critical events.
+    \item \textbf{Accountability Assignment}: Clear attribution of responsibility for decisions and outcomes.
+\end{itemize}
+
+\section{Conclusion}
+Effective human oversight and control are foundational for safe, trustworthy AI deployment. By integrating HITL patterns, approval gates, escalation triggers, override mechanisms, and robust audit structures, organizations can ensure that AI systems remain aligned with human values and under meaningful human supervision.
+
+\end{TNtwocol}

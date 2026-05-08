@@ -1,0 +1,117 @@
+\TNchapter[Agentic systems represent a shift from static automation to adaptive, goal-directed intelligence embedded across the enterprise.]{Functional Evaluation }
+\begin{TNtwocol}
+\section{Task Completion and Success Rate Assessment }
+\subsection{Introduction}
+Task completion metrics answer the fundamental question: did the agent accomplish what it was asked to do? This moves beyond simple output quality to evaluating outcomes, efficiency, and adherence to instructions.
+
+\subsection{Core Task Completion Metrics}
+\begin{itemize}
+    \item \textbf{TaskCompletionMetric} (DeepEval): A trace-based metric (1-5 scale) inspecting reasoning, tool selection, and logical execution.
+    \item \textbf{IntentResolutionEvaluator} (Azure): Assesses if the agent correctly parsed user intent and if the final answer addressed the actual need.
+    \item \textbf{TaskAdherenceEvaluator}: Checks compliance with system prompts, role constraints, and safety guidelines.
+\end{itemize}
+
+\subsection{Trajectory Evaluation Approaches}
+Google Vertex AI offers six metrics:
+\begin{enumerate}
+    \item \textbf{Exact Match}: Trajectory mirrors reference perfectly.
+    \item \textbf{In-Order Match}: Allows extra steps but preserves sequence.
+    \item \textbf{Any-Order Match}: Required actions present in any order.
+    \item \textbf{Precision \& Recall}: Measures relevance and completeness of actions.
+\end{enumerate}
+Arize's \textbf{Convergence Metrics} measure how consistently agents take optimal paths, helping identify inefficient execution loops.
+
+\subsection{Benchmark Frameworks}
+Frameworks like \textbf{AgentBench} (multi-domain tasks) and \textbf{ToolBench} (tool selection accuracy) provide standardized assessment environments.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Tool Selection and Usage Accuracy }
+\subsection{Introduction}
+Tool selection accuracy evaluates \textit{how} the agent executed the task---specifically, selecting appropriate tools and invoking them with correct parameters.
+
+\subsection{Fundamental Tool Evaluation Metrics}
+\begin{itemize}
+    \item \textbf{ToolCorrectnessMetric} (DeepEval): Isolates the decision of whether the correct tool was called.
+    \item \textbf{ArgumentCorrectnessMetric}: Validates parameter presence, type, and value appropriateness (e.g., passing "metric" vs. "celsius").
+    \item \textbf{ToolCallAccuracyEvaluator} (Azure): Binary assessment comparing expected vs. actual tool calls across diverse ecosystems (Search, Code Interpreter, etc.).
+\end{itemize}
+
+\subsection{Function Calling Evaluation}
+The \textbf{Berkeley Function Calling Leaderboard (BFCL)} uses AST-level (Abstract Syntax Tree) validation to handle semantic equivalence (e.g., parameter order differences) and specific typing rules, ensuring robust assessment across languages like Python, Java, and SQL.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Multi-Turn Conversation Coherence }
+\subsection{Introduction}
+Coherence evaluation assesses the quality of sustained interaction. Agents must maintain consistent persona, reference earlier points, and adapt to goal evolution.
+
+\subsection{Challenges of Multi-Turn Evaluation}
+Standard metrics fail due to temporal dependencies, state management, reference resolution (pronouns), and the compounding non-determinism of conversation paths.
+
+\subsection{Coherence Scoring Methodologies}
+\textbf{LLM-as-Judge}: Evaluating logical flow, consistency, clarity, and contextual awareness using structured prompts (e.g., W\&B Weave).
+\textbf{Granularity}:
+\begin{itemize}
+    \item \textbf{Turn-Level}: Identifies specific problematic responses.
+    \item \textbf{Conversation-Level}: Assesses overall narrative arc and goal progression.
+\end{itemize}
+
+\subsection{Context-Aware Assessment}
+Metrics focus on Reference Accuracy (are backward references correct?), Memory Consistency (contradictions with user inputs), and Implicit Context Handling (resolving "the red one").
+
+\subsection{Dialogue Flow}
+Evaluates transition quality (smooth vs. jarring) and conversational repair (clarification requests, error acknowledgments).
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Context Retention and Memory Evaluation }
+\subsection{Introduction}
+Memory evaluation assesses whether agents can store, retrieve, and leverage information across working, short-term, long-term, and procedural memory systems.
+
+\subsection{Fundamental Memory Evaluation Metrics}
+\begin{itemize}
+    \item \textbf{Recall Accuracy}: Testing specific retrieval via exact or semantic matches.
+    \item \textbf{Response Similarity}: Using metrics like ROUGE-1 to measure overlap with expected outputs.
+    \item \textbf{Memory Consistency}: Checking for logical (e.g., location vs. timezone) and temporal consistency in agent statements.
+    \item \textbf{Forgetting}: Evaluating priority-based retention and graceful degradation.
+\end{itemize}
+
+\subsection{Process-Oriented Memory Evaluation}
+Evaluating \textbf{Memory Access Patterns} (relevance, timing, redundancy) and \textbf{Memory-Augmented Task Completion} in personalization or history-aware tasks.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Error Recovery and Fallback Behavior }
+\subsection{Introduction}
+Error recovery evaluation tests agent robustness---the ability to handle failures (API, Planning, Context, Input, System) gracefully and continue making progress.
+
+\subsection{Recovery Strategies}
+Effective agents use strategies like Retry with Backoff, Alternative Tool Selection, Clarification, Graceful Degradation, and Human Escalation.
+
+\subsection{Path Evaluation Metrics}
+Arize's framework analyzes:
+\begin{itemize}
+    \item \textbf{Optimal Path Distance}: Efficiency compared to ideal execution.
+    \item \textbf{Cyclical Pattern Detection}: Identifying loops and dead ends.
+    \item \textbf{Convergence Score}: Consistency in finding efficient paths (0-1 scale).
+\end{itemize}
+
+\subsection{LLM-as-Judge for Recovery}
+Templates evaluate Error Detection accuracy, Recovery Strategy appropriateness, and subsequent Planning Quality.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{End-to-End Workflow Validation }
+\subsection{Introduction}
+End-to-end evaluation assesses whether capabilities integrate effectively in realistic, multi-step scenarios, validating production readiness.
+
+\subsection{Trajectory Evaluation Frameworks}
+Google Vertex AI metrics:
+\begin{enumerate}
+    \item \textbf{Exact Match}: Strict mirror of reference sequence.
+    \item \textbf{In-Order Match}: Preserves sequence but allows extra steps.
+    \item \textbf{Any-Order Match}: Flexible sequencing for independent tasks.
+    \item \textbf{Precision \& Recall}: Measures relevance and completeness; combined into an \textbf{F1-Score} to penalize inefficiency.
+    \item \textbf{Single-Tool Use}: Verifying utilization of specific capabilities.
+\end{enumerate}
+
+\subsection{Integration}
+Native integration with frameworks like LangChain and LangGraph allows systematic experiment tracking and comparison of agent runs.
+\end{TNtwocol}
+

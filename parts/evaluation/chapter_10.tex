@@ -1,0 +1,103 @@
+
+\TNchapter[Agentic systems represent a shift from static automation to adaptive, goal-directed intelligence embedded across the enterprise.]{Continuous Evaluation Systems}
+\begin{TNtwocol}
+\section{Production Evaluation Pipeline Design }
+\subsection{Introduction}
+Production evaluation moves from deterministic testing to continuous, non-deterministic assessment in real-time. It requires handling scale and asynchronous processing without blocking user interactions.
+
+\subsection{Core Architecture}
+\begin{itemize}
+    \item \textbf{Asynchronous Evaluation}: Decouples assessment from agent execution using event-driven architectures to ensure zero latency impact.
+    \item \textbf{CI/CD Integration}: Automated hooks for regression detection and staged rollouts (Canary deployments).
+    \item \textbf{Metric Collection}: Tracking Performance (latency, cost), Quality (accuracy, hallucinations), and User Feedback.
+\end{itemize}
+
+\end{TNtwocol}
+\begin{TNtwocol}
+\subsection{Deployment Strategies}
+Detailed \textbf{Trace Capture} (using OpenTelemetry standards) enables granular analysis. \textbf{Monitoring} checks for quality degradation and drift against Service Level Objectives (SLOs). Using evaluation data to trigger automated retraining closes the improvement loop.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Sampling Strategies for Live Traffic }
+\subsection{Introduction}
+Evaluating every interaction is cost-prohibitive. Sampling strategies balance coverage with cost while maintaining statistical significance.
+
+\subsection{Sampling Fundamentals}
+The \textbf{Coverage-Cost Tradeoff} weighs the need for detecting issues against the expense of LLM-as-judge calls. \textbf{Risk-Based Sampling} prioritizes high-stakes or user-facing interactions over internal tool usage.
+
+\subsection{Methodologies}
+\begin{itemize}
+    \item \textbf{Random Sampling}: unbiased baseline (Simple, Stratified, Reservoir).
+    \item \textbf{Adaptive Sampling}: Increases rates when errors or low confidence are detected.
+    \item \textbf{Stratified Sampling}: Ensures representation across Use Cases, User Segments, and Interaction Complexity to prevent blind spots.
+\end{itemize}
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Online vs. Offline Evaluation Integration}
+\subsection{Introduction}
+Integrating controlled Offline evaluation (reproducible but subject to distribution shift) with real-world Online evaluation (accurate distribution but lacks ground truth) is essential.
+
+\subsection{Evaluation Paradigms}
+\begin{enumerate}
+    \item \textbf{Offline}: Best for regression testing and rapid iteration. Limited by determining "correctness" without real user context.
+    \item \textbf{Online}: Best for drift detection and validating system integration. Challenges include attribution and lack of ground truth.
+\end{enumerate}
+
+\subsection{Integration Architecture}
+\textbf{Bidirectional Feedback Loops} allow online failures to populate offline test sets, ensuring future tests reflect reality. \textbf{Staged Deployment} moves from development to staging (offline + synthetic load) and then to production monitoring.
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Automated Quality Scoring Systems}
+\subsection{Introduction}
+Automated scoring uses LLM-as-judge frameworks and trajectory metrics to evaluate agents at scale, enabling rapid iteration and regression testing.
+
+\subsection{LLM-as-Judge}
+Frameworks like \textbf{GEval} allow criteria-based evaluation using natural language (e.g., "empathy," "compliance"). Effective rubrics need atomic criteria, explicit scoring bands, and reference examples.
+
+\subsection{Evaluation Strategies}
+\begin{itemize}
+    \item \textbf{Reasoning Layer}: \texttt{PlanQualityMetric} and \texttt{PlanAdherenceMetric} assess strategy and execution faithfulness.
+    \item \textbf{Action Layer}: \texttt{ToolCorrectness} and \texttt{ArgumentCorrectness} check if the right tool was called with valid parameters.
+    \item \textbf{End-to-End}: \texttt{TaskCompletionMetric} and \texttt{Trajectory Evaluation} (Exact vs. Any-Order match) measure overall success.
+\end{itemize}
+\end{TNtwocol}
+\begin{TNtwocol}
+\section{Human-in-the-Loop Evaluation Integration }
+\subsection{Introduction}
+Humans provide ground truth for edge cases, high-stakes decisions, and nuanced quality dimensions where automation fails.
+
+\subsection{Workflows}
+\textbf{Annotation Queues} route interactions for review based on filters (e.g., negative feedback).
+\begin{itemize}
+    \item \textbf{Single-Run}: Detailed assessment against rubrics.
+    \item \textbf{Pairwise Annotation}: Side-by-side comparison for A/B testing (e.g., model selection).
+\end{itemize}
+
+\subsection{Domain Expertise}
+Effective evaluation requires SMEs (Clinicians, Lawyers) for domain-specific correctness, rather than generic annotators. Calibration rounds ensure inter-rater reliability.
+\section{Feedback Loop Implementation }
+\subsection{Introduction}
+Feedback loops transform evaluation insights into improvements by channeling data back into development (datasets, prompts, models).
+
+\subsection{Cyclical Development Model}
+The lifecycle involves: Test Case Creation $\rightarrow$ Component Evaluation $\rightarrow$ Experimentation $\rightarrow$ Production Monitoring $\rightarrow$ Dataset Revision.
+
+\subsection{Test Case Libraries}
+Effective libraries focus on coverage over volume, evolving with real user variations and adversarial prompts harvested from production.
+
+\subsection{User Feedback}
+Integration includes \textbf{Explicit} signals (Thumbs Up/Down, Categorical Feedback) and \textbf{Implicit} signals (Retry rates, Abandonment) to validate automated metrics.
+\section{Evaluation-Driven Retraining Triggers}
+\subsection{Introduction}
+Automated triggers determine when to retrain or fine-tune models based on performance drift, distinguishing signal from noise.
+
+\subsection{Drift Detection}
+\begin{itemize}
+    \item \textbf{Input Distribution Drift}: Concept drift (new user needs) or Covariate shift (feature changes).
+    \item \textbf{Performance Degradation}: Tracking gradual declines (staleness) or sudden drops (broken dependencies).
+    \item \textbf{User Feedback Trends}: Declining ratings or rising complaint volumes.
+\end{itemize}
+
+\end{TNtwocol}
+\subsection{Statistical Rigor}
+Using \textbf{Rolling Baselines} and \textbf{Confidence Intervals} prevents over-reaction to natural variance. Contextual normalization accounts for time-based patterns.
