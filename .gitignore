@@ -1,0 +1,143 @@
+# LaTeX auxiliary files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+# LaTeX intermediate files
+*.dvi
+*.xdv
+*-converted-to.*
+
+# Bibliography auxiliary files
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+# Build tool auxiliary files
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+# Build directories
+build/
+dist/
+
+# Beamer auxiliary files
+*.nav
+*.pre
+*.snm
+*.vrb
+
+# Index auxiliary files
+*.idx
+*.ilg
+*.ind
+
+# Glossary auxiliary files
+*.acn
+*.acr
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.lzo
+*.lzs
+
+# Gnuplot auxiliary files
+*.gnuplot
+*.table
+
+# Hyperref auxiliary files
+*.brf
+
+# Knitr auxiliary files
+*-concordance.tex
+
+# Listings auxiliary files
+*.lol
+
+# Makeidx auxiliary files
+*.maf
+*.mlf
+*.mlt
+*.mtc[0-9]*
+*.slf[0-9]*
+*.slt[0-9]*
+*.stc[0-9]*
+
+# Minitoc auxiliary files
+*.maf
+*.mtc
+*.mtc0
+
+# Minted auxiliary files
+_minted*
+*.pyg
+
+# Nomenclature auxiliary files
+*.nlg
+*.nlo
+*.nls
+
+# PdfTeX auxiliary files
+*.pdf_tex
+
+# SageTeX auxiliary files
+*.sagetex.sage
+*.sagetex.py
+*.sagetex.scmd
+
+# Sympy auxiliary files
+*.sout
+*.sympy
+sympy-plots-for-*.tex/
+
+# TikZ & PGF auxiliary files
+*.dpth
+*.md5
+*.auxlock
+
+# Todonotes auxiliary files
+*.tdo
+
+# Xindy auxiliary files
+*.xdy
+
+# XFig auxiliary files
+*.bak
+
+# Temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Editor directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+Thumbs.db
+
+# output files
+*.pdf
+
+# Agent markdown files
+*agent*.md

@@ -1,0 +1,34 @@
+\documentclass{infosys-design}
+\usepackage{lipsum}
+
+% Override any cover strings (optional)
+\renewcommand{\TNBrand}{Your Brand | Knowledge Institute}
+\renewcommand{\TNTitle}{ARIA: Enterprise Agentic AI Blueprint}
+\renewcommand{\TNCoverKicker}{ARIA:}
+\renewcommand{\TNCoverTitleA}{AGENTIC ENTERPRISE}
+\renewcommand{\TNCoverTitleB}{AI PLAYBOOK}
+\renewcommand{\TNCoverImage}{assets/cover.png}
+\renewcommand{\TNLogoImage}{assets/logo.png}
+\renewcommand{\TNTOCHeroImage}{assets/toc-hero.png}
+
+\begin{document}
+\frontmatter
+
+\MakeCover
+\MakeContents
+
+\mainmatter
+\include{parts/certification}
+\include{parts/benchmarking}
+\include{parts/evaluation}
+\include{parts/hardening}
+\include{parts/alignment}
+
+\backmatter
+\bibliographystyle{plain}
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{references}
+\thispagestyle{scrheadings}
+\pagestyle{scrheadings}
+
+\end{document}
