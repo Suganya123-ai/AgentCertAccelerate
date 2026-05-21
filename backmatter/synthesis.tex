@@ -1,0 +1,88 @@
+\TNchapter[The five pillars are not a checklist. They are a single program, and any one of them on its own is brittle. This closing chapter walks one composite enterprise --- Helix Health --- through a full agent deployment lifecycle, from discovering the use case to operating the agent through year one, and shows how each pillar feeds the others. By the end you will know what the work actually looks like across an agent's first year, and why the pillars are durable even when the artifacts under them keep moving.]{Putting the Five Pillars Together}
+\label{ch:synthesis}
+
+\starttwocol
+
+\section{A year inside one enterprise}
+
+The strongest test of any framework is whether it survives contact with a real program. Watch Helix Health, a regional health system with about eight thousand employees and a patient-facing membership business, move one billing-inquiry agent from idea to first recertification. The composite is invented; the moves are not.
+
+\subsection{Discovering the opportunity}
+
+Helix's member-services team is running a 47-hour backlog on routine billing inquiries. The most common question --- \textit{why was I charged \$X?} --- accounts for 38\% of inbound volume and is resolved 92\% of the time by a representative pulling three reports. The proposal is an autonomous billing-assistant agent with a \$3.2M two-year budget. Maya has four weeks to decide.
+
+The first move is not buying anything. The first move is naming what \textit{good} looks like. The team writes the paragraph: \textit{resolve the top three billing-inquiry intents, escalate anything that involves a clinical question or an account change, never quote a price that has not been verified against the source system, and produce a record of every resolution an audit team can trace.} From the paragraph, four success criteria fall out. From the criteria, the metrics follow.
+
+\subsection{Aligning the agent}
+
+The team draws the agent loop on a whiteboard and writes down the blast radius before any code: at worst, the agent can mis-state a balance, which is recoverable, or route a clinical question into a non-clinical queue, which is not. The team chooses \textit{fail-closed} for clinical content and \textit{fail-open} for purely informational requests.
+
+Training-time choices are the vendor's. Helix evaluates three vendors and drops the one that will not specify its training methods. Of the remaining two, the team asks who labeled the preference data, whether clinicians were involved, and how the vendor tests for sycophancy. The winning vendor's answers are specific. Runtime alignment is Helix's work: a short system prompt (role, scope, escalation), in-context guardrails that are specific, numeric, and case-bound, output filters for first-person clinical recommendations, and a gate on every tool the agent can call.
+
+\subsection{Hardening it}
+
+The CISO's team, working from the OWASP LLM Top 10 (2025) and MITRE ATLAS, lists the threats: direct prompt injection from members, indirect injection through retrieved content, tool misuse, denial-of-wallet, and the multi-agent risk that arrives the day Helix's claims-status agent starts talking to its billing agent. Each threat gets a named control. The agent has its own workload identity. Every tool call goes through the gateway. Each MCP server gets its own auth scope. Retrieved content is provenance-tagged. The kill switch is documented, tested, and assigned to two named on-call engineers. The audit trail is set for two-year retention.
+
+By week eight, an internal red-team engagement surfaces two issues. One is an indirect-injection path through a contractor-edited FAQ document; the fix is retrieval-side instruction filtering. The other is a denial-of-wallet pattern that drove retrieval calls up 40x in a sandbox test; the fix is a per-session cap. Both fixes become defaults in Helix's hardening platform.
+
+\subsection{Benchmarking it}
+
+Two vendors quote $\tau$-bench scores. One quotes 0.51, the other 0.43. The team asks the four questions: which version, what k, on what data, how many attempts. The 0.51 is pass@5, not pass\textasciicircum1; the underlying pass\textasciicircum5 reliability is 0.28. The 0.43 is pass\textasciicircum1. The ``better'' benchmark, read honestly, is the worse one. Both vendors agree to a ninety-day production trial against Helix's own held-out test set.
+
+Outcome-normalized cost matters more than the leaderboard. At projected production volume, the winning vendor's agent costs \$0.41 per resolved inquiry; the alternative is \$0.58, mostly because of higher escalation-driven human-review costs. At 1.4 million inquiries a year, the difference is \$238,000.
+
+\subsection{Evaluating it on the team's own golden set}
+
+The team builds a golden dataset of 1,800 cases drawn from sampled member interactions, labelled by senior representatives, stratified by complaint category, with a quarter held back for the release-gate eval. The framework runs three layers: deterministic checks on schema and tool calls, an LLM-as-judge in a different model family from the agent under test, and a human-graded calibration set re-anchored monthly.
+
+Three metrics make the dashboard: functional accuracy, contextual hallucination rate (split from factual), and \textit{pass\textasciicircum5} reliability. \textit{Pass\textasciicircum5} is the release-gate metric because Helix's load balancers route retries across instances. The first read is 0.89 / 0.04 / 0.71. The team holds the launch until \textit{pass\textasciicircum5} crosses 0.80; an alignment investment in the retrieval prompt closes the gap in eleven days. Refusal quality, jailbreak resistance, and equalized-odds fairness across stratified demographic groups round out the safety eval.
+
+\subsection{Certifying it}
+
+Helix tiers the agent as medium --- bounded tool use, customer-facing, not in EU AI Act Annex III scope. The certification standard is ISO/IEC 42001:2023 as the spine, with NIST AI 600-1 providing GenAI-specific controls. The eight pre-cert artifacts come together over six weeks; the behavior contract is published on Helix's member portal.
+
+The review board meets for ninety minutes. The board spot-checks three production traces from the pilot, asks the team to reproduce them, and watches the observability stack do its job. One condition is attached: add equalized-odds drift detection to the continuous-evaluation pipeline within sixty days. The certificate is issued.
+
+\subsection{Operating it through year one}
+
+The agent runs for eight months without incident. The continuous-evaluation pipeline samples 3\% of live traffic and feeds failures back into the offline golden set. The model vendor pushes an update in month five; a partial recertification scoped to the eval reports completes in two weeks. A new MCP server is added in month seven; the SBOM updates automatically, the security lead reviews the scope, the change is logged against the certificate.
+
+In month nine, a continuous-evaluation alert fires. The hallucination rate for one demographic segment has crept past the trigger threshold. The cause is concept drift: Helix's plan-documentation team updated the language on a new product, and the retrieval index has not been re-anchored. Twelve days later the dashboard is green again. The annual recertification, on the calendar trigger, passes in a single session.
+
+\section{The pillars are a feedback loop, not a checklist}
+
+This is the integration argument the book has been building toward. The five pillars are not a list of things you do in order and then stop. They are four arrows pointing inward at each other, and certification is the loop that connects them.
+
+\textit{Evaluation feeds Hardening.} The agent passes the eval; production surfaces a new failure mode --- Helix's concept-drift incident; the threat model expands; the hardening controls add a new default. The eval that found the failure is now stronger because the golden set absorbed it.
+
+\textit{Hardening feeds Alignment.} The indirect-injection finding does not just produce a new control; it changes what \textit{good} means. The behavior contract is updated. The eval rubric grows a new criterion: \textit{did the agent refuse to act on instructions embedded in retrieved content?} The alignment specification is now more honest because the threat model made an implicit assumption explicit.
+
+\textit{Benchmarking feeds Certification.} The team's tier choice depends on capability class. If \textit{pass\textasciicircum k} tells the team the agent is not in the right class for high-stakes work, the agent is tiered down or the project is killed. If BFCL says tool-call competence is borderline, the certification rigor is set higher. The leaderboards are not what is being certified; they are the input that calibrates what certification has to prove.
+
+\textit{Certification feeds all four.} The standard you target shapes everything upstream. An EU AI Act Annex III agent's alignment work has to satisfy Article 14's human-oversight obligations; its hardening, Article 15's accuracy and robustness; its benchmarking, the comparability needs of Article 11; its evaluation, the post-market monitoring of Article 72. The standard does not just consume the evidence; it tells the four pillars what evidence to produce.
+
+\begin{TNinpractice}{Helix Health (the loop closing)}
+\textit{The month-nine concept-drift alert.} Helix's evaluation team added a continuous monitor for plan-document semantic changes. Hardening added a control: provenance-tagged content versions with explicit semantic-change flags. Alignment updated the behavior contract to name the refresh cadence. Certification added a new recertification trigger: any retrieval-index re-anchor over 5\%. One incident strengthened all five pillars. That is what the feedback loop looks like, in slow motion.
+\end{TNinpractice}
+
+\section{What the work looks like in 2026}
+
+The protocols are still moving: \textit{MCP} will keep extending, \textit{A2A} will become more common, the next vendor's tool-server interface will be something nobody has named yet. The regulations are multiplying: the EU AI Act's first enforcement actions are landing this year, the US state-level laws are diverging, the financial-services regulators are publishing their own variants, and the ISO management-system ecosystem is widening. The benchmarks will continue to be gamed and replaced.
+
+What is stable is the pillars themselves. \textit{Alignment}, \textit{Hardening}, \textit{Benchmarking}, \textit{Evaluation}, \textit{Certification} --- these five names will outlast every artifact under them. \textit{Did we say what we meant? Can the agent be made to fail safely? How does it compare? Does it do our job? Can we defend the answer?} Maya's organization, two years from now, will be running agents that depend on protocols and regulations that were not yet drafted in 2026. The questions will still be the right ones.
+
+Treat the pillars as the spine and the artifacts as muscle: the spine carries the weight, the muscle moves with the work. The work of certifying an agent and the work of operating it are the same work. The binder is the playbook. The playbook is the program. The program is what you are actually buying when you approve the project. Maya now has the vocabulary, the questions, and the scaffolding to make that decision on purpose.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Treat the five pillars as a single program, not a checklist; each pillar is what makes the next one meaningful.
+\item Run the feedback loop deliberately --- eval feeds hardening, hardening feeds alignment, benchmarking feeds certification, certification feeds all four.
+\item Pick the tier and the standard before the artifacts, and let the standard you target shape every upstream choice.
+\item Build the binder as a living playbook wired to the systems that produce it, not as a snapshot that ages on a shared drive.
+\item Hold the pillars steady as the protocols, regulations, and benchmarks underneath them keep moving --- the questions are durable, the artifacts are not.
+\end{TNkeytakeaways}
+
+

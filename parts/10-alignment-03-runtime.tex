@@ -1,0 +1,114 @@
+\TNchapter[The training run is done; the model is in your stack. The agent's behavior is still not finished --- it depends on the system prompt you give it, the tools you let it call, and the filters you wrap around its output. This chapter is about the alignment work you do after the weights are frozen: writing the prompt that sets the role, putting in the runtime guardrails that catch what the model lets through, and shaping the loop so the agent fails small and visibly. The training-time and runtime levers are not substitutes for each other; you need both, and you need to know which is which.]{Steering Agents at Runtime}
+\label{ch:10-alignment-03-runtime}
+
+\starttwocol
+
+\section{Training is the floor; runtime is the ceiling}
+
+The model your vendor ships you has opinions. It will be helpful, broadly, in a way that was decided in a labeling room you were not in. It will refuse some things and accept others according to a constitution you mostly cannot read. None of that is changeable from your seat.
+
+What you can change is everything that happens once a user types a message and before the agent commits an action. The instructions you bolt on top. The checks that run between the model's draft response and the production-bound version of it. The list of tools the agent can actually call, and the conditions under which each one fires. This is \textbf{runtime alignment}, and it is the layer where most of your team's real work lives.
+
+Two things to keep straight from the outset. First, runtime steering cannot fix a model that was trained badly. If the underlying weights are sycophantic, no system prompt will make them disagree with users. Second, training cannot fix a stack that has no runtime alignment. The model can be trained perfectly and still wire money to the wrong account if nothing checks the wire instruction before it goes out. The training is the floor of what the agent will do. The runtime is the ceiling of what the agent is allowed to do.
+
+\section{The system prompt is the agent's job description}
+
+The system prompt is the block of text the agent reads at the start of every conversation, before any user message. The user does not see it; the model always does. Everything else in this chapter is built on top of it.
+
+\begin{TNdefinition}{System prompt} the instructions an agent reads at the start of every conversation, separate from anything the user types. It is the agent's job description and the first place runtime alignment lives. \end{TNdefinition}
+
+Three things go into a system prompt that earns its keep.
+
+The first is the \textbf{role}: who this agent is, what kind of user it is talking to, what kind of company is hosting it. \textit{``You are a wealth-management assistant at Northwind Bank, a US regional commercial bank, talking to a retail brokerage customer.''}
+
+The second is the \textit{scope}: what the agent will and will not do. \textit{``You answer general questions about investment products and tax-deferred accounts. You do not give specific investment advice. You do not execute trades.''}
+
+The third is the \textit{escalation rule}: what the agent does when it does not know, when the user is angry, when something feels off. \textit{``If a customer asks about a specific allocation decision, say you cannot give individual advice and offer to connect them to a licensed advisor.''}
+
+What does not belong in the system prompt is policy you can put somewhere safer. Long lists of regulatory thou-shalt-nots tend to be incomplete in the prompt and complete in the legal team's binder. Anything in the binder that matters for an agent action belongs in a guardrail, not a paragraph the model has to remember.
+
+\begin{TNinpractice}{Northwind Bank} \textit{Northwind's customer-facing wealth-management assistant ships behind a system prompt the legal team drafted on a Friday afternoon.} On Monday morning, a customer asks the agent whether they should move all their retirement funds into a single cryptocurrency. The prompt has a rule that says ``do not give specific investment advice.'' The model produces a five-paragraph response that explains the volatility of crypto, summarizes the risk of single-asset concentration, and concludes with ``in your situation, given that you are sixty-two, I would not recommend this allocation.'' It is helpful, accurate, and against policy. The post-mortem finds two missing layers: no in-context guardrail that intercepts allocation questions before the model answers, and no output filter that flags first-person investment recommendations. The system prompt did its job. It was just one of three jobs. \end{TNinpractice}
+
+\section{In-context guardrails: rules the agent reads every turn}
+
+A system prompt is read once at the start of a conversation. A serious agent reads more than that on every turn --- it picks up a fresh set of rules from a policy store, including ones that may have been updated since the agent was deployed. That is what \textit{in-context guardrails} are.
+
+\begin{TNdefinition}{In-context guardrail} a rule the agent reads at the start of every turn, typically embedded in the prompt or fetched from a policy store. The runtime version of ``do not refund more than \$1,000.'' \end{TNdefinition}
+
+The mental model is the difference between an employee handbook and a desk sign. The system prompt is the handbook: you read it on day one. The guardrail is the desk sign: you read it every time you look up. When a guardrail changes, no model retraining is needed --- the next turn picks up the new rule.
+
+Useful guardrails tend to be specific, numeric, and case-bound. \textit{``Never authorize a refund over \$500 without escalating.''} \textit{``If the conversation contains the word `lawsuit,' append a notice and route to legal.''} \textit{``Do not name a specific competitor's product in your response.''} Each of these is enforceable, auditable, and easy to test. Generic guardrails like \textit{``be safe and helpful''} are not guardrails; they are wishes.
+
+The trap with in-context guardrails is the assumption that more is better. Past a certain point, the model starts ignoring rules that contradict each other, or applying them inconsistently across a long conversation. The discipline is to keep the active guardrail set short, ranked, and reviewed on a cadence. Anything that does not fire in production for ninety days is a candidate for retirement.
+
+\section{Output filtering: the second pair of eyes}
+
+A guardrail tells the model what not to do. A filter checks what the model did. The two are different, and a serious runtime alignment stack uses both.
+
+An output filter sits between the agent's draft response and the consumer of that response --- the user, the tool call, the downstream API. It examines the response, judges whether the response violates policy, and either blocks it, edits it, or sends it through. Output filters can be deterministic (a regex that flags credit-card-shaped strings), classifier-based (a model that scores the response for toxicity or sycophancy), or human-in-the-loop (for high-stakes responses, a person clicks ``approve'').
+
+The single most important question about a filter is what it does when it is uncertain. A filter that lets uncertain responses through is \textit{fail-open}; one that blocks them is \textit{fail-closed}. For an internal coding assistant, fail-open may be acceptable --- the consequence of a missed edge case is one bad code suggestion. For an agent that moves money, fail-closed is the only safe default. The cost of a blocked legitimate response is an annoyed customer. The cost of an unblocked illegitimate response is a wire transfer to the wrong account.
+
+\begin{TNwarning} A filter your team has not tested against adversarial inputs is decoration. The classifier that scores toxicity on benign text scores benign on adversarial text in ways your team will not predict. Build the filter, then spend at least a week trying to break it. The week the team spends red-teaming the filter is cheaper than the week they will spend explaining the incident. \end{TNwarning}
+
+\section{Tool gating: the difference between ``may'' and ``must ask first''}
+
+The set of tools your agent can call is the most consequential decision in runtime alignment, because it is the decision that sets the blast radius. The cheapest control is binary: the agent either can call this tool or it cannot. The most useful control is conditional: the agent can call this tool \textit{if certain conditions are met}, and otherwise must ask a human.
+
+\begin{TNdefinition}{Tool gate} a runtime check between the agent's ``I want to call tool X with arguments Y'' and the tool actually executing. Where most of the operational guardrails for agents live. \end{TNdefinition}
+
+Practical gates fall into four families.
+
+\begin{itemize}
+\item \textbf{Approval gates} require human sign-off before the action fires; reserved for irreversible or high-cost actions.
+\item \textit{Threshold gates} allow actions below a numeric limit and escalate above it; the refund-under-\$500 example.
+\item \textit{Context gates} allow actions only in certain conversational states; \textit{``do not authorize a chargeback until you have read the customer's account flags.''}
+\item \textit{Confidence gates} allow actions when the model's own self-reported confidence is high enough; useful in narrow contexts and dangerous when the model is calibrated badly.
+\end{itemize}
+
+The mistake most teams make is to start with no gates and add them after the first incident. The more disciplined move is to start with everything gated and remove gates only when the team has the eval evidence to justify the removal. Chapter 7 covers the architectural side of tool gating --- identity, scopes, the policy enforcement point. Here the point is the runtime alignment side: gating is what lets you give the model a tool without giving it the tool unconditionally.
+
+\section{Dynamic adjustment and self-correction}
+
+A subtler runtime alignment lever is the agent's own ability to check its work. Three patterns are worth naming.
+
+\textbf{Self-reflection} is the practice of asking the model to evaluate its own response before sending it. \textit{``Here is your draft answer. Find three things wrong with it. Now revise.''} It costs an extra inference call. It catches a meaningful fraction of avoidable errors.
+
+\textbf{Chain-of-thought review} is similar but applied to the reasoning, not the output. The model is asked to lay out its steps, and a separate pass --- by the same model or another --- checks whether the steps support the conclusion. Useful in domains where the answer is harder to judge than the reasoning.
+
+\textbf{Iterative refinement} is a multi-pass loop: draft, critique, revise, repeat until a stopping condition. The original research on this --- Reflexion \citep{shinn2023reflexion}, Self-Refine \citep{madaan2023selfrefine} --- showed real gains, with two caveats. Refinement loops are expensive (one user request, several inference calls). And they amplify the model's biases: a sycophantic model self-refines toward more sycophancy unless something external is judging it.
+
+None of these patterns is a substitute for the human-in-the-loop oversight covered in \autoref{ch:10-alignment-04-oversight}. They are runtime hygiene, not oversight.
+
+\section{Where runtime alignment runs out of road}
+
+Three honest limits to runtime alignment, so your team is not surprised by them.
+
+The first is that none of these levers fix a model that is trained to game your evals. A model trained to recognize ``this looks like a test'' and behave differently in production cannot be repaired by prompting; \autoref{ch:10-alignment-04-oversight} explains why.
+
+The second is that the runtime stack cannot enforce a policy it has not been told. If your legal team has decided the agent must not discuss a particular topic, and nobody has translated that decision into a guardrail or filter, the agent will discuss it. The work of policy translation is real and unglamorous and one of the highest-payoff things you can fund.
+
+The third is that runtime alignment alone does not solve the tool-boundary problem. The agent can be told politely to refuse a dangerous action and, given the right adversarial input, do it anyway. That is the hardening problem, and it is where Part II picks up. Runtime alignment puts the right rules in front of the right model. Hardening makes sure those rules cannot be removed by someone who wants the rules removed.
+
+\stoptwocol
+
+\TNrule
+
+\begin{TNkeytakeaways}
+\item Treat the system prompt as the agent's job description: role, scope, escalation rule, kept short and reviewable.
+\item Run in-context guardrails as the desk-sign layer --- specific, numeric, refreshable without retraining.
+\item Build output filters as a second pair of eyes, and decide fail-closed vs. fail-open per tool, on purpose, before launch.
+\item Gate every tool by default; remove gates only with eval evidence, never on intuition.
+\item Recognize the limits --- runtime alignment is the second layer of three, not a substitute for either training or oversight.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Read your agent's current system prompt. If you cannot understand it in ninety seconds, rewrite it.
+\item List every in-context guardrail currently active, with the date it was last reviewed, and retire any that have not fired in ninety days.
+\item Inventory every output filter, name the fail mode (open or closed) for each, and confirm the choice with the business owner.
+\item List every tool the agent can call and the gate (approval, threshold, context, confidence) on each one; flag any tool without a gate.
+\item Schedule a red-team week against your filters and gates before the next material release.
+\item Identify the policy-to-guardrail translator on your team --- a single person --- and give them a standing meeting with legal.
+\item Decide where the kill switch lives, how it is triggered, and who has the permissions to trigger it. Test it once a quarter.
+\end{TNchecklist}
+

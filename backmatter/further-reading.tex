@@ -1,0 +1,110 @@
+\TNchapter[A curated reading list, organized by pillar. Each entry names what the work is and why it is worth Maya's time. The list is short on purpose --- better thirty entries you will actually open than eighty you will not.]{Further Reading}
+\label{ch:further-reading}
+
+\starttwocol
+
+For full bibliographic details, see \textit{References}.
+
+\section{Alignment}
+
+\begin{itemize}
+\item \textbf{Ouyang, L., Wu, J., Jiang, X., et al.} \textit{Training language models to follow instructions with human feedback (InstructGPT)}. NeurIPS, 2022. The paper that turned RLHF from research into a commercial recipe. \href{https://arxiv.org/abs/2203.02155}{arXiv:2203.02155}
+
+\item \textbf{Bai, Y., Kadavath, S., Kundu, S., et al.} \textit{Constitutional AI: Harmlessness from AI feedback}. Anthropic, 2022. The original CAI paper; matters because the \textit{constitution} is the public artifact your vendor should show you. \href{https://arxiv.org/abs/2212.08073}{arXiv:2212.08073}
+
+\item \textbf{Hubinger, E., Denison, C., Mu, J., et al.} \textit{Sleeper agents: Training deceptive LLMs that persist through safety training}. Anthropic, 2024. The deceptive-alignment paper. Your CISO will eventually ask about it; the cleanest argument that behavioral verification alone is not sufficient. \href{https://arxiv.org/abs/2401.05566}{arXiv:2401.05566}
+
+\item \textbf{Schluntz, E., Zhang, B.} \textit{Building effective agents}. Anthropic, December 2024. The practitioner guide on augmented LLMs, prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer patterns. \href{https://www.anthropic.com/research/building-effective-agents}{anthropic.com/research/building-effective-agents}
+
+\item \textbf{OpenAI.} \textit{A practical guide to building agents}. 2025. The OpenAI-side practitioner guide; the Responses-API-and-Agents-SDK companion to the Anthropic guide above. \href{https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf}{OpenAI PDF}
+
+\item \textbf{Mollick, E.} \textit{Co-Intelligence: Living and Working with AI}. Portfolio, 2024. The long-form book Maya should read on a weekend. Less about technique, more about how organizations adapt.
+
+\item \textbf{Ng, A.} \textit{Agentic Design Patterns} (issue 241 of \textit{The Batch}). 2024. The letter that named reflection, tool use, planning, and multi-agent as the four agentic patterns. Short, opinionated, board-deck-ready. \href{https://www.deeplearning.ai/the-batch/issue-241/}{deeplearning.ai/the-batch/issue-241}
+
+\item \textbf{Qi, X., Zeng, Y., Xie, T., et al.} \textit{Fine-tuning aligned language models compromises safety, even when users do not intend to!} ICLR, 2024. Why vendor-shipped alignment is not enough --- innocuous fine-tuning re-opens safety gaps. \href{https://arxiv.org/abs/2310.03693}{arXiv:2310.03693}
+\end{itemize}
+
+\section{Hardening}
+
+\begin{itemize}
+\item \textbf{Greshake, K., Abdelnabi, S., Mishra, S., et al.} \textit{Not what you've signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection}. AISec, 2023. The seminal indirect-prompt-injection paper. Required reading for any security architect reviewing an agent design. \href{https://arxiv.org/abs/2302.12173}{arXiv:2302.12173}
+
+\item \textbf{Rose, S., Borchert, O., Mitchell, S., Connelly, S.} \textit{Zero Trust Architecture}. NIST SP 800-207, 2020. The Zero Trust foundation. Predates agents and applies to them better than anyone planned. \href{https://doi.org/10.6028/NIST.SP.800-207}{doi.org/10.6028/NIST.SP.800-207}
+
+\item \textbf{OWASP Foundation.} \textit{Top 10 for Large Language Model Applications (Version 2025)}. 2024. The community threat list this book uses as the layer-mapping in Chapter 6. Free, current, vendor-referenced. \href{https://genai.owasp.org/llm-top-10/}{genai.owasp.org/llm-top-10}
+
+\item \textbf{MITRE Corporation.} \textit{MITRE ATLAS --- Adversarial Threat Landscape for AI Systems}. Ongoing. The adversarial-tactics catalog your security team should cite by technique ID, not by name. \href{https://atlas.mitre.org/}{atlas.mitre.org}
+
+\item \textbf{Anthropic.} \textit{Model Context Protocol}. 2024. The spec for the open standard for agent-to-tool integration. \href{https://modelcontextprotocol.io/}{modelcontextprotocol.io}
+
+\item \textbf{Narajala, V. S., Narayan, O.} \textit{Securing agentic AI: A comprehensive threat model and mitigation framework (ATFAA / SHIELD)}. 2025. A 2025 synthesis that maps cleanly onto Chapter 7. \href{https://arxiv.org/abs/2504.19956}{arXiv:2504.19956}
+
+\item \textbf{Vassilev, A., Oprea, A., Fordyce, A., Anderson, H.} \textit{Adversarial Machine Learning: A taxonomy and terminology of attacks and mitigations}. NIST AI 100-2 E2025, 2025. The updated AML taxonomy --- shared vocabulary between security and data-science teams. \href{https://csrc.nist.gov/pubs/ai/100/2/e2025/final}{csrc.nist.gov pubs/ai/100/2/e2025}
+
+\item \textbf{Cybersecurity and Infrastructure Security Agency.} \textit{Zero Trust Maturity Model v2}. 2023. The CISA operational complement to NIST SP 800-207; source of the maturity model in Chapter 8. \href{https://www.cisa.gov/sites/default/files/2023-04/zero_trust_maturity_model_v2_508.pdf}{cisa.gov ZTMM v2}
+\end{itemize}
+
+\section{Benchmarking}
+
+\begin{itemize}
+\item \textbf{Liu, X., Yu, H., Zhang, H., et al.} \textit{AgentBench: Evaluating LLMs as agents}. arXiv (later ICLR 2024), 2023. The eight-environment generalist benchmark that opens most vendor decks. \href{https://arxiv.org/abs/2308.03688}{arXiv:2308.03688}
+
+\item \textbf{Jimenez, C. E., Yang, J., Wettig, A., et al.} \textit{SWE-bench: Can language models resolve real-world GitHub issues?} ICLR, 2024. The original SWE-bench paper; pair with the OpenAI Verified post below. \href{https://arxiv.org/abs/2310.06770}{arXiv:2310.06770}
+
+\item \textbf{OpenAI.} \textit{Introducing SWE-bench Verified}. 2024. The 500-case cleaned-up subset that any 2024-onward ``SWE-bench'' reference should mean. \href{https://openai.com/index/introducing-swe-bench-verified/}{openai.com/index/introducing-swe-bench-verified}
+
+\item \textbf{Yao, S., Shinn, N., Razavi, P., Narasimhan, K.} \textit{$\tau$-bench: A benchmark for tool-agent-user interaction}. Sierra, 2024. The benchmark closest to enterprise customer-service use cases; introduced \textit{pass\textasciicircum{}k}. \href{https://arxiv.org/abs/2406.12045}{arXiv:2406.12045}
+
+\item \textbf{Liang, P., Bommasani, R., Lee, T., et al.} \textit{Holistic Evaluation of Language Models (HELM)}. arXiv (later TMLR 2023), 2022. The multi-axis model-level suite; useful if your team is choosing a base model. \href{https://arxiv.org/abs/2211.09110}{arXiv:2211.09110}
+
+\item \textbf{Patil, S. G., Mao, H., Cheng-Jie Ji, C., et al.} \textit{Berkeley Function Calling Leaderboard (BFCL)}. 2024 (v3 multi-turn, 2025). The cleanest single signal of tool-use competence for any agent that calls APIs. \href{https://gorilla.cs.berkeley.edu/leaderboard.html}{gorilla.cs.berkeley.edu/leaderboard}
+
+\item \textbf{Mohammadi, M., Li, Y., Lo, J., Yip, W.} \textit{Evaluation and Benchmarking of LLM Agents: A Survey}. KDD '25, 2025. The first of two primary 2025 surveys. Read instead of vendor blog posts. \href{https://doi.org/10.1145/3711896.3736570}{doi.org/10.1145/3711896.3736570}
+
+\item \textbf{Garg, S., Steenhoek, B., Huang, Y.} \textit{Saving SWE-Bench: A benchmark mutation approach for realistic agent evaluation}. CAIN, 2026. The anti-contamination paper to read before getting excited about a benchmark jump. \href{https://arxiv.org/abs/2510.08996}{arXiv:2510.08996}
+\end{itemize}
+
+\section{Evaluation}
+
+\begin{itemize}
+\item \textbf{Mehta, S.} \textit{Beyond Accuracy: A multi-dimensional framework for evaluating enterprise agentic AI systems (CLEAR)}. 2025. The strongest case in the literature for purpose-built enterprise evaluation suites. \href{https://arxiv.org/abs/2511.14136}{arXiv:2511.14136}
+
+\item \textbf{Yehudai, A., Eden, L., Li, A., et al.} \textit{Survey on Evaluation of LLM-based Agents}. 2025. The second primary 2025 survey; companion to Mohammadi et al. \href{https://arxiv.org/abs/2503.16416}{arXiv:2503.16416}
+
+\item \textbf{Zheng, L., Chiang, W.-L., Sheng, Y., et al.} \textit{Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena}. NeurIPS, 2023. The LLM-as-judge primer. Calibrate against this, not against vendor marketing. \href{https://arxiv.org/abs/2306.05685}{arXiv:2306.05685}
+
+\item \textbf{Huang, L., Yu, W., Ma, W., et al.} \textit{A survey on hallucination in large language models}. ACM TOIS, 2024. The taxonomy paper that lets you split hallucination into faithfulness, groundedness, factual, contextual --- instead of one undifferentiated word. \href{https://arxiv.org/abs/2311.05232}{arXiv:2311.05232}
+
+\item \textbf{Hardt, M., Price, E., Srebro, N.} \textit{Equality of opportunity in supervised learning}. NeurIPS, 2016. The foundational fairness paper for equalized odds and equal opportunity. The math is light; the conceptual move (split fairness metrics by error type) is the one Maya will need.
+
+\item \textbf{Perez, E., Huang, S., Song, F., et al.} \textit{Red teaming language models with language models}. EMNLP, 2022. The automated red-teaming primer. \href{https://arxiv.org/abs/2202.03286}{arXiv:2202.03286}
+
+\item \textbf{Wang, B., Chen, W., Pei, H., et al.} \textit{DecodingTrust: A comprehensive assessment of trustworthiness in GPT models}. NeurIPS, 2024. The most comprehensive academic trust-evaluation benchmark; a sanity check, not a substitute for your own evaluation.
+\end{itemize}
+
+\section{Certification}
+
+\begin{itemize}
+\item \textbf{European Parliament and Council of the European Union.} \textit{Regulation (EU) 2024/1689 --- Artificial Intelligence Act}. 2024. The Act itself. Read at least Articles 6, 9--15, 17, 43, and 71--73 if your portfolio touches the EU. \href{https://eur-lex.europa.eu/eli/reg/2024/1689/oj}{eur-lex 2024/1689}
+
+\item \textbf{ISO/IEC.} \textit{ISO/IEC 42001:2023 --- Information technology --- Artificial intelligence --- Management system}. 2023. The international AI management system standard; the spine most enterprises adopt. \href{https://www.iso.org/standard/81230.html}{iso.org 81230}
+
+\item \textbf{Tabassi, E.} \textit{Artificial Intelligence Risk Management Framework (AI RMF 1.0)}. NIST AI 100-1, 2023. The NIST framework: Govern, Map, Measure, Manage. The US baseline. \href{https://doi.org/10.6028/NIST.AI.100-1}{doi.org/10.6028/NIST.AI.100-1}
+
+\item \textbf{NIST.} \textit{AI Risk Management Framework: Generative AI Profile (AI 600-1)}. 2024. The GenAI-specific companion checklist for scoping a GenAI certification program. \href{https://doi.org/10.6028/NIST.AI.600-1}{doi.org/10.6028/NIST.AI.600-1}
+
+\item \textbf{Mitchell, M., Wu, S., Zaldivar, A., et al.} \textit{Model Cards for Model Reporting}. FAccT, 2019. Every model card your team produces inherits this structure. \href{https://arxiv.org/abs/1810.03993}{arXiv:1810.03993}
+
+\item \textbf{Raji, I. D., Smart, A., White, R. N., et al.} \textit{Closing the AI accountability gap}. FAccT, 2020. The framework that shaped how modern enterprises think about internal AI audit.
+
+\item \textbf{Anthropic.} \textit{Anthropic's Responsible Scaling Policy}. 2023. The frontier-lab template for risk-tiered model release; reference for any enterprise designing its own risk-tier framework. \href{https://www.anthropic.com/news/anthropics-responsible-scaling-policy}{anthropic.com/news/anthropics-responsible-scaling-policy}
+
+\item \textbf{DeepMind.} \textit{Frontier Safety Framework}. 2024. Google DeepMind's analogue to Anthropic's RSP and OpenAI's Preparedness; useful for the comparative view. \href{https://deepmind.google/discover/blog/introducing-the-frontier-safety-framework/}{deepmind.google/discover/blog/introducing-the-frontier-safety-framework}
+\end{itemize}
+
+\TNrule
+
+The list is curated, not exhaustive. For the full set of works cited across the book's chapters, see \textit{References}. For pointers to the artifacts that organize this evidence into a certification, see \textit{Appendix A}.
+
+\stoptwocol

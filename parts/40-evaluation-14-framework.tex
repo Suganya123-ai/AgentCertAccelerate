@@ -1,0 +1,134 @@
+\TNchapter[A good evaluation framework is a small number of questions, asked the same way every time, with answers that compound into a decision. This chapter is about building that framework: the success criteria worth choosing, the golden dataset that anchors them, the deterministic checks that handle most cases, the LLM-as-judge setup that handles the rest, and the calibration step that keeps the judge from drifting. By the end you will have the template your team can take to a whiteboard on Tuesday morning.]{Designing an Evaluation Framework}
+\label{ch:40-evaluation-14-framework}
+
+\starttwocol
+
+\section{Success criteria you can actually act on}
+
+Most evaluation frameworks fail not because the team picked the wrong metric, but because they picked too many. A vendor's evaluation deck typically lists nine or ten dimensions --- accuracy, latency, cost, robustness, adaptability, reliability, faithfulness, helpfulness, safety, and so on --- and gives each a number. The dashboard is impressive. The decision it produces is nothing. When everything is measured, nothing is decisive.
+
+The starting move is to write down, in one paragraph, what \textit{this} agent has to do well for \textit{this} deployment. Not the agent class. Not the vendor. \textit{This agent, this deployment.} A claims-triage agent in a regional health system has to route correctly above some threshold, escalate the right cases, and never give clinical advice. A product-recommendation agent in a retailer has to convert above a baseline, avoid recommending out-of-stock items, and stay within content-safety bounds. The paragraph is short, organization-specific, and rarely longer than five sentences. From the paragraph, three to five success criteria fall out. From the criteria, the metrics follow.
+
+\begin{TNdefinition}{Success criterion}
+A single, falsifiable statement about what the agent must do, attached to a measurable threshold. \textit{``Routes 95\% of incoming claims to the correct triage queue, measured against a gold-standard set of 500 historical claims''} is a success criterion. \textit{``Demonstrates strong reasoning''} is not.
+\end{TNdefinition}
+
+The framework that follows from a small set of success criteria looks like this. Each criterion gets a question. Each question gets a dataset that answers it. Each dataset gets a grader --- deterministic, LLM-based, or human. Each grader produces a number. The numbers compound into a decision: ship, do not ship, ship with mitigation, redesign. The dashboard reads as one paragraph, not ten dimensions. Maya's audit committee can read it in five minutes. Her CISO can defend it in fifteen.
+
+The Cascade Manufacturing case below is what this looks like when it works, and the Helix Health case in the next section is what happens when it does not.
+
+\begin{TNinpractice}{Cascade Manufacturing}
+\textit{Cascade's first evaluation framework for its engineering-Q\&A agent: fifty hand-curated questions, a deterministic check for citation accuracy, an LLM-as-judge for plain-English quality.} The deterministic check ran on every release in under a minute. The judge ran nightly. The dashboard showed two numbers --- citation accuracy and quality score --- and a graph of both over the last 30 days. Two months in, the team noticed the judge's scoring had drifted upward: cases that had scored 8.0 in April were scoring 9.4 in June, on prompts that had not changed. They re-anchored the judge against a fifty-case human-graded calibration set. Quality scores returned to their previous range. Nothing else in the dashboard changed. The framework worked because there were two numbers, not ten.
+\end{TNinpractice}
+
+\section{Deterministic, non-deterministic, and the case for both}
+
+Two kinds of checks live inside every serious evaluation framework. Maya's team will hear them called by different names --- code-based versus LLM-based, structural versus semantic, exact-match versus rubric-graded --- but the distinction that matters is whether the grader returns the same answer every time, or not.
+
+\begin{TNdefinition}{Deterministic check}
+A grader whose output is fully determined by the agent's output. Schema validation, regex matching, JSON parsing, ``did the agent call the right tool with the right arguments.'' Cheap, fast, auditable, brittle.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Non-deterministic check}
+A grader that involves judgment: a human reviewer, an LLM acting as a judge, a probabilistic similarity metric. Flexible, expensive, harder to audit. Required for anything where there is more than one valid answer.
+\end{TNdefinition}
+
+Deterministic checks should carry as much of the framework as possible. They are cheap to run, easy to debug, and trivially reproducible --- when a deterministic check fails on commit number 4,381, the build breaks, the team fixes it, and the build passes again. Most things that can be made deterministic should be. Did the agent call the booking tool? Did it parse the customer ID into the right format? Did the output validate against the schema? These belong in the deterministic bucket because failures are unambiguous and the cost of running the check is rounding error.
+
+Non-deterministic checks pick up the rest. Was the explanation clear? Was the tone right? Did the agent escalate when it should have? These do not collapse to a regex. They need a judge --- human at first, then an LLM as the volume grows and the rubric stabilizes --- and the judge needs to be calibrated, and the calibration needs to be re-run. Most of the operational pain in evaluation comes from non-deterministic checks; most of the \textit{value} also comes from them, because the questions an audit committee cares about are the ones a regex cannot answer.
+
+A useful default ratio for an enterprise agent is sixty percent deterministic, thirty percent LLM-as-judge, ten percent human review. The deterministic checks run on every commit. The LLM-judge runs nightly or on every release. The human review runs on a sampled subset, weighted toward the cases the LLM-judge flagged as borderline. Each layer covers what the layer below it cannot.
+
+\section{Golden datasets, ground truth, and the trap of ``we have 200 cases''}
+
+The golden dataset is the foundation every evaluation rests on, and the place every evaluation program cuts corners first. The vocabulary is loose in most teams, so it is worth being precise about two words that get used interchangeably.
+
+\begin{TNdefinition}{Ground truth}
+For a given input, the correct or validated output, established through expert review or authoritative source. The thing you are grading against.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Golden dataset}
+A curated, versioned collection of test inputs paired with ground-truth outputs, with metadata rich enough to support diagnosis when something fails. The artifact the evaluation framework grades against.
+\end{TNdefinition}
+
+Two failure patterns dominate. The first is a golden dataset that is too small. Two hundred cases sound like a lot in a planning meeting and turn into nothing in production: rare failure modes are rare exactly because they need a long tail of cases to surface, and a 200-case set will hide them. The second is a golden dataset that is too homogeneous. The team built the cases by hand, and they were polite, well-formed, and reasonable --- so the agent passed. In production, half the users were rude, in a hurry, and using regional spelling. The golden dataset was not the population \citep{asai2023selfrag, honovich2022true}.
+
+The fix on both counts is the same: build the dataset from production data, not from imagination. Sample 1,500 to 3,000 real interactions across the highest-volume use cases. Have subject-matter experts label them. Stratify by user segment, by intent, by outcome. Reserve at least a quarter of the dataset as a held-out set the model has not been trained on and the judges have not been calibrated against. Version the dataset like code: every release of the agent runs against a specific version of the golden set, and the version is recorded next to the score \citep{mohammadi2025survey, yehudai2025survey}.
+
+The dataset is also where leakage hides. If the cases you grade on are inside the model's training data, your evaluation is grading the model on cases it has already seen. Most enterprise teams underestimate how easy this is to do --- public benchmarks leak constantly, and any case that has appeared on a public forum, in a vendor demo, or in a prior model's fine-tuning set is suspect. The defensive move is to keep your golden dataset off the public web and out of any training pipeline you do not control, and to refresh a portion of it every quarter.
+
+\begin{TNinpractice}{Helix Health}
+\textit{Helix's first attempt at evaluation: 200 hand-curated cases written by the clinical informatics team. The agent passed 198 of them. The team shipped.} The agent failed on the 199th case within four hours of going live --- a frustrated patient using shorthand the clinical reviewers had not modelled in the golden set. By the end of the first week, the team had identified eleven failure patterns that none of the 200 cases covered. The golden dataset was rebuilt over six weeks from 1,800 sampled patient interactions, labelled by clinicians and stratified by complaint category. The second launch held. The lesson Helix carried into every project after was that the golden dataset is the gating investment, not the easy one to compress.
+\end{TNinpractice}
+
+\section{LLM-as-judge, calibrated honestly}
+
+Once the framework leaves the deterministic bucket, the cheapest grader is another language model. The LLM-as-judge pattern is now table stakes in any evaluation program at scale \citep{zheng2023mtbench, liu2023trustworthy-survey}: you take the agent's output, hand it to a strong model with a rubric, and ask for a score. The pattern works. It also fails in ways that are hard to see without active calibration.
+
+\begin{TNdefinition}{LLM-as-judge}
+Using a language model to grade the outputs of another model against a written rubric. Cheap, scalable, and worth exactly what you put into calibrating it.
+\end{TNdefinition}
+
+Three things go wrong with judges that nobody catches. First, \textit{judge drift}: the same rubric, the same prompts, the same model behind the judge --- and the scores creep upward over weeks, because the judge has subtle biases the team did not see at calibration time. Cascade's June scores from earlier in the chapter were judge drift. Second, \textit{rubric ambiguity}: a rubric like \textit{``score the response from 1 to 10 for clarity''} gives one human grader 7 and another 9, on the same answer; the judge inherits whichever bias was strongest in its training. Third, \textit{self-preference}: a judge from the same model family as the agent under test rates its sibling's outputs higher than it should. This is well documented in the LLM-as-judge literature and is the single best argument for using a different model as the judge than the one you are grading.
+
+The defensive practice has three parts. Define a rubric with atomic criteria --- ``did the response cite a source,'' ``did the response stay within scope,'' ``did the response refuse appropriately'' --- and explicit scoring bands, not free-form 1-to-10 scales. Build a calibration set of 50 to 100 cases that a human has graded against the same rubric. On a fixed cadence --- monthly is a good default --- re-run the judge against the calibration set and check that its scores still track the human grades. If the judge drifts by more than a small tolerance, pause the framework, find the drift, and recalibrate. Inter-rater reliability between the LLM and the human reviewers should be measured (Cohen's $\kappa$ above 0.6 is a reasonable floor for production work) and tracked over time.
+
+The LLM-as-judge does not free you from human grading. It moves the human grading from ``everything, expensively'' to ``the calibration set, on cadence.'' That is the trade that makes the pattern economical. Skip the calibration step and the trade goes the wrong way.
+
+\section{Tool-use evaluation: a special case worth naming}
+
+Most enterprise agents do their interesting work through tool calls. A wealth-management assistant queries a portfolio API; a clinical-coding agent calls a billing-code lookup; a dispatch agent triggers a routing service. The functional evaluation of these calls is its own sub-discipline, and the field has converged on a few accepted ways to measure it.
+
+\begin{TNinpractice}{BFCL (Berkeley Function-Calling Leaderboard)}
+\textit{BFCL \citep{bfcl-2024} is the most-cited benchmark for tool-call correctness in 2025.} It tests whether a model, given a natural-language request and a tool catalog, picks the right tool, formats the arguments correctly, and handles error cases like a missing required field or an ambiguous request. The simple version evaluates single-turn function calls; the agentic version evaluates multi-turn workflows where the agent must chain calls and recover from tool errors. The score is the percentage of test cases where every tool call was correctly placed. BFCL is a benchmark, not an evaluation in the sense of \autoref{ch:40-evaluation-13-vs-benchmarking} --- it does not tell you whether the agent works on your tools or your data --- but it is a sanity check worth running, and the dimensions it grades on (tool selection, argument extraction, output interpretation, sequence accuracy) are exactly the dimensions your purpose-built tool-use evaluation should measure too.
+\end{TNinpractice}
+
+The framework lift for tool-use evaluation is mostly deterministic. Was the right tool called? Did the arguments match the expected schema? Did the agent handle the tool's error response correctly? These are regex-and-assertion questions, and the deterministic bucket is where they belong. The non-deterministic bucket covers what's left: did the agent recover gracefully when the tool was unavailable, did it ask the user for clarification when the arguments were ambiguous, did the multi-step workflow stay coherent.
+
+\section{The cadence that keeps the framework honest}
+
+A framework only does work if it runs on a schedule. The default cadence for an enterprise agent has three layers. On every commit, the deterministic checks run as part of CI/CD (continuous integration / continuous delivery); if they fail, the build fails. On every release --- every prompt change, every model upgrade, every retrieval-index refresh --- the full offline evaluation runs, including the LLM-as-judge portion. On a fixed quarterly cadence (or whenever drift triggers it), the judges get recalibrated against the human-graded set, and a portion of the golden dataset gets refreshed from new production traffic.
+
+\begin{table*}[!ht]
+\centering
+\caption{Evaluation cadence reference card.}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Trigger} & \textbf{What runs} & \textbf{Failure action} \\
+\midrule
+Every commit       & Deterministic checks (schema, tools, exact-match) & Break the build \\
+Every release      & Full offline eval incl.\ LLM-as-judge             & Hold release until passed \\
+Monthly            & Judge recalibration vs.\ human-graded set         & Retune rubric / swap judge \\
+Quarterly          & Refresh portion of golden dataset                 & Re-baseline metrics \\
+On drift alert     & Targeted re-evaluation + recalibration            & Trigger recertification \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The cadence is the difference between a framework that catches regressions and a framework that documents them. The teams that ship reliable agents have the cadence written down before they ship the first version. The teams that ship unreliable ones discover, six months in, that the framework has not been re-run since June and nobody is sure why.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item A useful evaluation framework starts with three to five success criteria, not nine dimensions. Everything else follows from those.
+\item Deterministic checks carry the bulk of the work, non-deterministic checks (LLM-as-judge, human review) handle the rest. A 60/30/10 split is a good default.
+\item The golden dataset is the gating investment, not the corner to cut. Build it from production data, version it like code, and refresh a portion every quarter.
+\item LLM-as-judge is cheap to run and easy to mis-calibrate. Define atomic rubrics, keep a human-graded calibration set, and recheck inter-rater reliability on a fixed cadence.
+\item Run the framework on a written cadence --- every commit, every release, every quarter --- or it stops being a framework and becomes a folder.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Write the one-paragraph statement of what your agent has to do well for this deployment, and circulate it to the eval team and audit.
+\item Pick three to five success criteria from the paragraph, each with a falsifiable threshold attached.
+\item Audit your golden dataset: size, source, stratification, held-out portion, refresh cadence --- and document the gaps.
+\item If you use LLM-as-judge, build a 50-100 case human-graded calibration set and schedule a monthly re-check.
+\item Confirm with your team that no part of the golden dataset is reachable from a public benchmark or the model's training corpus.
+\item Map your evaluation cadence to your release cadence: commit, release, quarterly. If any tier is missing, fix that first.
+\item If your agents make tool calls, decide whether BFCL belongs in your sanity-check suite and how it complements your purpose-built tool evaluation.
+\end{TNchecklist}
+
+
+

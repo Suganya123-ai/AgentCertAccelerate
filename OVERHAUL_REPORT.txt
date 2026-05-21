@@ -1,0 +1,114 @@
+ARIA Book — Visual Overhaul Report
+====================================
+Date:  2026-05-20
+Build: main.pdf (126 pages, copied to main-v2-visual.pdf)
+Run:   3 iterations (style overhaul → TikZ figures → chapter banner polish)
+
+Summary
+-------
+The book moved from a plain B&W serif draft to an Infosys-corporate
+two-column layout: navy/teal palette, Fira Sans throughout, navy chapter
+banners with a teal eyebrow, full-bleed navy pillar pages, and lightly
+tinted callouts with a single accent rule. All seven `\imgplaceholder`
+boxes were removed — five were replaced with original TikZ diagrams, one
+with a small comparison table, and one (the benchmark/eval comparison)
+was converted to a tabular figure. The bibliography stays as a single
+consolidated list at the end.
+
+Files changed
+-------------
+- tn-style.sty                                  (full rewrite from plain → Infosys palette)
+- frontmatter/title-page.tex                    (navy hero title page)
+- parts/20-hardening-05-why.tex                 (TikZ: four loci of attack surface)
+- parts/20-hardening-07-identity.tex            (TikZ: Zero Trust stack)
+- parts/40-evaluation-13-vs-benchmarking.tex    (table: benchmark vs eval; TikZ: eval taxonomy 2x2)
+- parts/50-certification-17-framework.tex       (TikZ: three-band certification stack)
+- parts/50-certification-19-process.tex         (TikZ: governance triangle)
+- parts/50-certification-20-keeping-certified.tex (TikZ: certification lifecycle)
+
+No chapter prose was rewritten. Caption wording was lightly trimmed to read
+correctly for the new diagrams.
+
+What looks good
+---------------
+- Cover (PDF page 1): navy hero, teal accent column, Fira Sans display title,
+  bottom strap with the Infosys mark. Reads enterprise-grade.
+- TOC (page 3): clean two-tier hierarchy, navy entries on chapters, light
+  rule under header, page numbers right-aligned.
+- Chapter openers (e.g. PDF pages 14, 19, 33): one decorative element — a
+  navy banner with white title, teal "CHAPTER N" eyebrow, and a 3pt teal
+  rule below. Consistent across all twenty mainmatter chapters.
+- Pillar dividers (PDF pages 13, 28, 45, 61, 87, 103): full navy page,
+  large Fira Sans display title, teal accent at top, "ARIA FRAMEWORK · PILLAR"
+  eyebrow.
+- Callouts (Abstract, Definition, In Practice, Warning, Key takeaways,
+  Practitioner checklist): tinted background + 3pt left rule. No
+  blue-on-blue text. Warning uses amber; the rest use navy or teal.
+- TikZ figures: clean, brand-aligned (navy fills + teal arrows), no shading
+  gradients. See pages ~33 (attack surface), ~42 (Zero Trust stack), ~64
+  (eval taxonomy), ~88 (cert stack), ~96 (governance triangle), ~98 (cert
+  lifecycle).
+- Header/footer: Infosys mark right, book title left, navy bold page number
+  far right of footer, copyright far left. Thin teal rule under the header.
+
+What's still imperfect
+----------------------
+1. Chapter end-pages occasionally have a key-takeaway/checklist block alone
+   near the top with empty space below (e.g. PDF page 20 after the foreword).
+   This is the float pattern: `\stoptwocol` + `figure*` + `\starttwocol`
+   forces a column break and the rest of the chapter's body floats. It's
+   tolerable but a future pass could tighten this by collapsing the float
+   into the multicols (using `\captionof` inside the columns) for shorter
+   figures.
+
+2. 417 overfull `\hbox` warnings remain (down from ~540 in the plain build).
+   None are fatal; most are 1–10pt overruns in two-column body. The
+   `microtype` package is already loaded.
+
+3. The named purple-toned illustrations in `ref_figures/extracted/Assets/`
+   were intentionally NOT placed. They are stylized purple-on-dark art that
+   would clash with the Infosys navy/teal palette. The five authored TikZ
+   diagrams plus the existing benchmarking infographics cover the high-value
+   visual slots; placing the named illustrations would have introduced
+   off-brand color noise.
+
+4. The 5 benchmarking PNGs in `figures/benchmarking/` were not re-styled.
+   They were authored for the aria-2 book and have their own (compatible)
+   navy/teal palette, so they pass; if a future pass wants to polish, they
+   could be re-rendered to match the exact hex values.
+
+5. Pillar divider title alignment is left-edge for visual weight; if the
+   user prefers center alignment the change is one line in tn-style.sty
+   (`anchor=west` → `anchor=center`).
+
+What the user should review
+---------------------------
+- /Innovation/home/boyaaarya/projects/aria-3/main.pdf (the build)
+  …also saved as main-v2-visual.pdf in the same directory.
+
+- Renderings worth opening at full size to judge the look:
+    /tmp/aria3-iter3/p1-001.png    (cover)
+    /tmp/aria3-iter3/p3-003.png    (TOC)
+    /tmp/aria3-iter3/p14v2-014.png (Chapter 1 banner — closest read of the openers)
+    /tmp/aria3-iter3/ll103_lo.png  (Synthesis pillar page)
+    /tmp/aria3-iter3/fpg33-033.png (attack-surface TikZ figure in context)
+    /tmp/aria3-iter3/fpg41-041.png (Zero Trust stack figure in context)
+    /tmp/aria3-iter3/cert87-087.png (certification framework chapter opener)
+    /tmp/aria3-iter3/cert98-098.png (governance triangle in context)
+
+- Specifically check that callout contrast reads cleanly (especially the
+  amber Warning and the navy-tinted Key takeaways). The earlier
+  blue-on-blue issue is gone — Warning uses amber, takeaways use navy on
+  navy-tint with the title text in solid navy.
+
+Build pipeline
+--------------
+`bash build.sh` (3 pdflatex passes + bibtex). 126 pages.
+Engine: pdflatex (unchanged). No LuaLaTeX, no Python build helpers
+introduced.
+
+Stretch goals not attempted
+---------------------------
+- Index
+- Figure list
+- Per-pillar color accents (kept uniform navy/teal for restraint)

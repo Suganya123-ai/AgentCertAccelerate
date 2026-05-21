@@ -1,0 +1,52 @@
+\TNchapter[ARIA is the framework this book is organised around --- five disciplines that together answer the question every enterprise faces when it deploys an agent: \textit{how do we know we can trust this?} This chapter names the five disciplines in plain language, shows how each answers a distinct question, and explains how they relate to each other. It also tells you how to read the rest of the book --- straight through, or by entry point, or in sixty minutes if that is all you have.]{About ARIA: How to read this book}
+\label{ch:about-aria}
+
+\starttwocol
+
+\section{The five pillars in plain language}
+
+ARIA stands for five disciplines: \textbf{Alignment}, \textbf{Hardening}, \textbf{Benchmarking}, \textbf{Evaluation}, and \textbf{Certification}. Each is the body of work that answers one piece of the trust question. The names are technical; the questions they answer are not.
+
+\textbf{Alignment} is the discipline of making an agent do what you actually wanted. It covers the choices that shape an agent's behaviour during training --- the data it learned from, the preferences its makers baked in, the rulebook it was trained against --- and the choices you make at runtime --- the system prompt that gives the agent its job description, the tools you let it call, the filters you wrap around its output. Alignment answers the question \textit{how do we tell an agent what we want?}
+
+\textbf{Hardening} is the discipline of making sure that when an agent fails --- and it will --- the consequences are bounded by what your organisation can afford to lose. It covers the attack surface an agent introduces, the trust boundaries you draw around its tools and its data, the identity and access controls that govern what it can touch, and the operational machinery that watches it once it is in production. Hardening answers the question \textit{how do we keep an agent from causing damage?}
+
+\textbf{Benchmarking} is the discipline of comparing one agent to another, or one version of an agent to an earlier one. It covers the public tests vendors will quote at you, the operational benchmarks your CFO will care about more than your CTO (latency, cost per outcome, behaviour under load), and the small set of practices that let you read a leaderboard honestly rather than fall for the marketing number on the slide. Benchmarking answers the question \textit{how do we know this agent is better than the alternative?}
+
+\textbf{Evaluation} is the discipline of measuring whether the agent you chose actually does the job you bought it for. It is purpose-built --- designed by your team, against your data, with your definition of a pass --- and it runs on a different cadence than benchmarking. Where benchmarking compares, evaluation answers. Evaluation answers the question \textit{how do we know this agent works for our use case?}
+
+\textbf{Certification} is the discipline of producing the artifact that lets your organisation defend its decision. It is the binder your CFO can hold, the document your regulator will ask for, the chain of evidence that runs from the agent's intended job to a named human who approved it for production. Certification answers the question \textit{how do we prove we did the work?}
+
+The five are not independent disciplines you can do separately. They are five views on the same trust question, and they assume each other.
+
+Hardening starts where alignment fails. You cannot align an agent perfectly, so you harden the systems around it to bound the cost of its imperfection. Benchmarking compares; evaluation tests yours. You cannot evaluate without first having benchmarked enough to know what good looks like, and you cannot trust a benchmark without an evaluation that grounds it in your own job.
+
+Certification is the discipline that gathers what the other four produced and turns it into a decision. Without alignment, you have no goal to certify against. Without hardening, you have no defensible bound on what could go wrong. Without benchmarking and evaluation, you have no evidence. Without certification, the evidence sits in a drawer.
+
+A useful way to hold this in mind: the first four pillars produce the work, and the fifth pillar is the discipline that lets your organisation defend the work to the people on either side of the decision.
+
+\section{How to read this book}
+
+The book is organised in the order the pillars build on each other. Part I covers Alignment, Part II covers Hardening, Part III covers Benchmarking, Part IV covers Evaluation, Part V covers Certification. Each part is four chapters. Each chapter is short enough to read in twenty minutes and structured enough that you can skim it in five.
+
+How you read the book depends on what you are trying to do.
+
+\textit{If you are sponsoring your first agent project}, read it straight through. The pillars build on each other, and the vocabulary you pick up in Part I is the vocabulary the later parts assume. The whole book is about a hundred pages of body prose. You should be able to finish it across two evenings.
+
+\textit{If you are auditing an existing deployment} --- your team has already shipped an agent, and you want to know how exposed you are --- read Part II (Hardening) first, then Part V (Certification), and then loop back to the others. Hardening will tell you what your CISO should have asked. Certification will tell you what your audit committee will ask next. The other three pillars are how you produce the evidence to answer them.
+
+\textit{If you have sixty minutes}, read the foreword, this chapter, and the first chapter of each of the five parts (Chapters 1, 5, 9, 13, and 17). Skip the rest. Use the practitioner checklist at the end of each of those five chapters as your starting list of questions for your team. That is not a complete reading of the book, but it is enough to walk into a review board meeting and ask the right questions.
+
+Every chapter has the same rhythm. A short \textbf{ABSTRACT} at the top tells you what the chapter argues in three or four sentences. The body is narrative --- the experienced-colleague voice this book is written in. Three kinds of callout interrupt the body where they earn it: \textbf{DEFINITION} for terms being introduced, \textbf{IN PRACTICE} for worked examples (and for named callouts on a current standard like the EU AI Act or a current protocol like MCP), and \textbf{WARNING} for failure modes that have actually broken deployed systems. The chapter closes with \textbf{KEY TAKEAWAYS} --- three to five sentences you can repeat to your CFO --- and a \textbf{PRACTITIONER CHECKLIST} of five to seven things you can do with your team on Monday. The consolidated Bibliography at the back of the book points at the literature, in case you or your CISO wants to go deeper on any source cited in the chapters.
+
+\begin{TNinpractice}{The composite companies}
+Throughout the book you will meet five enterprises by name --- \textit{Meridian Logistics}, \textit{Northwind Bank}, \textit{Helix Health}, \textit{Aurora Retail}, and \textit{Cascade Manufacturing}. They are not real customers. They are composites, drawn from the dozens of agent deployments behind the material in this book and stripped of every detail that would identify any one of them. Each has been given a sector, a recognisable problem, and a specific failure or success that illustrates the chapter's point. When you see one of these names in a vignette, that is the signal: the story is illustrative, the lesson is real, and the details have been changed enough that you can use the example in your own organisation without worrying about whose deal you are quoting.
+\end{TNinpractice}
+
+A note on cross-references. When a chapter references another chapter --- whether by number (``Chapter 10 takes this up'') or by topic (``the trust-boundary idea introduced in Chapter 5'') --- the pointer is real, and the chapters that follow build on the ones that came before. The book is designed to read linearly, but it is also designed to survive being read out of order --- because most readers, in practice, do.
+
+One last note on the tone. The book is written in the second person --- \textit{you}, \textit{your team}, \textit{your CFO}. The authorial \textit{we} shows up only in the foreword. From Chapter 1 onward, the experience of reading the book is intended to feel like a one-on-one conversation with an experienced colleague --- opinionated, direct, and uninterested in wasting your time.
+
+The agents are already on your desk. The rest of the book is how to handle them.
+
+\stoptwocol

@@ -1,0 +1,117 @@
+\TNchapter[Most enterprises will pick more than one of these frameworks to certify against. This appendix is the map. The five pillars of ARIA --- Alignment, Hardening, Benchmarking, Evaluation, Certification --- produce the evidence that each standard requires; the standards organize that evidence into the obligation language the regulator, the auditor, and the procurement team speak. Crosswalking the two is the work that turns a binder into a defensible decision.]{Appendix A: ARIA versus EU AI Act, ISO 42001, NIST AI RMF}
+\label{ch:crosswalk}
+
+\starttwocol
+
+Three tables follow. The first maps ARIA to the EU AI Act's articles (Regulation 2024/1689), the regulatory floor for any agent that touches the EU market. The second maps ARIA to the clauses of ISO/IEC 42001:2023, the voluntary AI-management-system standard most enterprises adopt as their internal spine. The third maps ARIA to the four functions of the NIST AI Risk Management Framework 1.0 (Tabassi 2023) and to the GenAI-specific actions of NIST AI 600-1 (NIST 2024).
+
+The mapping is opinionated. Each cell is the answer to a single question: \textit{what does this pillar contribute to this requirement?} The cells are short on purpose. Where a pillar contributes to a clause indirectly, the cell names the upstream artifact and points at it. Where the standard's requirement is squarely on a pillar, the cell names the pillar's central practice.
+
+Two warnings before you read. First, the crosswalk is a navigational aid, not a substitute for reading the source standard. Your legal team will still need the actual article and clause text. Second, all three frameworks are moving targets. The EU AI Act's secondary legislation is rolling out through 2026 and 2027. ISO/IEC 42001's first amendment cycle is anticipated mid-decade. NIST AI 600-1 will be revised as the GenAI risk catalog matures. Treat the rows as durable, the cell content as current as of the book's lock date.
+
+\stoptwocol
+
+\TNrule
+
+\section*{Table 1: ARIA pillar vs.\ EU AI Act (Regulation 2024/1689)}
+
+\starttwocol
+The EU AI Act is the binding regulation for any agent placed on the EU market. The articles most relevant to enterprise agents are Article 6 (which sorts high-risk systems by Annex III categories), Articles 9 through 15 (the technical and procedural obligations on high-risk systems), Article 17 (quality management system), Article 43 (conformity assessment), and Articles 71 through 73 (post-market obligations). Each ARIA pillar maps to one or more of these.
+\begin{table*}[tb]
+\centering
+\small
+\caption{ARIA pillar mapped to EU AI Act articles.}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{ARIA pillar} & \textbf{EU AI Act article(s)} & \textbf{What the pillar contributes} \\
+\midrule
+\textbf{Alignment} & Article 13; Article 14; Article 9 & The behavior contract that satisfies Article 13's user-facing transparency obligation. The HITL approval gates, drift-monitoring, and kill-switch documentation that demonstrate Article 14 oversight. The misalignment-failure-mode catalog (specification gaming, reward hacking, sycophancy, deceptive compliance) that feeds the Article 9 risk register. \\
+\addlinespace
+\textbf{Hardening} & Article 15; Article 9 & The threat model, red-team report, OWASP LLM Top 10 mapping, and MITRE ATLAS technique IDs that prove Article 15 robustness and cybersecurity. The hardening maturity model and identity-and-tool-boundary controls that constitute the Article 9 mitigations. \\
+\addlinespace
+\textbf{Benchmarking} & No direct article; supports Article 15 and Article 11 & Public benchmark results (AgentBench, SWE-bench Verified, $\tau$-bench, GAIA, HELM, BFCL) form part of the Article 11 technical-documentation evidence on accuracy and capability class. Comparative benchmarking data justifies the choice of model and version under Article 15. \\
+\addlinespace
+\textbf{Evaluation} & Articles 9, 15, 17, 72 & The golden-dataset evaluation reports --- functional, quality, safety, continuous --- are the central evidence under Article 15. The continuous-evaluation pipeline (sampled production traffic, drift detection, feedback loop) is the operational basis for Article 72's post-market monitoring. The eval-framework cadence and ownership feed Article 17's quality management system. \\
+\addlinespace
+\textbf{Certification} & Articles 6, 11, 17, 43, 71--73 & The risk-based tiering exercise that decides whether an agent falls under Annex III; the pre-cert binder (model card, lineage, SBOM, risk assessment, red-team report, eval reports, behavior contract, owner sign-off) that constitutes the Article 11 technical documentation; the conformity-assessment workflow that satisfies Article 43; the recertification triggers and public-registry entry that satisfy Articles 71 (registration), 72 (post-market monitoring), and 73 (serious-incident reporting). \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+A single agent in Annex III scope will touch every row of this table. A low-tier internal agent will touch fewer rows, but the structure is the same: alignment and hardening produce the risk-management substrate; benchmarking and evaluation produce the quantitative evidence; certification gathers and signs.
+\stoptwocol
+
+\TNrule
+
+\section*{Table 2: ARIA pillar vs.\ ISO/IEC 42001:2023}
+
+\starttwocol
+ISO/IEC 42001:2023 is structured around the standard ISO management-system clauses (4 through 10) plus a normative Annex A of controls. Each ARIA pillar maps to one or more clauses, and the controls in Annex A populate the specific obligations under each.
+\begin{table*}[tb]
+\centering
+\small
+\caption{ARIA pillar mapped to ISO/IEC 42001:2023 clauses.}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{ARIA pillar} & \textbf{ISO/IEC 42001 clause(s)} & \textbf{What the pillar contributes} \\
+\midrule
+\textbf{Alignment} & Clauses 5, 6; Annex A (objectives, intended use) & The alignment paragraph --- what \textit{good} looks like for this agent in this deployment --- is the AI policy statement Clause 5 requires. The misalignment-failure-mode catalog and approval-gate design feed the Clause 6 AI risk-assessment and treatment plan. Annex A's controls on intended use and objectives are satisfied by the behavior contract and the system-prompt-scope discipline from Chapter 3. \\
+\addlinespace
+\textbf{Hardening} & Clauses 6, 8; Annex A (security, robustness, operational integrity) & The threat model and red-team report are evidence for the Clause 6 AI risk-assessment, alongside the Clause 8 operational controls --- the workload identity, the tool gateway, the policy decision and enforcement points, the hardening maturity model. The Annex A controls on resilience and security map directly to the Chapter 5--8 architectural moves. \\
+\addlinespace
+\textbf{Benchmarking} & Clause 9; Annex A (monitoring, measurement) & Regression benchmarks, version-aware benchmarking, leaderboard gaming defenses, and statistical-sanity practices (confidence intervals, effect sizes, multiple-comparison corrections) populate the monitoring and measurement controls under Clause 9. \\
+\addlinespace
+\textbf{Evaluation} & Clauses 8, 9, 10; Annex A (data, model, system performance) & The offline-online-continuous evaluation taxonomy operationalizes the Clause 8 operational controls. Production metrics --- functional accuracy, hallucination rate split, pass\textasciicircum{}k, escalation rate, time-to-recover, fairness --- are the Clause 9 evidence. The feedback-harvesting loop that absorbs production failures into the golden set is the Clause 10 continual-improvement mechanism. \\
+\addlinespace
+\textbf{Certification} & Clauses 5, 7, 8, 9, 10; all of Annex A & The certification review board, the certification authority's standing to deny, and the named-owner discipline are the Clause 5 leadership commitments and the Clause 7 support obligations made concrete. The five-stage workflow (initiation, evidence, review, decision, publication) operationalizes Clauses 8 and 9. Recertification triggers and the binder-as-living-playbook are Clause 10's improvement loop. The full Annex A control set is the obligation checklist your binder is curated against. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+ISO/IEC 42001's strength is that it gives Maya's audit committee a shared spine. The standard does not tell you what controls to implement; it tells you what controls to document, how to govern them, and how to demonstrate continual improvement. ARIA's five pillars supply the substance the standard requires you to manage.
+
+The companion ISO/IEC 5338:2023 (AI system life cycle processes) covers the development-process side that ISO/IEC 42001 references. For most enterprises, 42001 is the spine and 5338 is the supporting cast; the crosswalk above is sufficient for the management-system view.
+\stoptwocol
+
+\TNrule
+
+\section*{Table 3: ARIA pillar vs.\ NIST AI RMF 1.0 + AI 600-1 (GenAI Profile)}
+
+\starttwocol
+The NIST AI Risk Management Framework 1.0 is organized around four functions --- \textbf{GOVERN, MAP, MEASURE, MANAGE} --- applied at the organization and the system level. NIST AI 600-1 (the GenAI Profile, published July 2024) names the GenAI-specific risks (confabulation, dangerous or violent content, data privacy, harmful bias, information integrity, information security, intellectual property, obscene material, value chain, environmental harm, human-AI configuration) and the actions that mitigate them.
+
+Each ARIA pillar maps to one or more functions and to a cluster of AI 600-1 actions.
+\begin{table*}[tb]
+\centering
+\small
+\caption{ARIA pillar mapped to NIST AI RMF functions and AI 600-1 actions.}
+\begin{tabularx}{\textwidth}{@{}l l l X@{}}
+\toprule
+\textbf{ARIA pillar} & \textbf{NIST AI RMF function(s)} & \textbf{AI 600-1 GenAI actions} & \textbf{What the pillar contributes} \\
+\midrule
+\textbf{Alignment} & GOVERN; MAP & Confabulation, harmful bias, value chain, human-AI configuration & The misalignment-failure-mode catalog, the system-prompt-and-guardrail discipline, and the HITL approval-gate design under GOVERN. The MAP-level work of identifying outer- and inner-alignment risks per use case. AI 600-1's confabulation, harmful-bias, and human-AI-configuration actions map onto Chapter 1's failure modes and Chapter 4's oversight controls. \\
+\addlinespace
+\textbf{Hardening} & MAP; MANAGE & Information security, value chain, data privacy, dangerous content & The threat-model and attack-catalog work (direct and indirect prompt injection, tool misuse, denial-of-wallet, configuration tampering, multi-agent collusion) sits squarely in MAP. The runtime hardening --- identity, tool gateway, secrets management, data-path hardening --- is the MANAGE work. AI 600-1's information-security, dangerous-content, and value-chain actions map onto Chapter 6's OWASP-LLM-Top-10 mapping and Chapter 7's Zero Trust controls. \\
+\addlinespace
+\textbf{Benchmarking} & MEASURE & Confabulation, harmful bias, information integrity & Public benchmarks (AgentBench, SWE-bench Verified, $\tau$-bench, GAIA, HELM, BFCL), regression benchmarks, and operational benchmarks (latency, throughput, outcome-normalized cost) are the MEASURE-level instruments. AI 600-1's actions on confabulation and information-integrity rely on benchmark and evaluation results to be operationally meaningful. \\
+\addlinespace
+\textbf{Evaluation} & MEASURE; MANAGE & Confabulation, harmful bias, information integrity, human-AI configuration & The offline-online-continuous evaluation taxonomy is NIST's MEASURE function operationalized. The continuous-evaluation pipeline --- drift detection, fairness monitoring, attack-success-rate tracking --- feeds the MANAGE function's response actions. AI 600-1's fairness actions map onto the equalized-odds and demographic-parity work from Chapter 16. \\
+\addlinespace
+\textbf{Certification} & GOVERN; MAP; MEASURE; MANAGE & All AI 600-1 risk categories & The risk-based tiering exercise is the GOVERN-level decision that scopes everything downstream. The pre-cert binder is the MAP-level cataloging. The eval and benchmark reports are MEASURE. The conformity-assessment workflow, the recertification triggers, and the public disclosure (system card, transparency report, public registry where applicable) are MANAGE. AI 600-1's actions across all eleven risk categories are the controls the binder is curated against. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+NIST's framework is voluntary, principles-based, and the closest the United States has to a federal AI standard. For agents that touch US federal-government customers, AI RMF conformance is increasingly an expectation; for agents that touch GenAI use cases specifically, AI 600-1 is the practical checklist your enterprise can use to scope a certification program. The crosswalk above tells your audit team which ARIA artifacts answer which NIST action.
+\stoptwocol
+
+\TNrule
+
+\section*{Using the crosswalk}
+
+\starttwocol
+The three tables answer three different audit questions. \textit{``Are we compliant with the EU AI Act?''} The first table. \textit{``Do we have an ISO/IEC 42001-conformant AI management system?''} The second table. \textit{``Can we demonstrate AI RMF and GenAI Profile alignment to a US federal customer?''} The third table.
+
+Most enterprises will eventually need answers to all three. The good news is that the underlying evidence --- the binder --- is the same. The crosswalk reorganizes that evidence into the language each standard speaks. Build the binder once, in ARIA's language; map it three ways for the regulators and auditors.
+
+When the standards update --- and they will --- the rows of these tables stay constant. The ARIA pillars do not move. What moves is the cell content as new articles, clauses, and actions are added or revised. Treat the row labels as the durable structure and the cells as the year's snapshot.
+
+For deeper treatment of any individual standard, see the further-reading list. For the bib entries supporting these mappings, see the references. For the operational shape of the certification program these standards govern, see Part V of the book.
+\stoptwocol

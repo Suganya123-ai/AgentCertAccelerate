@@ -1,0 +1,322 @@
+% tn-style.sty — Infosys-corporate two-column book style for ARIA (v2 visual)
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tn-style}[2026/05/20 ARIA Infosys-corporate style]
+
+%% ─── Encoding ─────────────────────────────────────────────
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+
+%% ─── Font: Fira Sans ──────────────────────────────────────
+\RequirePackage[sfdefault, scaled=0.95]{FiraSans}
+\renewcommand{\familydefault}{\sfdefault}
+
+%% ─── Page geometry ────────────────────────────────────────
+\RequirePackage[
+  a4paper,
+  top=24mm, bottom=22mm,
+  left=18mm, right=18mm,
+  headheight=16pt,
+  headsep=6mm,
+  footskip=10mm
+]{geometry}
+
+%% ─── Colors (Infosys palette) ─────────────────────────────
+\RequirePackage[table]{xcolor}
+\definecolor{TNNavy}{HTML}{0B1F3A}
+\definecolor{TNNavyDeep}{HTML}{071528}
+\definecolor{TNTeal}{HTML}{009AC7}
+\definecolor{TNTealDeep}{HTML}{007AA0}
+\definecolor{TNLightGray}{HTML}{F4F6F8}
+\definecolor{TNMidGray}{HTML}{777777}
+\definecolor{TNBorderGray}{HTML}{D8DEE4}
+\definecolor{TNBodyText}{HTML}{2C2C2C}
+\definecolor{TNAmber}{HTML}{B7791F}
+\definecolor{TNAmberLight}{HTML}{FFF7E6}
+\definecolor{TNTealTint}{HTML}{EAF6FA}
+\definecolor{TNNavyTint}{HTML}{EEF1F6}
+
+%% ─── Graphics & TikZ ──────────────────────────────────────
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\usetikzlibrary{positioning, calc, arrows.meta, shapes.geometric, fit, backgrounds}
+
+%% ─── Multicol ─────────────────────────────────────────────
+\RequirePackage{multicol}
+\setlength{\columnsep}{7mm}
+\setlength{\columnseprule}{0pt}
+
+\newcommand{\starttwocol}{\begin{multicols}{2}}
+\newcommand{\stoptwocol}{\end{multicols}}
+
+%% ─── Floats, captions, tables ─────────────────────────────
+\RequirePackage{float}
+\RequirePackage{caption}
+\RequirePackage{capt-of}
+\captionsetup{
+  font={small,sf},
+  labelfont={bf,color=TNNavy},
+  labelsep=period,
+  justification=raggedright,
+  singlelinecheck=false,
+  hypcap=false
+}
+
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage{array}
+\renewcommand{\arraystretch}{1.15}
+
+%% ─── Callouts (tcolorbox) ─────────────────────────────────
+%% Design rule: never put colored title text on a same-hue background.
+%% Title text is white-on-navy OR navy-on-light-gray. Body text is always dark
+%% on a near-white tint. The accent appears only as a 3pt left rule.
+\RequirePackage[most]{tcolorbox}
+
+\tcbset{
+  TNbase/.style={
+    enhanced,
+    breakable,
+    arc=2pt,
+    outer arc=2pt,
+    boxrule=0pt,
+    leftrule=3pt,
+    colback=TNLightGray,
+    colframe=TNTeal,
+    coltext=TNBodyText,
+    left=6pt, right=6pt, top=3pt, bottom=3pt,
+    fonttitle=\bfseries\sffamily\footnotesize\color{TNNavy},
+    coltitle=TNNavy,
+    colbacktitle=TNLightGray,
+    fontupper=\footnotesize,
+    fontlower=\footnotesize,
+    before skip=8pt,
+    after skip=8pt,
+    parbox=false
+  },
+  TNabstractStyle/.style={
+    TNbase,
+    colback=TNNavyTint,
+    colframe=TNNavy,
+    colbacktitle=TNNavyTint,
+    fonttitle=\bfseries\sffamily\small\color{TNNavy}
+  },
+  TNwarningStyle/.style={
+    TNbase,
+    colback=TNAmberLight,
+    colframe=TNAmber,
+    colbacktitle=TNAmberLight,
+    fonttitle=\bfseries\sffamily\small\color{TNAmber},
+    coltitle=TNAmber
+  },
+  TNkeyStyle/.style={
+    TNbase,
+    breakable=false,
+    colback=TNNavyTint,
+    colframe=TNNavy,
+    colbacktitle=TNNavyTint,
+    fonttitle=\bfseries\sffamily\small\color{TNNavy}
+  }
+}
+
+\newtcolorbox{TNabstract}{TNabstractStyle, title={Abstract}}
+\newtcolorbox{TNdefinition}[1]{TNbase, title={Definition --- #1}}
+\newtcolorbox{TNinpractice}[1]{TNbase, title={In practice --- #1}}
+\newtcolorbox{TNwarning}{TNwarningStyle, title={Warning}}
+
+\newenvironment{TNkeytakeaways}{%
+  \needspace{14\baselineskip}%
+  \begin{tcolorbox}[TNkeyStyle, title={Key takeaways}]
+  \begin{itemize}[leftmargin=1.1em, itemsep=1pt, topsep=2pt, parsep=1pt]
+}{%
+  \end{itemize}\end{tcolorbox}
+}
+
+\newenvironment{TNchecklist}{%
+  \needspace{16\baselineskip}%
+  \begin{tcolorbox}[TNkeyStyle, title={Practitioner checklist}]
+  \begin{itemize}[leftmargin=1.3em, itemsep=1pt, topsep=2pt, parsep=1pt, label={$\square$}]
+}{%
+  \end{itemize}\end{tcolorbox}
+}
+
+\RequirePackage{enumitem}
+\RequirePackage{amssymb}
+\setlist[itemize]{leftmargin=1.2em, itemsep=2pt, topsep=2pt, parsep=1pt}
+\setlist[enumerate]{leftmargin=1.4em, itemsep=2pt, topsep=2pt, parsep=1pt}
+
+%% ─── UTF-8 fallbacks ──────────────────────────────────────
+\DeclareUnicodeCharacter{03C4}{$\tau$}
+\DeclareUnicodeCharacter{03B1}{$\alpha$}
+\DeclareUnicodeCharacter{03B2}{$\beta$}
+\DeclareUnicodeCharacter{03B3}{$\gamma$}
+\DeclareUnicodeCharacter{03B4}{$\delta$}
+\DeclareUnicodeCharacter{03BB}{$\lambda$}
+\DeclareUnicodeCharacter{03BC}{$\mu$}
+\DeclareUnicodeCharacter{03C0}{$\pi$}
+\DeclareUnicodeCharacter{03C3}{$\sigma$}
+\DeclareUnicodeCharacter{03C6}{$\varphi$}
+\DeclareUnicodeCharacter{03C8}{$\psi$}
+\DeclareUnicodeCharacter{03C9}{$\omega$}
+\DeclareUnicodeCharacter{0394}{$\Delta$}
+\DeclareUnicodeCharacter{03A3}{$\Sigma$}
+\DeclareUnicodeCharacter{2192}{$\rightarrow$}
+\DeclareUnicodeCharacter{2190}{$\leftarrow$}
+\DeclareUnicodeCharacter{2194}{$\leftrightarrow$}
+\DeclareUnicodeCharacter{2264}{$\leq$}
+\DeclareUnicodeCharacter{2265}{$\geq$}
+\DeclareUnicodeCharacter{2248}{$\approx$}
+\DeclareUnicodeCharacter{00D7}{$\times$}
+\DeclareUnicodeCharacter{2713}{\checkmark}
+\DeclareUnicodeCharacter{2014}{---}
+\DeclareUnicodeCharacter{2013}{--}
+
+%% ─── Typography ──────────────────────────────────────────
+\RequirePackage{microtype}
+\RequirePackage{needspace}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\linespread{1.06}
+
+% Discourage widows/orphans but do not forbid (10000 caused empty half-columns)
+\widowpenalty=1500
+\clubpenalty=1500
+\displaywidowpenalty=1500
+\predisplaypenalty=1500
+\interfootnotelinepenalty=1000
+
+%% ─── Title state ─────────────────────────────────────────
+\newcommand{\BookTitle}{Book Title}
+\newcommand{\setbooktitle}[1]{\renewcommand{\BookTitle}{#1}}
+
+%% ─── KOMA header / footer ────────────────────────────────
+\RequirePackage{scrlayer-scrpage}
+\clearpairofpagestyles
+\setkomafont{pageheadfoot}{\small\sffamily}
+\setkomafont{pagenumber}{\small\sffamily}
+
+\ihead{\textcolor{TNMidGray}{\small\BookTitle}}
+\ohead{\textbf{\textcolor{TNNavy}{Infosys\textsuperscript{\textregistered}}}%
+  \ \textcolor{TNMidGray}{\textbar\ Knowledge Institute}}
+\ifoot{\textcolor{TNMidGray}{\footnotesize External Document \copyright\ 2026 Infosys Limited}}
+\ofoot{\textcolor{TNNavy}{\footnotesize\bfseries \thepage}}
+
+% Thin teal rule under header
+\setkomafont{pagehead}{\small\sffamily}
+\KOMAoption{headsepline}{0.4pt}
+\addtokomafont{headsepline}{\color{TNTeal}}
+
+\pagestyle{scrheadings}
+
+%% ─── Chapter banner (single decorative element) ──────────
+\KOMAoptions{chapterprefix=false, open=any}
+\setkomafont{chapter}{\normalfont}
+
+\RedeclareSectionCommand[
+  beforeskip=0pt,
+  afterskip=14pt,
+  innerskip=0pt
+]{chapter}
+
+\renewcommand*{\chapterlinesformat}[3]{%
+  \noindent
+  \begin{tikzpicture}
+    \fill[TNNavy] (-2cm,0) rectangle (\textwidth+2cm, 2.8cm);
+    \fill[TNTeal] (-2cm,0) rectangle (\textwidth+2cm, 0.12cm);
+    \ifnum\value{chapter}>0
+      \node[anchor=north west, text width=0.88\textwidth, inner sep=0pt]
+        at (0,2.55cm) {%
+          \fontsize{9}{11}\selectfont\sffamily\color{TNTeal}%
+          \MakeUppercase{Chapter \thechapter}%
+        };
+    \fi
+    \node[anchor=south west, text width=0.88\textwidth, inner sep=0pt]
+      at (0,0.85cm) {%
+        \fontsize{20}{24}\selectfont\bfseries\sffamily\color{white}%
+        #3%
+      };
+  \end{tikzpicture}%
+  \vspace{0.4em}%
+}
+\renewcommand*{\chapterlineswithprefixformat}[3]{%
+  \chapterlinesformat{#1}{#2}{#3}%
+}
+\renewcommand*{\chapterpagestyle}{scrheadings}
+
+%% ─── Section styling ─────────────────────────────────────
+\setkomafont{section}{\large\bfseries\sffamily\color{TNNavy}}
+\setkomafont{subsection}{\normalsize\bfseries\sffamily\color{TNTealDeep}}
+\setkomafont{subsubsection}{\normalsize\bfseries\sffamily\color{TNBodyText}}
+
+\RedeclareSectionCommand[beforeskip=1.0em, afterskip=0.35em]{section}
+\RedeclareSectionCommand[beforeskip=0.7em, afterskip=0.2em]{subsection}
+
+%% ─── TNchapter wrapper ──────────────────────────────────
+\newcommand{\TNchapter}[2][]{%
+  \chapter{#2}%
+  \def\TNtmp{#1}\ifx\TNtmp\empty\else
+    \begin{TNabstract}#1\end{TNabstract}%
+  \fi
+}
+
+%% ─── Horizontal rule helper ──────────────────────────────
+\newcommand{\TNrule}{\par\vspace{0.4em}\noindent%
+  \textcolor{TNBorderGray}{\rule{\linewidth}{0.4pt}}\par\vspace{0.4em}}
+
+%% ─── Pillar page ─────────────────────────────────────────
+\newcommand{\pillarpage}[2][TNNavy]{%
+  \clearpage
+  \thispagestyle{empty}%
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[#1] (current page.south west) rectangle (current page.north east);
+    \fill[TNTeal]
+      ([yshift=-3.5cm]current page.north west)
+      rectangle ([yshift=-3.62cm]current page.north east);
+    \node[anchor=north west, text width=10cm]
+      at ([xshift=2.2cm, yshift=-2.6cm]current page.north west) {%
+        \fontsize{10}{12}\selectfont\sffamily\color{TNTeal}%
+        \MakeUppercase{ARIA Framework \textbullet\ Pillar}%
+      };
+    \node[anchor=west, text width=15cm]
+      at ([xshift=2.2cm, yshift=-0.5cm]current page.west) {%
+        \fontsize{56}{64}\selectfont\bfseries\sffamily\color{white}%
+        #2%
+      };
+    \node[anchor=south west, text width=15cm]
+      at ([xshift=2.2cm, yshift=2cm]current page.south west) {%
+        \fontsize{10}{14}\selectfont\sffamily\color{white!70}%
+        Infosys\textsuperscript{\textregistered}\ \textbar\ Knowledge Institute%
+      };
+  \end{tikzpicture}%
+  \addcontentsline{toc}{part}{\protect\textbf{#2}}%
+  \clearpage
+}
+
+%% ─── Image placeholder (kept for safety; should not appear in final) ─
+\newcommand{\imgplaceholder}[2]{%
+  \begin{tikzpicture}
+    \fill[TNLightGray] (0,0) rectangle (#1, #2);
+    \draw[TNBorderGray] (0,0) rectangle (#1, #2);
+    \node[font=\footnotesize\sffamily, color=TNMidGray]
+      at ($(0,0)!0.5!(#1,#2)$) {Figure --- forthcoming};
+  \end{tikzpicture}%
+}
+
+%% ─── Key term ────────────────────────────────────────────
+\newcommand{\keyterm}[1]{\textbf{\textcolor{TNNavy}{#1}}}
+
+%% ─── Non-floating single-column figure inside multicols ──
+\newenvironment{Figure}{%
+  \par\medskip\noindent\begin{minipage}{\columnwidth}\centering%
+}{%
+  \end{minipage}\par\medskip%
+}
+
+%% ─── Hyperlinks ──────────────────────────────────────────
+\RequirePackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=TNTealDeep,
+  urlcolor=TNTealDeep,
+  citecolor=TNNavy,
+  pdftitle={\BookTitle}
+}

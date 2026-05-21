@@ -1,0 +1,149 @@
+\TNchapter[The process is what turns the binder into a decision. This chapter walks the path from ``we have the artifacts'' to ``we have the certificate'': who reviews, against what criteria, with what evidence, and with what authority to say no. It covers conformity assessment (the EU AI Act version), assurance (the ISO/IEC 42001 version), and the third-party assessor question (when you need one, when you don't). The chapter closes by drawing the governance triangle --- owner, review board, regulator --- that holds the whole thing together.]{Certification Process and Governance}
+\label{ch:50-certification-19-process}
+
+\starttwocol
+
+\section{The process in five stages}
+
+Certification is a workflow, not an event. The most useful way to picture it is five stages --- initiation, evidence assembly, review, decision, publication --- each with a named handoff. If your team cannot draw the workflow on a whiteboard, the process will collapse the first time it is contested.
+
+The initiation stage is short. Someone declares an agent in scope, and the certification authority confirms the tier and the standard. The evidence stage is the work of the pre-cert binder we walked in \autoref{ch:50-certification-18-pre-cert}. The review stage is where the binder meets a body of humans who can read it, push on it, and ask hard questions. The decision is \textit{approved}, \textit{approved with conditions}, or \textit{denied}. The publication is the act of writing it down in a place the next reader can find --- the audit committee minutes, the model registry, and (for high-risk systems) the public-facing registry the regulator will check.
+
+The shape of the workflow does not change much between an internal certification and an external one. What changes is who staffs the review stage and how much they cost.
+
+\section{Self-assessment vs. third-party certification}
+
+For most low-tier and many medium-tier agents, \textbf{self-assessment} is the right answer. Your own certification review board reads the binder, runs the workflow, and issues the decision. The discipline lives inside the company. The cost is one or two days of senior people's time per agent per cycle. The credibility is whatever your board is worth.
+
+For high-tier agents --- and for any agent the regulator says is high-risk --- self-assessment is not enough. The certification has to be issued, or at minimum endorsed, by a body that is independent of the team that built the agent. The discipline now includes an external review. The cost goes up by an order of magnitude. So does the credibility, because the assessor's reputation, not yours, is on the certificate.
+
+The cleanest decision rule: \textit{if the cost of an incident exceeds the cost of an external assessment by a comfortable margin, the assessment is worth it.} For an HR FAQ bot, the calculation says no. For a wealth-management assistant or a clinical-decision tool, the calculation says yes --- and for an EU AI Act Annex III agent, the law says yes regardless.
+
+\begin{TNinpractice}{Cascade Manufacturing} \textit{Cascade's quality-control agent for a German plant inspects machined components and recommends pass-or-reject decisions on the line.} The agent landed in EU AI Act Annex III as a ``safety component of machinery'' --- Annex III, item 2 --- and the team had been doing internal-review-board certifications for its other agents. The internal board was not enough. Cascade engaged a notified body for the conformity assessment, kept the internal board for the ISO/IEC 42001 management-system audit, and discovered that the work of the external assessor was less about catching technical issues and more about catching governance ones. The notified body asked who had signed the model card. The owner had moved teams. The signature was three months stale, and the new owner had not been formally handed the binder. The fix took a week. The lesson --- that the binder needed an owner change procedure --- was worth more than the certification itself. \end{TNinpractice}
+
+\section{Conformity assessment under the EU AI Act}
+
+For any agent in EU AI Act Annex III, the gateway is \textbf{conformity assessment}.
+
+\begin{TNdefinition}{Conformity assessment} the procedure required by the EU AI Act (Article 43) under which a high-risk AI system is checked, and documented, against the Act's requirements before going to market and again on every substantial modification. Some assessments are self-declared by the provider; others require an independent body to issue the certificate. \end{TNdefinition}
+
+\autoref{ch:50-certification-17-framework} introduced conformity assessment as a definition. Here is what it looks like as a process.
+
+\begin{TNinpractice}{EU AI Act Article 43} Article 43 of Regulation 2024/1689 \citep{euAIact2024} governs how high-risk AI systems are conformity-assessed. For most Annex III categories, the provider may self-declare conformity after running a structured internal procedure (the ``based on internal control'' route in Annex VI). For systems where there is a harmonized standard, or for certain biometric and law-enforcement uses, an independent \textbf{notified body} must be involved (the Annex VII route), and the body issues the certificate. Either way, the conformity assessment must be repeated on every substantial modification --- a change in intended purpose, a change in the model, a change that materially affects performance. The artifact you produce is a \textit{Declaration of Conformity} and (where required) a notified-body certificate. Both go in the binder and the EU's public database for high-risk systems. \end{TNinpractice}
+
+The procedural requirements that Article 43 references are spread across Articles 9 through 15, and each one maps onto evidence your binder should already have:
+
+\begin{itemize}
+\item \textit{Article 9} (risk management system) --- your risk assessment.
+\item \textit{Article 10} (data and data governance) --- your data lineage record.
+\item \textit{Article 11} (technical documentation) --- your model card and architecture diagram.
+\item \textit{Article 12} (record-keeping) --- your audit logs and traces.
+\item \textit{Article 13} (transparency) --- your behavior contract.
+\item \textit{Article 14} (human oversight) --- your kill-switch and approval-gate documentation.
+\item \textit{Article 15} (accuracy, robustness, cybersecurity) --- your eval reports and red-team report.
+\end{itemize}
+
+This is why the pre-cert binder is curated the way it is. The mapping is not coincidence; the chapter that designed the binder was written backwards from this list.
+
+\section{ISO/IEC 42001 --- clauses 8 and 9}
+
+For agents outside the EU regulatory scope, the spine your audit committee will most often reach for is ISO/IEC 42001:2023.
+
+\begin{TNinpractice}{ISO/IEC 42001:2023 clauses 8 and 9} Clause 8 is \textit{Operation} --- the standard's requirement that the AI management system operate the controls planned in clause 6, including the AI risk-treatment plan and the AI-impact-assessment procedure. Clause 9 is \textit{Performance Evaluation} --- the requirement that the organization monitor, measure, analyze, and evaluate the management system on a defined cadence, run internal audits, and conduct management reviews. For your certification process, clause 8 governs the operational discipline (who runs which control, with what frequency) and clause 9 governs the evidence of that discipline. ISO/IEC 42001's assurance ladder is voluntary; the value is that it gives your audit committee a published structure, so when the next regulator asks how you govern AI, you have a recognized answer \citep{iso-iec-42001}. \end{TNinpractice}
+
+ISO/IEC 42001 does not replace the EU AI Act. It is the management-system spine your company runs on, regardless of which regulator is asking. Most enterprises adopt it because procurement contracts increasingly require it, because the auditors who know how to assess AI tend to know ISO management systems, and because it gives an internal-audit team a stable target. Cascade Manufacturing, in the vignette above, used ISO/IEC 42001 as the spine and overlaid the EU AI Act conformity assessment as the regulator-specific layer. That pattern works in most jurisdictions today.
+
+\section{Audit evidence collection}
+
+Whatever the standard, the review stage runs on evidence. The pre-cert binder is the starting point. The review board will ask for more.
+
+The two evidence types reviewers want to see beyond the binder are \textbf{execution traces} and \textit{calibration records}. Execution traces are the per-turn records from production traffic --- the prompt, the tool calls, the tool results, the model output. The reviewer's question is not \textit{how does the agent behave on the eval set} but \textit{does the eval set look like what happens in production}. A binder whose traces look nothing like its eval inputs will not survive the review. Calibration records are the documentation that the metrics in the binder were computed against the same definitions the reviewers expect: a 95\% accuracy number is meaningless until you say what counted as a correct answer and who said so.
+
+The discipline your team needs from the observability and production-evaluation chapters pays off here. The agents whose observability stack was built ad-hoc will struggle to produce the traces the reviewer asks for. The agents whose eval framework was deterministic and versioned will sail through.
+
+\begin{TNinpractice}{Meridian Logistics} \textit{Meridian's review board met for ninety minutes one Thursday to certify a third agent in the dispatch portfolio.} The agent passed every threshold in the binder. The board asked the operations lead to reproduce three production decisions from the prior week --- a routine spot-check. The audit trail did not have enough context to reproduce them; the trace logs were sampled at one in twenty, and the three sampled cases did not include the ones the board picked. The board denied certification on the spot, not because the agent was bad, but because the evidence chain was not defensible. The operations team rebuilt the observability stack to retain full traces for ninety days. The agent recertified five weeks later. The cost of the delay was less than the cost of an incident the board would not have caught. \end{TNinpractice}
+
+\section{Review boards and approval gates}
+
+A certification review board is a standing body, not an ad-hoc committee. Its job is to be in the room when an agent is being certified, to read the binder, to push, and to vote.
+
+The composition we sketched in \autoref{ch:50-certification-17-framework} carries over here: a product or engineering lead, a domain SME, a security and risk lead, a compliance lead, and (for high-tier) an external assessor. The discipline that matters is the meeting. A review-board meeting is structured. The agenda is the binder. The decision is recorded. The minutes are part of the next binder.
+
+A serviceable review-board agenda for a single agent looks like this:
+
+\begin{enumerate}
+\item \textit{Scope confirmation} (5 minutes) --- does the agent's intended use still match the tier?
+\item \textit{Binder walkthrough} (20 minutes) --- the owner presents the eight artifacts.
+\item \textit{Trace spot-check} (15 minutes) --- the board picks three production turns; the team reproduces them.
+\item \textit{Risk discussion} (15 minutes) --- the board pushes on the risk assessment and the red-team report.
+\item \textit{Vote} (5 minutes) --- approved, approved with conditions, or denied.
+\item \textit{Minutes} (parallel) --- the compliance lead records the outcome and the conditions.
+\end{enumerate}
+
+The whole meeting is ninety minutes. If it takes longer, the binder was not ready. If it takes shorter, the board is rubber-stamping.
+
+The \textit{approved with conditions} outcome is the one teams underuse. A condition is a specific fix the team must complete and document before the certification is final. Conditions force the team to close real gaps without holding up a launch for one missing artifact. Used well, they raise the binder's quality over time. Used poorly, they become a way for the board to avoid saying no. The discipline is to make conditions concrete, dated, and signed off by the owner.
+
+\section{The governance triangle: owner, board, regulator}
+
+Certification works because three parties watch each other.
+
+The \textbf{owner} is accountable for the agent every day.
+
+The \textit{review board} is accountable for the certification every cycle.
+
+The \textit{regulator} (or its proxy --- the external assessor, the customer's audit team, the public registry's reviewer) is accountable for the standard the certification is held to.
+
+\begin{figure*}[ht]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  corner/.style={draw=TNNavy, line width=0.8pt, rounded corners=3pt,
+    fill=TNNavyTint, text width=3.6cm, align=center, inner sep=8pt,
+    minimum height=1.4cm, font=\sffamily\bfseries\color{TNNavy}},
+  rel/.style={font=\sffamily\footnotesize\itshape\color{TNTealDeep}, align=center}
+]
+  \node[corner] (owner)  at (-5,0) {Owner\\\footnotesize\mdseries product / engineering};
+  \node[corner] (board)  at ( 5,0) {Review board\\\footnotesize\mdseries risk, legal, security};
+  \node[corner] (reg)    at ( 0,-3.5) {Regulator or external\\\footnotesize\mdseries assessor, auditor, registry};
+
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (owner)  -- node[rel, above]{evidence binder} (board);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (board)  -- node[rel, above]{conditions / findings} (owner);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (board)  -- node[rel, right, xshift=4pt]{conformity report} (reg);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (reg)    -- node[rel, left,  xshift=-4pt]{standard updates} (board);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (owner)  -- node[rel, left,  xshift=-4pt]{incidents, disclosures} (reg);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (reg)    -- node[rel, right, xshift=4pt]{registry obligations} (owner);
+\end{tikzpicture}%
+}
+\caption{The governance triangle. Each corner watches another; no single party runs the process alone.}
+\end{figure*}
+
+The triangle is what makes the process self-correcting. When the owner gets sloppy, the board catches it. When the board gets cozy, the regulator catches it. When the regulator's standard goes stale, the owner's incidents force the standard to update. None of the three corners can run the process alone. The discipline of a serious certification program is to keep all three corners staffed.
+
+The next chapter --- \autoref{ch:50-certification-20-keeping-certified} --- is about what the triangle does between certifications: the recertification triggers, the version control, the public disclosure obligations, and the discipline of treating certification not as a one-time event but as a continuous capability. Because the certificate is granted, but it does not stay granted by default.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item The certification process is a five-stage workflow: initiation, evidence, review, decision, publication. If you cannot draw it, you cannot run it.
+\item Self-assessment is the right answer for low and many medium-tier agents; third-party assessment is required for high-tier and for EU AI Act Annex III systems.
+\item EU AI Act Article 43 maps directly onto the pre-cert binder --- Articles 9 through 15 each correspond to a specific artifact you should already have.
+\item ISO/IEC 42001 clauses 8 and 9 give your audit committee a recognized operating spine and an evidence-of-discipline backbone.
+\item A review-board meeting is ninety minutes if the binder is ready, longer if it isn't, and a rubber stamp if it isn't a real meeting at all.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Draw the five-stage workflow for your certification program on one page. Share it with your CFO.
+\item For every agent in flight, decide self-assessment or third-party and document the reasoning.
+\item Map your pre-cert binder against EU AI Act Articles 9--15. Identify gaps.
+\item Schedule a recurring review-board meeting cadence --- quarterly at minimum, monthly for high-tier portfolios.
+\item Define the ninety-minute review-board agenda and circulate it before every meeting.
+\item Identify when an \textit{approved with conditions} outcome is the right call and write three conditions you would accept.
+\item Confirm that an external assessor relationship is in place for any agent that will need one within the next six months.
+\end{TNchecklist}
+
+
+

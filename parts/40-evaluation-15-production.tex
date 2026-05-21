@@ -1,0 +1,147 @@
+\TNchapter[Once the framework is built, the question is whether it measures the things that change your decisions. This chapter walks the production-relevant evaluation metrics that show up on the dashboard your team will actually use: did the agent do the job, was the answer faithful to the source, was it consistent across repeated tries, and what happened when it went wrong. By the end you will know which numbers belong on the wall and which ones belong in the appendix.]{Measuring What Matters in Production}
+\label{ch:40-evaluation-15-production}
+
+\starttwocol
+
+\section{Functional evaluation: did the agent do the job}
+
+The simplest question in evaluation is also the easiest to answer badly. Did the agent do what it was supposed to do? Most teams answer with one number --- \textit{accuracy} --- and ship it. The number looks fine. The next quarter's incident review shows the dashboard was missing the things that actually broke.
+
+A serious functional evaluation breaks the question into pieces that map onto the agent's loop. Task completion, tool selection, multi-turn coherence, memory and context, error recovery, end-to-end workflow integrity. Each piece can be measured. Each piece can fail independently. A claims-triage agent can have 96\% task completion and 12\% tool-selection error: the routing decision is right most of the time, but the agent is calling the wrong downstream service inside the right decision. Aggregate accuracy hides this. The breakdown surfaces it.
+
+\begin{TNdefinition}{Functional evaluation}
+Measuring whether the agent completes the real-world task it was assigned, broken down by the legs of the agent loop: task outcome, tool selection and parameters, multi-turn coherence, context retention, error recovery, and end-to-end workflow integrity. Distinct from quality evaluation, which asks how good the answer was.
+\end{TNdefinition}
+
+Three measurements carry most of the diagnostic load.
+
+\textit{Task completion rate} is the fraction of sessions where the agent reached the intended outcome --- counted by what actually happened, not by what the agent said it did.
+
+\textit{Tool-call correctness} is the percentage of tool calls where the agent selected the right tool, formatted the arguments correctly, and interpreted the response.
+
+\textit{Multi-turn coherence} is whether the agent kept track of facts and context across the conversation without drifting or contradicting itself.
+
+Each is straightforward to instrument once the agent's trace is well-formed. The practical work is in deciding the thresholds and where in the loop a failure means the agent should escalate rather than retry.
+
+Most enterprise agents need an \textit{escalation rate} on the dashboard too: the fraction of turns where the agent handed control to a human. Too low means the agent is over-stepping, doing things it should be deferring. Too high means it is not earning its cost. The right band is set by the business and is one of the harder thresholds to get right; it is also one of the numbers that change the most between offline evaluation and production. Plan to measure it both places.
+
+\section{Hallucination, faithfulness, and groundedness}
+
+The word \textit{hallucination} has been doing too much work since 2023. The persona uses it loosely to mean ``the agent said something confidently and wrong.'' In production evaluation, the looseness becomes a problem because there are at least two kinds of wrong, and they are caught by different metrics.
+
+\begin{TNdefinition}{Hallucination}
+A confidently stated, fluent, factually wrong output from an LLM. Useful as a headline word; insufficient as a metric. Production evaluation breaks it down into faithfulness and groundedness.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Factual hallucination}
+The output contradicts an objective external fact. The Eiffel Tower is 600 metres tall (it is 330). Caught by reference checks against authoritative sources.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Contextual hallucination}
+The output is not supported by the documents the agent was given. The user asked about return policy, the retrieved policy says 30 days, and the agent said 60. Caught by groundedness checks against the retrieved context.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Groundedness}
+Every claim in the agent's output can be traced back to a specific source document. A yes/no judgment per claim, not per output \citep{shuster2021groundedness, asai2023selfrag}.
+\end{TNdefinition}
+
+For a retrieval-augmented system, contextual hallucination is the more dangerous of the two and the more measurable. Factual hallucination is a model problem: the weights got something wrong, and the fix is upstream of evaluation. Contextual hallucination is a system problem: the retrieval found the right document and the model ignored it, or the retrieval found the wrong document and the model believed it. Either way, the failure is in the pipeline your team built \citep{huang2023hallucination-survey}.
+
+The practical metrics for groundedness break a response into atomic claims and check each one against the retrieved sources. \textit{Claim verification rate} --- the fraction of claims supported by the source --- is the headline number. \textit{Hallucination rate} --- the fraction of outputs containing at least one unsupported claim --- is what gets compared across releases. Both are usually run by an LLM-as-judge, with a calibration set human-graded by domain experts. The judge needs to be in a different model family from the agent being graded, for the self-preference reasons discussed in \autoref{ch:40-evaluation-14-framework}.
+
+\begin{TNwarning}
+A common reporting mistake is to publish \textit{hallucination rate} as a single number without saying which kind. A 4\% rate on factual hallucination and a 4\% rate on contextual hallucination are not the same thing, and the remediation is not the same. Split the metric on every dashboard your team produces, or your CISO will assume the worse of the two when reading it.
+\end{TNwarning}
+
+\section{Retrieval-grounded evaluation: did the retrieval do its job}
+
+For any RAG-style agent, the answer is only as good as the documents that reached the model. Groundedness measures whether the model honored the retrieved context. Retrieval-grounded evaluation asks the prior question: did the retrieval find the right context in the first place? When the retrieval misses, no amount of model quality saves the answer.
+
+\begin{TNdefinition}{Retrieval-grounded evaluation}
+Measuring the retrieval step itself, separately from the generation step, by checking whether the documents the agent received contained the information needed to answer correctly. Distinct from groundedness, which measures the \textit{model's} fidelity to whatever was retrieved.
+\end{TNdefinition}
+
+Maya does not need to compute the metrics by hand; her team will. What she needs is to recognize two numbers when she sees them on a dashboard, and to know what each one is telling her.
+
+\begin{TNdefinition}{MRR (mean reciprocal rank)}
+The average of $1/\textrm{rank}$ of the first relevant document across a set of queries \citep{voorhees1998trec}. A score near 1.0 means the right document is almost always first; a score of 0.5 means it is, on average, the second result. Reported as a single number for a retrieval set; useful when the first relevant hit is the one that matters most.
+\end{TNdefinition}
+
+\begin{TNdefinition}{nDCG (normalized discounted cumulative gain)}
+A retrieval-quality metric \citep{jarvelin2002ndcg} that rewards a system for putting more relevant documents higher in the ranking, discounted by position. The ``normalized'' version scales it to 0--1 against a perfect ranking. Useful when more than one document is relevant and the order across the top-$k$ matters, not just the rank of the first hit.
+\end{TNdefinition}
+
+The practical discipline is to instrument retrieval and generation as separate measurements, so a regression can be assigned to the right team. A drop in groundedness with stable MRR means the model stopped honoring good context; a drop in MRR with stable groundedness means the retrieval started missing. The two diagnoses lead to different fixes.
+
+\section{Consistency, reliability, and the metric that travels from benchmarking}
+
+The single most important quality metric that does not appear in most enterprise dashboards is consistency. An agent that gives the right answer 90\% of the time on a single try can still be operationally broken if the 10\% it gets wrong are \textit{different} every time. Users notice the variance more than the average. So do auditors.
+
+Consistency is measured by running the same prompt through the agent multiple times --- temperature non-zero, otherwise identical conditions --- and looking at how often the outputs agree. Two flavors are useful. \textit{Plan consistency} asks whether the agent's reasoning steps stayed stable across runs. \textit{Tool-selection consistency} asks whether the same task triggered the same tool with the same arguments. Both can be measured deterministically (does the tool call match across runs?) or with an LLM-as-judge (is the reasoning substantively the same?).
+
+The metric that travels from Part III into evaluation work is \textit{pass\textasciicircum k}. It was introduced earlier in the book as a benchmarking measure; in evaluation it does the same work, but on your own golden dataset and your own thresholds.
+
+\begin{TNdefinition}{Pass\textasciicircum k}
+The probability that the agent succeeds at the same task on every one of $k$ independent attempts. Not ``at least one of $k$.'' A model with high \textit{pass\textasciicircum 1} but low \textit{pass\textasciicircum 8} is \textit{occasionally} good. A model with high \textit{pass\textasciicircum 8} is \textit{reliably} good \citep{yao2024taubench}. The closed-form, for the team's data scientist: for $c$ successes out of $n$ single-shot runs, $\textrm{pass}^k = 1 - \binom{n-c}{k} / \binom{n}{k}$.
+\end{TNdefinition}
+
+A worked example makes the metric concrete. Suppose an agent succeeds 80\% of the time on a single attempt. The probability that it succeeds across all eight independent attempts (assuming independence) is 0.8 to the eighth, which is roughly 17\%. The same model that looks ``80\% accurate'' on a one-shot test looks 17\% \textit{reliable} across eight runs. For most enterprise deployments --- where users will retry, where load balancers route the same query to different instances, where the same task gets escalated and retried --- the reliability number is what matters.
+
+The number to put on the dashboard is \textit{pass\textasciicircum k} at the $k$ that matches your operational reality. For a low-volume agent where each task is attempted once, \textit{pass\textasciicircum 1} is the right metric. For a high-volume agent where users routinely retry and where consistency matters more than peak performance, \textit{pass\textasciicircum 5} or \textit{pass\textasciicircum 8} is the threshold the agent has to clear. The right $k$ is a business decision; the wrong $k$ is whichever one your vendor prefers.
+
+\begin{TNinpractice}{Aurora Retail}
+\textit{Aurora's assortment-recommendation agent passed offline evaluation with a 92\% functional accuracy on the curated golden set. The CFO was delighted.} Three months in, the customer-service queue showed something the dashboard had missed. The same shopper, asking the same question forty minutes apart, was getting different product recommendations --- sometimes by a wide margin. The agent was 92\% accurate in single-shot evaluation and 38\% consistent across paired runs of identical inputs. The 14\% gap between functional accuracy and contextual hallucination (citing products that did not exist in the live catalog) was its own problem. The fix was a re-anchored evaluation: \textit{pass\textasciicircum 5} replaced \textit{pass\textasciicircum 1} as the primary release-gate metric, and contextual hallucination joined the dashboard as a separate KPI. The CFO was less delighted and considerably better informed.
+\end{TNinpractice}
+
+\section{Edge cases, robustness, and the boundary conditions that ship the incident}
+
+Most agents fail on the inputs nobody thought to test. Edge-case evaluation is the discipline of finding those inputs before production does. The categories are well-rehearsed: ambiguous instructions, out-of-scope queries, extremely long conversations near the context window, incomplete context, multilingual prompts, adversarial inputs, and failures in upstream tools or APIs.
+
+Three measurement techniques carry the load.
+
+\textit{Perturbation testing} introduces small, semantically-preserving changes to inputs --- typos, paraphrases, reordered clauses --- and checks whether the agent's behavior changes.
+
+\textit{Stress testing} pushes the agent beyond expected load or context length to find the failure mode, not the breaking point.
+
+\textit{Metamorphic testing} gives the agent pairs of inputs that should produce logically-related outputs (a query and its negation, a query in two languages) and verifies the consistency of the relationship.
+
+All three should run as part of the offline evaluation, on a smaller dataset than the main golden set but reasonable coverage of the failure modes the team has already seen.
+
+The metric on the dashboard is usually \textit{graceful degradation rate}: of the cases where the agent could not complete the task, what fraction failed safely --- escalated, asked for clarification, returned a structured ``I do not know'' --- versus cases where it failed unsafely, by hallucinating, by calling the wrong tool, or by producing a confidently wrong answer. The ratio of safe-to-unsafe failures is one of the strongest signals of an agent's production-readiness, and one of the easiest to instrument once the traces are well-formed.
+
+\section{Time-to-recover, the metric most teams forget}
+
+When an agent does fail, the next thing that matters is how fast the system gets back to correct operation. \textit{Time-to-recover} --- the duration from ``something went wrong'' to ``the agent is doing the right thing again'' --- is a KPI that becomes important after the first production incident and is almost never measured before it. Two flavors are useful. \textit{Within-session recovery} is how long it takes the agent (or the human it escalated to) to get a single broken session back on track. \textit{Cross-release recovery} is how long it takes the team to detect a regression, ship a fix, and verify the fix held --- measured from the first failure trace to the first clean release.
+
+The metric is operationally important because it sets the floor on the cost of an agent's mistakes. An agent that fails twice a week but recovers in 30 seconds is operationally healthier than one that fails once a week but takes four hours of incident response per failure. The dashboard number is the median and the 95th percentile; the median is what the team optimizes, the 95th is what the CFO sees when the next incident is unusual.
+
+\section{Tying it back to the framework}
+
+The metrics in this chapter feed the framework in \autoref{ch:40-evaluation-14-framework}. The deterministic checks cover schema, tool selection, and exact-match outcomes. The LLM-as-judge covers faithfulness, groundedness, and multi-turn coherence. The human-graded calibration set anchors the judge against the rubric. The dashboard combines them into the small number of metrics that change decisions: functional accuracy, hallucination rate (split), \textit{pass\textasciicircum k} at the relevant $k$, graceful-degradation rate, escalation rate, time-to-recover.
+
+These are the numbers Maya will hand to her audit committee in the certification chapters that follow. They are also the numbers that show, on a chart, whether the agent is getting better or worse over time. A serious agent program runs them weekly, charts them monthly, and notices when the trend bends before anyone outside the team does.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Functional evaluation is more than a single accuracy number --- it breaks down into task completion, tool-call correctness, multi-turn coherence, and escalation, each measured separately.
+\item Hallucination splits into factual (caught against authoritative sources) and contextual (caught against retrieved context); report them as different numbers or your CISO will assume the worse one.
+\item Consistency is measured by \textit{pass\textasciicircum k}, not by single-shot accuracy. Pick the $k$ that matches how users will actually retry; for most enterprise agents, $k=5$ or $k=8$ is the operational threshold.
+\item Edge-case testing, perturbation, and metamorphic checks belong in the offline framework; \textit{graceful degradation rate} is the dashboard summary.
+\item \textit{Time-to-recover} is the metric most teams add only after their first incident, and the one their CFO will ask about during the second.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Pull your current production dashboard and audit which of the metrics in this chapter are present, which are absent, and which are aggregated when they should be split.
+\item Split your hallucination rate into factual and contextual on the next dashboard refresh.
+\item Decide the $k$ in \textit{pass\textasciicircum k} for each agent in your portfolio, and document the business rationale.
+\item Add \textit{graceful degradation rate} and \textit{time-to-recover} (median + p95) to the next dashboard cycle.
+\item Confirm that the judge model you use for faithfulness scoring is in a different model family from the agent it is grading.
+\item For each metric on the dashboard, write down the threshold that would trigger a hold-release decision. If no threshold exists, the metric is decoration.
+\item Schedule a quarterly review of the evaluation traces from agents that failed safely vs.\ unsafely, and use the ratio to set next quarter's targets.
+\end{TNchecklist}
+
+
+

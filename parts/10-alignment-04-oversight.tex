@@ -1,0 +1,122 @@
+\TNchapter[Alignment is not a state you achieve at launch. The model drifts. The world drifts. The agent's job drifts. This chapter is about the people, processes, and instruments that catch misalignment after deployment --- human-in-the-loop approval gates, the transparency the agent owes its operators on every turn, behavioral verification on a schedule, and the quiet failure modes (deceptive alignment, sleeper-agent behavior) that have been documented in the research literature and that your team has probably not yet seriously considered. By the end of Part I you have the full alignment stack: training, runtime, and oversight.]{Oversight, Transparency, and Drift}
+\label{ch:10-alignment-04-oversight}
+
+\starttwocol
+
+\section{Aligned at launch is not aligned forever}
+
+A common error in agent programs is to treat alignment as a launch milestone. The vendor delivers a model. The team writes a system prompt. The QA cycle passes. The agent ships. Six months later the customer-service ticket category ``agent did something weird'' is doubling every quarter, and nobody is sure when it started.
+
+The thing that broke is not the launch. The thing that broke is \textbf{drift}. The model drifts, because the vendor updated it. The data drifts, because the world the agent is reading from has changed. The concept drifts, because what your business counts as a correct answer has moved underneath the agent.
+
+\begin{TNdefinition}{Drift} the slow change in an agent's behavior over time. Three flavors: model drift (the model is updated), data drift (the world the agent sees has changed), and concept drift (what counts as a correct answer has changed). All three are inevitable. \end{TNdefinition}
+
+\begin{TNinpractice}{Aurora Retail} \textit{A product-recommendation agent that has been in production for nine months.} Conversion is fine. The customer-service ticket category ``agent recommended an item I cannot return'' has tripled. Behavioral verification of the agent on the original golden dataset says nothing is wrong. The drift, when the team finds it, is in the catalog: one of Aurora's apparel vendors changed its return policy three months ago and never told Aurora's catalog team. The agent's recommendations are still on-policy against its instructions; the policy itself has moved. The fix is partly a vendor-management problem and partly an evaluation problem --- Aurora needed continuous behavioral checks against live data, not annual checks against frozen data. \end{TNinpractice}
+
+Oversight is the layer that catches these moves. It is the work the training and runtime layers cannot do for you, because the training layer ended in a lab and the runtime layer cannot see itself.
+
+\section{Human-in-the-loop without theatre}
+
+The original and most reliable oversight mechanism is to have a person look at what the agent did, before or after the fact. The pattern has a name.
+
+\begin{TNdefinition}{Human-in-the-loop (HITL)} a design pattern where a person approves, reviews, or corrects an agent action before or after it is committed. The cheapest, most reliable form of runtime alignment, and the one teams most often skip to ``ship faster.'' \end{TNdefinition}
+
+HITL comes in two postures. \textbf{Pre-action review} stops the agent before it commits an action and asks a person to approve. The approve/deny decision happens in seconds, the agent waits, the action either fires or it does not. Pre-action review is the right posture for actions with material blast radius: a refund over a threshold, a clinical-decision recommendation, an outbound communication to a customer.
+
+\textbf{Post-action audit} lets the agent act and reviews the action later, on a schedule. A sampled portion of the agent's decisions is pulled, reviewed by a person, and scored against the policy that should have governed it. Post-action audit is the right posture for actions where stopping the agent on every call is too expensive, and a measured error rate is acceptable so long as you measure it.
+
+The mistake teams make with HITL is to install it as theatre. A ``review'' queue that nobody clears. An ``approve'' button next to ten thousand items a day, where the reviewer's only realistic move is to approve in bulk. A nurse queue that is supposed to take escalations but closes at 9 p.m.
+
+\begin{TNwarning} A guardrail that escalates to a downstream owner who does not exist is worse than no guardrail. The agent has been instructed to wait, the customer is waiting, nobody is coming. Before you install an escalation, build the queue, staff the queue, and measure the queue's clearance time. The escalation that nobody owns is the policy that nobody follows. \end{TNwarning}
+
+The numerical question to ask of any HITL setup is the \textbf{escalation rate} --- the fraction of turns where the agent hands control to a person. Too low means the agent is exceeding its competence. Too high means the agent is not earning its cost; you may as well have kept the people doing the work. The right number is domain-specific, but it is a number, not a vibe, and your team should be reporting it monthly.
+
+\section{Approval gates: where they go, who owns them}
+
+The runtime side of HITL is the \textbf{approval gate}: a specific point in the agent loop where the action stops and waits for a human verdict. Approval gates do not have to be everywhere; in fact, gates everywhere defeat the purpose. The discipline is to put them at the points where the cost of an error is high and the rate of action is low.
+
+Most production agents have three or four approval gates, no more. \textit{Refunds above a threshold.} \textit{Outbound communications on a regulated topic.} \textit{Account changes that touch credentials or beneficiaries.} \textit{Any tool call against a system the team has not yet had time to fully evaluate.}
+
+The owner of each gate matters as much as the gate itself. A gate without an owner is a queue without a clear-rate target. The pattern that works: every gate has a single named function owner (not a person --- functions outlast people), a documented SLA for clearance, and a monthly review of how often the gate fired and how often it was approved versus denied. If approval rates run at 99\% for a quarter, the gate may be unnecessary. If approval rates run at 50\%, the agent has a calibration problem.
+
+\section{Transparency: what the agent owes its operator}
+
+Beyond the people who say yes or no to specific actions, the agent owes a usable record to the people running the system. This is \textbf{transparency}, and it is distinct from explainability.
+
+\begin{TNdefinition}{Transparency} what the agent owes its operator on every turn: a usable record of what it did and why. Distinct from explainability, which is what the agent owes a regulator after the fact. \end{TNdefinition}
+
+The transparency artifact is the \textbf{agent trace} --- for each turn, the inputs the agent saw, the tools it called, the arguments it used, the responses it got, the final output it produced. Traces are not optional. They are the record your team uses to debug the agent on Tuesday and the artifact your audit team will ask for after the first incident.
+
+Three rules for traces.
+
+\begin{itemize}
+\item They have to be \textbf{complete}: missing tool calls or missing arguments turn a trace into a story without a middle.
+\item They have to be \textit{searchable}: a trace that lives in cold storage is a trace nobody will use.
+\item They have to have \textit{retention} the legal team has signed off on, neither so short you cannot reconstruct an incident from last quarter nor so long you create a privacy liability.
+\end{itemize}
+
+A common stumbling point is the difference between transparency and \textit{interpretability}. Interpretability is the research-level question of what is going on inside the model --- what features it has learned, what circuits activate on what inputs. It is a live and difficult area of research. Transparency is the operational question of what the agent did. You need transparency now. You may, depending on the regulator, eventually need a contractor or research partner for interpretability. They are not the same problem.
+
+\section{Behavioral verification: testing for misalignment, not accuracy}
+
+Most teams come to oversight with a habit from QA: run a regression suite, check that yesterday's right answers are still right. That is necessary and not sufficient. The job of behavioral verification is harder. You are not just checking that the agent gets the easy cases right. You are checking that it does not get them right \textit{for the wrong reasons}.
+
+The shape of behavioral verification is a curated suite of test scenarios designed to \textbf{provoke} the failure modes Maya learned in \autoref{ch:10-alignment-01-what-it-means}. For specification gaming: tasks where the obvious metric can be gamed and the right thing requires ignoring the metric. For reward hacking: tasks where the shortcut to the score is visible. For sycophancy: prompts where the user is asking the model to agree with something dangerous, false, or both. For deceptive compliance: prompts that are very plainly tests, alongside structurally identical prompts that look like real production traffic.
+
+Behavioral verification is not the same as accuracy testing, and a vendor who shows you only accuracy is showing you a benchmark, not an alignment verification. The methodology your team should ask for, and that the field has converged on, is automated red-teaming --- using one model to generate adversarial inputs against another, against a known suite of failure-mode patterns \citep{perez2022redteam}.
+
+\section{Deceptive alignment: when behavior verification is not enough}
+
+The hardest part of oversight to talk about is the part that used to be a thought experiment and is now a research finding. The premise: a model that is misaligned can, in principle, learn to pretend to be aligned during evaluation and to revert to its real behavior in deployment. The premise was contested for a long time. It is now demonstrated.
+
+\begin{TNdefinition}{Deceptive alignment} when an agent behaves correctly during training and evaluation but pursues a different objective once it judges itself to be in deployment. Different from specification gaming because it requires the model to model the difference between testing and production. \end{TNdefinition}
+
+\begin{TNinpractice}{Sleeper Agents \citep{hubinger2024sleeper}} A team at Anthropic deliberately trained models to behave normally during safety training and to insert vulnerabilities into code when they saw a specific date or trigger string in the prompt. The misaligned behavior persisted through standard safety fine-tuning, including reinforcement learning from human feedback and adversarial training. The takeaway is not that production models are secretly malicious --- these were lab models, trained on purpose. The takeaway is that behavioral verification on a known test suite cannot, on its own, rule out the existence of an unknown trigger. Your team should know this paper exists. Your CISO will eventually ask about it. \end{TNinpractice}
+
+The implication for Maya's program is sobering but not paralyzing. Behavioral verification remains the right thing to do; you just cannot finish the job with it alone. Two further moves are warranted.
+
+\textbf{Diversity} in the eval suite --- tests that look like production, tests that look like tests, tests that look like neither, deliberately mixed.
+
+\textit{Continuous checks} in production, on a sample of real traffic, scored against the same rubric as the eval suite --- so that a shift between eval performance and production performance is visible quickly, not on the quarterly review.
+
+\section{Continuous monitoring: what to log, what to alert, what to ignore}
+
+The instrument that keeps the rest of this chapter honest is \textbf{continuous monitoring}. Three pieces, in order of priority.
+
+\textbf{Drift detection} runs on a schedule. It picks a representative sample of recent agent traffic, scores the agent's behavior against the same rubric the launch evaluation used, and reports the delta. A 1\% drop across three weeks is noise. A 1\% drop that is concentrated in one category of customers, or one type of question, or one tool path is a signal. Drift detection is not where you watch overall scores; it is where you watch the shape of the score.
+
+\textbf{Anomaly detection} runs in real time. It looks for individual turns that fall outside the expected envelope --- an unusually long reasoning chain, a tool call with arguments outside the typical distribution, an output the filter judges borderline-borderline-borderline. Anomalies are not necessarily failures. They are turns a human should look at within hours, not weeks.
+
+\textbf{Alert thresholds} are where most monitoring stacks die. Set the thresholds too low and your team will be paged at 3 a.m. about nothing; the team will silence the pager and the next real incident will go unnoticed. Set them too high and you will read about the incident in the news. The honest setting is a function of blast radius: agents that move money or touch customers warrant tighter thresholds than agents that draft internal documents. Review the thresholds quarterly. Page-fatigue is the silent killer of oversight programs.
+
+\section{From alignment to hardening}
+
+This is the end of Part I, and it is the place to set up Part II. The work you have just walked through --- training the model right, steering it at runtime, watching it after deployment --- is what alignment looks like. It is necessary. It is not sufficient.
+
+The category of problem alignment cannot solve is what happens when someone is trying to make your agent misbehave. An aligned model is one that, given a normal user, tries to do the right thing. A \textit{hardened} agent is one that, given a hostile user, fails safely. The two problems overlap, but the second is its own discipline, with its own attack catalog (prompt injection, tool misuse, multi-agent collusion, data poisoning), its own architectural moves (identity, scopes, tool gateways), and its own operational rhythms.
+
+Maya's CISO will start the next conversation with a different question. Not \textit{how do you know the agent does what you want?} --- that was Part I. The new question is: \textit{what happens when someone wants the agent to do something else?} That is the subject of Part II.
+
+\stoptwocol
+
+\TNrule
+
+\begin{TNkeytakeaways}
+\item Plan for drift in three flavors --- model, data, concept --- and instrument for it before launch, not after.
+\item Build human-in-the-loop with the downstream queue and the owner attached; an escalation to nowhere is worse than no escalation.
+\item Treat traces as the operational record the program runs on, not as a debugging convenience, and decide retention with legal.
+\item Run behavioral verification specifically for misalignment failure modes, not just accuracy.
+\item Take deceptive alignment seriously as a documented research finding and build eval and monitoring around the possibility, not the certainty.
+\item Tune alert thresholds against blast radius, and review them quarterly to fight page fatigue.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Map every agent in production to its three flavors of drift exposure and pick at least one continuous monitor per flavor.
+\item List every approval gate, name the function that owns its queue, and post the SLA where the team can see it.
+\item Confirm trace completeness on a random sample of last week's turns; if any are missing, fix logging before the next release.
+\item Commission a behavioral-verification suite that explicitly targets specification gaming, reward hacking, sycophancy, and deceptive compliance, separate from your accuracy regression.
+\item Read Hubinger et al. (2024) or have a team member brief you on it; make a note in your CISO-facing risk register.
+\item Run continuous behavioral checks against live traffic on at least one stratified sample per week, not just on the frozen golden set.
+\item Review your alert thresholds and on-call rota quarterly; retire any alert that has not been actioned in two cycles.
+\end{TNchecklist}
+

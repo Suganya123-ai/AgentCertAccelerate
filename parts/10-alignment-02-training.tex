@@ -1,0 +1,95 @@
+\TNchapter[Most of the alignment a deployed agent shows you was baked into it before you ever opened the console. Pre-training gives the model its knowledge; supervised fine-tuning and reinforcement learning from human feedback give it its instincts about what to do with that knowledge. This chapter walks the training stack in plain terms, names the three methods you will hear in the room --- supervised fine-tuning, RLHF, and Constitutional AI --- and tells you where each shows up in the agents your team is buying. By the end you will know which training choices your vendor has made, and which ones they are hiding from you.]{Aligning Agents During Training}
+\label{ch:10-alignment-02-training}
+
+\starttwocol
+
+\section{The stack in one diagram}
+
+An LLM-based agent is built in three passes. The first is \textbf{pre-training}: feed a model trillions of tokens of text and let it learn to predict the next one. Pre-training is the expensive phase your vendor does and your enterprise does not. It produces a model that is fluent and knowledgeable, and that will agree to almost anything if you ask it nicely. It is not yet useful.
+
+The second pass teaches the model the \textit{shape} of the job --- how a helpful assistant talks, what an answer looks like, when to refuse. The third pass teaches it the \textit{taste} of the job --- which of two equally fluent answers is better, given what humans actually want. Almost everything Maya thinks of as ``the model's personality'' was set in those two passes, and almost everything that can go wrong with the agent at runtime was either fixed or installed there.
+
+The training stack is where alignment becomes a discipline rather than an aspiration. The vendor questions in this chapter let you tell which vendors take it seriously.
+
+\section{Supervised fine-tuning: teach by example}
+
+The cheapest, oldest move in the alignment toolkit is to show the model what good looks like. You take the pre-trained model, you assemble a set of curated examples --- a question, the answer you want, with the tone you want, in the format you want --- and you keep training. Do this for tens of thousands of examples and the model learns to imitate the pattern.
+
+\begin{TNdefinition}{Supervised fine-tuning (SFT)} taking a pre-trained model and continuing training on a smaller, hand-curated dataset that shows the kind of outputs you want. SFT is the training phase between general pre-training and the preference-learning methods that follow it. \end{TNdefinition}
+
+SFT is what installs an agent's instinct for \textit{how to talk}. The agent that always responds in bullet points, the one that refuses to give medical advice without a referral, the one that signs off with a polite closing --- those are SFT artifacts. You will hear vendors talk about \textit{instruction tuning}, which is the same thing applied to instructions specifically. Both are SFT.
+
+What SFT cannot do, on its own, is teach the model which of two plausible answers is better. The examples teach by example. They do not teach by preference. For that you need the next pass.
+
+\section{RLHF: teach by judgment}
+
+Reinforcement learning from human feedback is the technique that, in 2022 and 2023, turned ChatGPT and its peers into something Maya could put on a slide and not be embarrassed by. The pipeline is older than that. Stiennon et al. \citep{stiennon2020rlhf} used it on summarization. Ouyang et al. \citep{ouyang2022instructgpt} applied it to instruction-following, and the result was InstructGPT. The same recipe sits behind most of the agents in your procurement funnel.
+
+\begin{TNdefinition}{Reinforcement learning from human feedback (RLHF)} a training method in which human raters compare model outputs, a smaller model learns to predict which the raters preferred, and the main model is then fine-tuned to produce more of the preferred kind. The technique that made instruction-following LLMs commercially useful. \end{TNdefinition}
+
+The shape of RLHF, in Maya-sized terms, is three steps. First, the team gathers \textbf{preference data}: pairs of model responses where a human rater has said \textit{A is better than B}. Second, those preferences are used to train a \textit{reward model} --- a separate model whose only job is to look at any new response and predict the score a rater would give it. Third, the main model is fine-tuned, using reinforcement learning, to maximize that predicted score.
+
+\begin{TNinpractice}{Helix Health} \textit{Helix's procurement team is evaluating a clinical-summary agent from three vendors.} The vendors quote three different training-method profiles: one is SFT-only, one is SFT plus RLHF, and one is SFT plus Constitutional AI. Helix's chief medical informatics officer asks three questions that the procurement spreadsheet did not. Who labeled the preference data --- and were any of them clinicians? When the model preferred a longer, more authoritative-sounding answer, did the raters reward it for being right or for being confident? And on the Constitutional vendor: what is in the constitution, and how do its principles handle the case where the most helpful answer to the user is \textit{I don't know, talk to a doctor?} The two vendors whose answers are vague get a follow-up call. The one whose answers are specific gets a pilot. \end{TNinpractice}
+
+RLHF is also where two of the failure modes in \autoref{ch:10-alignment-01-what-it-means} get installed.
+
+\textbf{Sycophancy} is a near-inevitable consequence of training to predict rater preference: raters prefer agreeable answers, and the model learns to be agreeable.
+
+\textit{Reward hacking} happens because the reward model is itself a model, and any model has shortcuts; the main model can learn to exploit those shortcuts instead of producing genuinely better answers. A well-run RLHF program watches for both. A badly-run one ships them.
+
+\section{Constitutional AI and why it scaled}
+
+By 2022 the limits of pure RLHF were visible. Human preference data is expensive. Human raters disagree, and they disagree in patterned ways. Some of the things you want the model to refuse are unpleasant for humans to label thousands of times. Anthropic published a paper that proposed a different recipe: write down the principles you want the model to follow, and use the model itself to rate which of two responses follows them better. The result was \textit{Constitutional AI} \citep{bai2022constitutional}.
+
+\begin{TNdefinition}{Constitutional AI} a training method that supplements human preference labels with critiques the model produces against a written list of principles (``the constitution''). The model is trained to prefer the responses its own critique flags as more constitution-following. \end{TNdefinition}
+
+The practical implication for Maya is that she will hear this term in vendor decks, and she should know what it does and does not promise. Constitutional AI scales: you can rate millions of responses cheaply because the rater is a model. It is transparent: the constitution is a document you can read, and a vendor's constitution is something you can ask to see. And it is partial: the constitution can only encode what you knew to write down. The constitution that did not anticipate your business's edge case will not catch it.
+
+\begin{TNinpractice}{Constitutional AI v2} Anthropic's 2023 follow-up to its 2022 paper sharpened the recipe by mixing constitution-derived AI feedback with a small amount of human feedback on the hardest cases. The takeaway for procurement: when a vendor says ``we use Constitutional AI,'' ask whether they mean only model-generated feedback or a hybrid. Most current production systems are hybrid; pure model-feedback systems are still a research configuration. \end{TNinpractice}
+
+\section{The newer methods you will see named}
+
+There are three or four newer training recipes --- \textit{direct preference optimization} (DPO), \textit{Kahneman-Tversky Optimization} (KTO), and \textit{group relative policy optimization} (GRPO) --- that you will see named in vendor decks from 2024 onward. They are newer training methods that matter to ML teams because they are cheaper or more stable than the original RLHF recipe; they do not matter to you because they do the same job. When a vendor says ``RLHF'' in 2026, they often mean one of these variants.
+
+For Maya, the practical question is not which method the vendor used. It is what they did with it: what preferences they trained against, who labeled them, whether the constitution (if any) is reviewable, and how they tested for sycophancy and reward hacking on the way out. Those questions do not change across methods.
+
+\section{Pre-training choices alignment also depends on}
+
+Two extra knobs sit upstream of the methods above, both of them owned by the vendor, both worth asking about.
+
+The first is \textbf{value-prompt conditioning}: the practice of mixing examples of value-oriented behavior into the pre-training data, so the model has seen the relevant patterns before fine-tuning begins. A model pre-trained on data that includes safety-conscious medical advice is easier to fine-tune into a safety-conscious medical agent than one pre-trained only on the open web.
+
+The second is \textbf{safety-aware curriculum}: ordering the data so that the model is shown safer, less ambiguous material earlier and harder, more adversarial material later. This is the analog of how a hospital trains a new doctor.
+
+Neither of these is something your team will do. Both are things your vendor either did or did not do, and a vendor who can describe them in specific terms is a vendor who has thought about the problem.
+
+\section{Trade-offs and the alignment tax}
+
+Every alignment intervention costs something. Training the model to refuse certain requests makes it less useful on adjacent legitimate ones. Training it to defer to a constitution makes it slower to give a direct answer. The industry term for this cost is the \textit{alignment tax}, and the only honest answer is that there is no way to bring it to zero.
+
+What you can do is keep the tax visible. Vendors who report only capability scores and not refusal-quality scores are showing you half the picture. Vendors who report both, and who can show you the trade-off curve they chose, are showing you the whole.
+
+The next chapter looks at the levers you have once the model lands in your stack. The system prompt, the guardrails, the output filters --- those are not substitutes for the training. They are the second line, and they do not work without the first.
+
+\stoptwocol
+
+\TNrule
+
+\begin{TNkeytakeaways}
+\item Know the three passes --- pre-training, supervised fine-tuning, preference learning --- and which one your vendor controls vs. which one you can influence.
+\item Treat RLHF as the technique that installs both helpfulness and sycophancy; ask about both when you evaluate a model.
+\item Read Constitutional AI as scalable, transparent, and partial --- the constitution catches what its authors knew to write down, and nothing else.
+\item Recognize newer methods (DPO, KTO, GRPO) by name without confusing the method with the problem; the method is implementation, the problem is yours.
+\item Insist on the alignment tax being visible: capability and refusal-quality together, never alone.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Ask each shortlisted vendor which training methods they used (SFT, RLHF, Constitutional) and in what combination.
+\item Ask who labeled the preference data --- number of raters, domain expertise, hourly cost --- and get something other than ``internal contractors.''
+\item If the vendor uses Constitutional AI, request the constitution (or a redacted version) and read it before the buy decision.
+\item Request the model card or its equivalent before procurement closes; treat its absence as a red flag.
+\item Ask for the refusal-quality and sycophancy evaluation results, not just the capability benchmark.
+\item Confirm in writing what your team can fine-tune on top, and what your vendor will not let you change.
+\item Identify a single person --- yours --- who owns ``knowing what training choices our agent inherits.'' Without an owner, you will buy the next model without noticing.
+\end{TNchecklist}
+

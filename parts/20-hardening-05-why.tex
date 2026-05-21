@@ -1,0 +1,134 @@
+\TNchapter[Hardening is what your security team will call you about. The first time an agent in your stack updates a ticket, refunds a charge, or sends an email on your behalf, you have changed the category of system you're running --- from advisory intelligence to operational autonomy --- and almost every security control your organization spent the last twenty years building was designed for a different category. This chapter draws the new attack surface in plain terms and sets up the four chapters that follow. It is not a checklist. It is the picture your CISO needs you to have before any checklist makes sense.]{Why agents need hardening}
+\label{ch:20-hardening-05-why}
+
+\starttwocol
+
+\section{From advice to action}
+
+The first AI agents most companies deploy look a lot like the chatbots they already had. You type a question; the agent answers it. If it gets the answer wrong, you laugh, complain to IT, and move on. The blast radius of a wrong answer is, at worst, a customer hangup.
+
+That changes the moment you give the agent a tool.
+
+The first time an agent can update a ticket, refund a charge, send an email on your behalf, or read a row out of a database it didn't have access to yesterday, you've changed the category of system you're running. Yesterday it was an unreliable speaker. Today it's an unreliable actor. Yesterday a hallucination was embarrassing. Today a hallucination is a wire transfer to the wrong account.
+
+This is the shift from \textit{advisory intelligence} to \textit{operational autonomy} \citep{anthropic-building-agents-2024,openai-practical-agents-2025}. Almost every security control your organization has spent twenty years building was designed for a world in which the actor on the other end of the keyboard was a human --- or, occasionally, a deterministic script written by a human. Your single sign-on, your role-based access, your data loss prevention rules, your code review process: all of these assume that the entity making requests has a name, a manager, and a performance review. They also assume a basic understanding of ``do not refund \$40,000 to the customer who is yelling on Twitter.''
+
+An agent has none of these. It has a prompt, a tool list, and a model. The model produces a response. The tools fire. Money moves.
+
+\begin{TNdefinition}{Hardening}
+the practice of designing, constraining, and observing an agent so that the consequences of its mistakes are bounded by what your organization can afford to lose.
+\end{TNdefinition}
+
+The rest of this part is about how to do that work. This chapter starts with the question your CISO is going to ask first: \textit{what is actually different here, and why won't the controls already in place do the job?}
+
+\section{What an attack surface looks like when the agent has tools}
+
+The word \textit{attack surface} used to mean something fairly bounded. A web app had a login page, an API, a database, and a few admin consoles. Your security team drew a diagram, named the entry points, and put a control on each one. With agents, the diagram looks different --- wider, fuzzier, and more interesting in the wrong ways.
+
+\begin{TNdefinition}{Attack surface}
+everything an attacker could touch to make an agent misbehave: the prompts it reads, the tools it can call, the data it retrieves, the memory it keeps across turns, and the model itself.
+\end{TNdefinition}
+
+The model is the root of every downstream action. If the agent's reasoning can be manipulated --- by a hidden instruction in a retrieved document, by a cleverly phrased user request, by a tool result returned in an unexpected format --- the manipulation does not stay as text. It becomes a plan. The plan becomes a tool call. The tool call lands in your accounts payable system.
+
+Three things make agent attack surfaces wider than the ones your security team is used to. First, the agent treats the same input channel as both information and instruction. A document retrieved from your wiki and a system prompt written by your security team arrive at the model on the same wire.
+
+Second, the agent's tools are real. They send emails, update records, transfer money. Third, the agent has memory --- across turns, sometimes across sessions --- and what gets stored becomes a future input. None of these are problems an existing perimeter solves.
+
+\begin{figure*}[tb]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  locus/.style={draw=TNNavy, line width=0.8pt, rounded corners=3pt,
+    fill=TNNavyTint, text width=3.6cm, align=center, inner sep=8pt,
+    minimum height=1.4cm},
+  attacks/.style={text width=3.6cm, align=center, font=\sffamily\footnotesize\itshape,
+    color=TNBodyText},
+  center/.style={draw=TNTeal, line width=1pt, fill=TNTealTint, circle,
+    minimum size=2.2cm, align=center, font=\sffamily\bfseries\small\color{TNNavy}}
+]
+  \node[center] (agent) at (0,0) {Agent};
+  \node[locus] (prompt) at (-5.2,1.6) {\textbf{\color{TNNavy}Prompt}};
+  \node[locus] (tools)  at ( 5.2,1.6) {\textbf{\color{TNNavy}Tools}};
+  \node[locus] (data)   at (-5.2,-1.6) {\textbf{\color{TNNavy}Retrieved data}};
+  \node[locus] (mem)    at ( 5.2,-1.6) {\textbf{\color{TNNavy}Memory \& state}};
+
+  \node[attacks, anchor=east] at ([xshift=-2pt]prompt.west) {direct injection, jailbreak};
+  \node[attacks, anchor=west] at ([xshift=2pt]tools.east)   {capability abuse,\\confused deputy};
+  \node[attacks, anchor=east] at ([xshift=-2pt]data.west)   {indirect injection,\\poisoned context};
+  \node[attacks, anchor=west] at ([xshift=2pt]mem.east)     {persistence,\\session hijack};
+
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (prompt) -- (agent);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (tools)  -- (agent);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (data)   -- (agent);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (mem)    -- (agent);
+\end{tikzpicture}%
+}
+\caption{The four loci of an agent attack surface --- prompt, tools, retrieved data, memory and state --- with representative attacks named at each locus.}
+\end{figure*}
+
+\section{Three concepts to learn now and reuse for the rest of this part}
+
+Three ideas do the heavy lifting through the chapters that follow: trust boundary, blast radius, and Zero Trust. Each is borrowed from older security disciplines and needs a small re-frame to work for agents.
+
+\begin{TNdefinition}{Trust boundary}
+the conceptual edge between two parts of a system that don't, by default, trust each other. In agent systems, every tool, every retrieved document, and every other agent sits on the other side of a trust boundary from the model.
+\end{TNdefinition}
+
+Trust boundaries are where most agent failures happen. A user message arrives as untrusted text. A retrieval call returns untrusted content from a document the agent didn't write. A tool returns a result the agent will read on the next turn. Each of those is a boundary crossing. If the agent treats the crossed-over content as trusted instruction rather than as raw information, the boundary has failed silently --- and the next tool call carries the failure forward.
+
+\begin{TNdefinition}{Blast radius}
+the maximum harm an agent can do before someone catches it. Bounded by the scope of its tools, the credentials it holds, and the speed at which it can act.
+\end{TNdefinition}
+
+Blast radius is the number your security team should be able to write down before launch. It is not the model's accuracy. It is what happens when the model is wrong.
+
+An agent that can read a customer file has a blast radius measured in privacy incidents. An agent that can refund charges has a blast radius measured in dollars. An agent that can send emails on your domain has a blast radius measured in reputation. The goal of hardening is not to make the agent perfect; it is to make sure the blast radius, when something goes wrong, is something you can survive.
+
+Zero Trust is the philosophy that turns trust boundaries into enforceable controls. The chapter on identity and access (\autoref{ch:20-hardening-07-identity}) formalizes it; for now, the one-line version is enough: no actor --- human, script, or agent --- is trusted by default, and every action is authenticated, authorized, and logged. The standards lineage is NIST SP 800-207 \citep{nist-sp800-207} and CISA's Zero Trust Maturity Model v2 \citep{cisa-ztmm-v2}. Both predate agents and apply to them better than anyone planned.
+
+\section{Why existing controls are necessary but not sufficient}
+
+A natural objection from a thoughtful security architect is that none of this is new. You already have identity management, role-based access control, data loss prevention, and a security operations center. Why isn't that enough?
+
+Three reasons. The first is that single sign-on assumes the user requesting a thing is a person who can be held accountable for the request. An agent has no manager. The second is that role-based access control assumes roles change slowly. An agent's effective role changes every turn, depending on what the user asked, what document came back from retrieval, and what the model decided to do next. The third is that data loss prevention rules were written to catch a human exfiltrating data; they were not written to catch an agent that politely emails a customer file to an attacker because the user's last message included a hidden instruction to do so.
+
+The existing controls are not wrong. They are the foundation hardening sits on. But every one of them was designed for an actor who could be reasoned with, blamed, fired, or sued. An agent cannot be any of those things. The controls you already have stop the human attacker who tries to log in as the agent. The controls in the rest of this part stop the agent from doing the wrong thing on the human attacker's behalf.
+
+\begin{TNwarning}
+The most common failure mode in early agent deployments is not a sophisticated attack. It is a well-meaning team that connects an agent to a tool with the wrong scope --- ``read-write because filtering was harder'' --- and discovers six weeks later that the agent has been routinely writing to the wrong field. There was no breach. Everything was authorized. The blast radius was simply much larger than anyone wrote down.
+\end{TNwarning}
+
+\begin{TNinpractice}{Cascade Manufacturing}
+\textit{Cascade's first internal agent --- a procurement assistant --- got read access to the supplier database in week one and write access in week three.} In week four a malformed supplier email triggered the agent to ``update'' the registered address for sixteen suppliers with the address from the malformed message. Nothing was breached. Every action was authorized. The audit team caught it Monday morning when a procurement clerk noticed the new address looked off. The cost was three days of operations time and an awkward conversation with the CISO. The lesson Cascade took into Part II of its agent program: existing controls assume the actor knows the difference between information and instruction, and an agent does not.
+\end{TNinpractice}
+
+\section{What this part covers, in the order you need it}
+
+The rest of this part walks the work in the order a CISO would do it. The next chapter (\autoref{ch:20-hardening-06-defending}) is the threat catalog: the attacks you'll see, with concrete vignettes and the OWASP LLM Top 10 (2025) mapped to where each attack lands. \autoref{ch:20-hardening-07-identity} covers Zero Trust for agents: identity, scopes, the tool gateway, and the new piece 2025 brought --- the \textit{Model Context Protocol} --- that standardizes how agents talk to tools. \autoref{ch:20-hardening-08-production} closes the part with what changes when you go from one agent to many: monitoring, incident response, and a maturity model you can show your board.
+
+You will not find a list of products in any of these chapters. You will find the questions to ask, the failures to plan for, and the controls to put names on. The point of this part is not to teach your team how to harden an agent. It is to make sure that when they tell you they have, you can tell whether they really did.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Giving an agent a tool changes the category of system you're running, from advisory intelligence to operational autonomy.
+\item The agent attack surface is wider than a traditional app's because data and instructions ride the same channel, the tools are real, and the agent has memory.
+\item Three ideas carry the rest of this part: trust boundary (where untrusted content crosses into trusted execution), blast radius (what the agent can do when it is wrong), and Zero Trust (no actor is trusted by default).
+\item Existing controls --- single sign-on, role-based access, data loss prevention --- are necessary but were designed for human actors and are insufficient on their own.
+\item Hardening is not about preventing every mistake. It is about bounding the consequence of the mistakes you cannot prevent.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item For every agent in your portfolio, write down its blast radius in one sentence (dollars, records, reach).
+\item Ask your security architect to draw the trust boundaries for one production agent on a whiteboard.
+\item Identify which of your existing controls --- SSO, RBAC, DLP --- assume a human actor, and where the assumption breaks for an agent.
+\item Confirm that every agent has a named owner accountable for its actions, the way a manager is accountable for an employee.
+\item Schedule a session with your CISO to align on the four pieces of vocabulary --- attack surface, trust boundary, blast radius, Zero Trust --- before any architecture review.
+\item Decide which agents are high blast radius enough to require a separate security review before launch, not just a sign-off.
+\end{TNchecklist}
+
+

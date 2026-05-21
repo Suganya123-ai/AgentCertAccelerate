@@ -1,0 +1,20 @@
+\TNchapter{Executive Summary}
+\label{ch:executive-summary}
+
+\starttwocol
+
+Five questions stand between an enterprise AI agent project and a regrettable Monday. This book is organised around those questions, and around the five disciplines --- alignment, hardening, benchmarking, evaluation, certification --- that answer them. The framework is called ARIA. The summary below is the one-page version, the page worth photographing.
+
+\textbf{Alignment} is the work of making sure an agent does what you actually wanted, not what you literally asked for. With chatbots the gap was annoying; with agents that move money, send emails, or update tickets, the gap is expensive. Alignment is partly a training-time discipline --- the data the model learned from, the preferences its makers baked in --- and partly a runtime one --- the system prompt, the guardrails, the tools you let it call. \textit{How do you tell an agent what you want?} The answer is never one sentence; the agents that work in production are the ones whose teams kept refining the answer every quarter.
+
+\textbf{Hardening} is what your security team will call you about. The first time an agent in your stack updates a ticket, refunds a charge, or sends an email on your behalf, you have changed the category of system you are running. Most of the controls your organisation spent twenty years building were designed for a human actor with a manager and a performance review. An agent has none of those. \textit{How do you keep an agent from causing damage?} You bound the blast radius --- what the agent can touch, what it can move, who gets hurt when it is wrong --- and you treat every tool and every retrieved document as a trust boundary, because they are.
+
+\textbf{Benchmarking} is how you compare one agent to another. Most enterprise benchmarking is theatre --- a vendor cites a number, your team underlines it, nobody asks which version of the test or how many tries the agent got. \textit{How do you know this agent is better than the alternative?} You compare it under the same conditions, on a test that resembles your job, with outcome-normalized cost --- the dollars or tokens per resolved ticket, not per token --- as the number that survives a budget review. A 95\% agent that costs twice as much per resolved case as a 92\% agent is rarely the right answer.
+
+\textbf{Evaluation} is the discipline that benchmarking is not. A benchmark is shared; an evaluation is yours. A benchmark compares; an evaluation answers. \textit{How do you know this agent works for your use case?} You build a small, sharp test suite from your own traffic and your own subject-matter experts, and you run it on every change. The single most important thing to measure is not accuracy but consistency --- whether the agent succeeds on the same task across many independent attempts. Reliable beats brilliant in production, every time.
+
+\textbf{Certification} is the artifact that lets your organisation defend its decision. It is the binder your CFO can hold while you say \textit{yes, we are ready}. \textit{How do you prove you did the work?} You match the rigour of the certification to the risk of the agent --- low, medium, high --- and you build a stack of three things: the standard you certified against (ISO/IEC 42001 is the safe default; the EU AI Act sets the floor for some agents in the EU), the evidence you collected from the other four pillars, and the governance body that has the standing to say no. The body that cannot say no is a rubber stamp, and the rubber stamp will eventually get printed on something it should not have been.
+
+None of this is research. All of it is operational. The choices in this book are choices your team is making this quarter, whether you have noticed them or not.
+
+\stoptwocol

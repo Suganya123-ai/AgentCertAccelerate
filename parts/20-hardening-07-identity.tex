@@ -1,0 +1,185 @@
+\TNchapter[The single most important piece of agent hardening is not in the model. It is in the boundaries you draw around what the agent can touch. This chapter is the Zero Trust chapter, applied to agents rather than to people. Every tool an agent calls is a trust boundary; every secret it can read is a blast radius; every retrieval result it reads is an untrusted input. The 2025 addition to this picture is the \textit{Model Context Protocol} (MCP), which standardizes how agents call tools and, in doing so, standardizes where attackers will eventually attack. By the end of this chapter you can name the four control layers your team should be building --- identity, authorization, gateway, audit --- and ask the questions that tell you whether they actually exist.]{Identity, access, and tool boundaries}
+\label{ch:20-hardening-07-identity}
+
+\starttwocol
+
+\section{Zero Trust for agents, in one page}
+
+\autoref{ch:20-hardening-05-why} introduced Zero Trust as the philosophy that no actor is trusted by default. The formal version comes from NIST SP 800-207 \citep{nist-sp800-207}: every request is authenticated, authorized, and logged against the resource being accessed, with no implicit trust derived from network location or prior success. The CISA Zero Trust Maturity Model v2 \citep{cisa-ztmm-v2} operationalizes the same idea across five pillars --- identity, devices, networks, applications, and data.
+
+\begin{TNdefinition}{Zero Trust}
+a security approach in which every access request is authenticated, authorized, and audited against the specific resource it touches, with no implicit trust granted from network position or prior successful access \citep{nist-sp800-207}. Applied to agents, every tool call is a Zero Trust event.
+\end{TNdefinition}
+
+The translation to agents is direct. The agent process is a workload identity. Every tool call is a request against a resource. Every retrieval is a request against an index, with document-level or field-level scope. Every memory read is a request against a store.
+
+The policy decision is made per request, not per session. The trust evaporates the moment the call completes.
+
+Three principles do almost all of the work:
+
+\begin{itemize}
+\item \textbf{Verify explicitly.} Re-authorize on every tool call, retrieval, and high-risk read. Do not cache trust across the agent run. A user's session does not grant the agent license to do anything the user themselves wouldn't be re-authorized for.
+\item \textbf{Least privilege.} Constrain the agent to the minimum tool functions and data scopes it needs to do the task in front of it. Time-bound and purpose-bound the grants. Most teams violate this on day one because narrow scoping is harder; pay the cost early.
+\item \textbf{Assume breach.} Treat prompts, retrieved passages, tool outputs, and other agents' messages as adversarial inputs. Validate, contain, and log at every boundary. The model will sometimes be wrong; the architecture must keep that wrongness inside a bounded box.
+\end{itemize}
+
+These are not new ideas. NIST SP 800-207 is from 2020 and assumed the actor was a human or a deterministic workload. The work of this chapter is to show what each principle means when the actor is a model with tools.
+
+\section{Identity --- what an agent actually is}
+
+Every agent in production should have its own identity. Not a shared service principal, not a generic ``ai-agent'' account, not the credentials of the human who happens to be testing it. A workload identity, named, scoped, rotatable, and revocable.
+
+The harder question is what happens when the agent acts \textit{on behalf of} a user. The agent's identity is one thing; the user it is serving is another. A wealth-management agent calling a portfolio service on Maya's behalf is using two identities simultaneously: the agent's own (which is allowed to call the service at all) and the delegated user identity (which determines whose portfolio it can see). The pattern is \textit{delegation}, and getting it wrong produces what security architects call a \textit{confused deputy} --- the agent uses its own broad permissions to do something the user themselves wasn't authorized for.
+
+The fix is to make delegation explicit. Every call carries a scoped claim: who the user is, what purpose the agent is serving, which tenant or workspace it's acting in, and how long the delegation is valid for. Short-lived tokens with narrow scopes are not a perfectionist preference; they are the difference between ``an attacker who got the agent to misbehave reached one customer's data'' and ``an attacker who got the agent to misbehave reached everyone's data.''
+
+\begin{TNwarning}
+The most common identity failure in early agent deployments is the long-lived service account with read-write everywhere, created in development and never tightened for production. When that account leaks --- through a logging mistake, a misconfigured retrieval index, or a vendor's mistake --- the blast radius is the full scope of the account. The fix is to issue per-request, short-lived, vault-backed tokens scoped to the specific tool function being called.
+\end{TNwarning}
+
+Secrets management for agents follows the same logic. The agent should not hold long-lived keys. It should request them from a vault, scoped to the operation, with a TTL (time to live) measured in minutes. \citet{inan2023llamaguard} and the OWASP AI Agent Security Cheat Sheet both make the case that this is now table-stakes. The agent isn't a developer; it doesn't need a developer-grade key.
+
+\section{The tool gateway --- where policy gets enforced}
+
+If identity tells you \textit{who} is asking, the gateway is \textit{where} the asking gets adjudicated. Every tool call should go through it.
+
+\begin{TNdefinition}{Tool gateway}
+the architectural component that mediates every tool call an agent makes: it enforces scope, applies policy, logs the call, and returns the result. In Zero Trust language, the gateway is the policy enforcement point (PEP) for agent tooling.
+\end{TNdefinition}
+
+The gateway is where two distinct components meet: the part of the system that \textit{decides} whether the call is allowed (the policy decision point, PDP) and the part that \textit{enforces} the decision (the policy enforcement point, PEP). NIST SP 800-207 separates these because the same decision logic can be reused across many enforcement points, and because the decision and the enforcement have different audit needs.
+
+\begin{TNdefinition}{Policy decision point (PDP)}
+the component that decides whether a requested action is permitted, based on identity, scope, policy, and runtime signals.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Policy enforcement point (PEP)}
+the component that blocks or allows the action based on the PDP's decision. In an agent system, the tool gateway is the PEP.
+\end{TNdefinition}
+
+The mental model your team should hold for every tool call is the \textbf{Propose $\rightarrow$ Decide $\rightarrow$ Enforce $\rightarrow$ Record} sequence. The model \textit{proposes} an action: ``I want to call refund\_customer with arguments X, Y.'' The PDP \textit{decides} by checking identity, scope, the user delegation, the action's risk class, and any runtime constraints (rate limits, anomaly flags). The PEP \textit{enforces} the decision: permit, deny, or escalate to human approval. The record is an immutable audit entry capturing the proposal, the decision, the rationale, and the outcome. Every link in the chain is independently inspectable.
+
+The reason this matters is that the model's ``intent'' --- the thing the prompt produces --- is only a proposal. It is not authority. The agent has not actually called the tool until the gateway lets it. The gateway is the line between recommendation and action; it is the place where the principle ``alignment is necessary but not sufficient'' becomes architecture.
+
+\begin{figure*}[tb]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  layer/.style={draw=TNNavy, line width=0.6pt, rounded corners=2pt,
+    fill=TNNavyTint, minimum width=14cm, minimum height=0.95cm,
+    inner sep=4pt, align=left},
+  layerlabel/.style={text width=4cm, align=left, font=\sffamily\bfseries\color{TNNavy}},
+  layerdesc/.style={text width=9.6cm, align=left,
+    font=\sffamily\footnotesize\color{TNBodyText}},
+  arr/.style={-{Stealth}, TNTealDeep, line width=0.6pt}
+]
+  \def\TNlayers{%
+    {Audit \& telemetry}{immutable record of every proposal, decision, and outcome}%
+    {Tool execution}{permitted call hits the downstream system}%
+    {Policy enforcement point (PEP)}{permit, deny, or escalate to human approval}%
+    {Policy decision point (PDP)}{identity, scope, risk class, runtime constraints}%
+    {Authorization \& delegation}{which user is acting, what scope they granted}%
+    {Identity}{who is the agent, on whose behalf is it acting}}
+  \foreach \i in {0,...,5} {
+    \node[layer] (L\i) at (0, \i*1.05) {};
+  }
+  \node[layerlabel, anchor=west] at ([xshift=8pt]L0.west) {Audit \& telemetry};
+  \node[layerdesc,  anchor=west] at ([xshift=4.4cm]L0.west) {immutable record of every proposal, decision, and outcome};
+  \node[layerlabel, anchor=west] at ([xshift=8pt]L1.west) {Tool execution};
+  \node[layerdesc,  anchor=west] at ([xshift=4.4cm]L1.west) {permitted call hits the downstream system};
+  \node[layerlabel, anchor=west] at ([xshift=8pt]L2.west) {Policy enforcement (PEP)};
+  \node[layerdesc,  anchor=west] at ([xshift=4.4cm]L2.west) {permit, deny, or escalate to human approval};
+  \node[layerlabel, anchor=west] at ([xshift=8pt]L3.west) {Policy decision (PDP)};
+  \node[layerdesc,  anchor=west] at ([xshift=4.4cm]L3.west) {identity, scope, risk class, runtime constraints};
+  \node[layerlabel, anchor=west] at ([xshift=8pt]L4.west) {Authorization};
+  \node[layerdesc,  anchor=west] at ([xshift=4.4cm]L4.west) {which user is acting, what scope they granted};
+  \node[layerlabel, anchor=west] at ([xshift=8pt]L5.west) {Identity};
+  \node[layerdesc,  anchor=west] at ([xshift=4.4cm]L5.west) {who is the agent, on whose behalf is it acting};
+  \node[font=\sffamily\bfseries\color{TNTealDeep}, anchor=south]
+    at ([yshift=4pt]L5.north) {Agent proposes a tool call $\downarrow$};
+  \node[font=\sffamily\bfseries\color{TNTealDeep}, anchor=north]
+    at ([yshift=-4pt]L0.south) {$\downarrow$ Effect on the world};
+\end{tikzpicture}%
+}
+\caption{The Zero Trust stack for agents. Every tool call descends through identity, authorization, policy decision, enforcement, execution, and audit. No layer is optional.}
+\end{figure*}
+
+\section{Least privilege, applied to tools}
+
+The principle of \textbf{least privilege} is old enough to predate the cloud, the web, and Maya. It says: grant the agent only the smallest set of tools, scopes, and data it needs to do its job. It is also the rule most often broken under launch pressure, because narrow scoping requires saying no to the team that just wants to ship.
+
+For agents, least privilege has three flavors. The first is \textbf{tool-level}: of the 40 tools your agent could in principle call, give it the 6 it actually needs for the task in front of it. The second is method-level: within a tool, scope to the specific functions, not the whole API. The third is data-level: within a method, scope to the specific records or fields, not the entire index.
+
+An agent that needs to read a customer record does not need permission to delete it. Retrieval should be at index-plus-document granularity, not ``entire knowledge base.'' The Cascade vignette from \autoref{ch:20-hardening-05-why} failed all three flavors at once.
+
+Sandboxing is the operational version of least privilege. High-risk tools should run in isolated execution environments with explicit network egress rules, filesystem scope, and resource budgets. The OWASP LLM Top 10 (2025) calls this out under LLM06 (Excessive Agency) and LLM05 (Improper Output Handling). The CIS Benchmarks give your platform team prescriptive guidance for the substrate --- container, Kubernetes, cloud --- that the sandbox runs on.
+
+\begin{TNinpractice}{Model Context Protocol (MCP)}
+Anthropic's \textit{MCP} is an emerging open standard (2024--25) for how agents call external tools \citep{mcp-spec}. Think of it as USB-C for AI: it standardizes the handshake so any agent can talk to any compliant tool server without bespoke glue code. For Maya, two things matter. First, MCP is rapidly becoming the way tool integrations get done --- your vendors are moving toward it whether you've heard of it or not. Second, each MCP server becomes its own trust boundary, with its own authentication scope, its own audit trail, and its own update cadence. The protocol does not give you policy enforcement for free; it gives you a standard wire format on top of which your gateway, PDP, and audit logging still need to live.
+\end{TNinpractice}
+
+\section{Data-path hardening --- what the agent reads is half the attack surface}
+
+The discipline of \autoref{ch:20-hardening-06-defending}'s indirect-injection threats lives in the data path. Retrieval-augmented generation is, by design, the act of letting documents the agent did not write become its context. Memory is the same problem stretched over time. The defenses are a small number of disciplined practices.
+
+\textbf{Content provenance} is the practice of tagging every retrieved document with where it came from, who wrote it, when, and how it was approved. The agent's reasoning should be able to treat content from ``approved internal knowledge base'' differently from content from ``open web page fetched in this session.'' Without provenance you cannot tell, after an incident, whether an attacker-controlled page reached the retrieval result that drove the bad tool call.
+
+\textbf{Retrieval governance} is the rest of the discipline: source allowlists, sensitivity labels at index time, integrity checks on the underlying store, and explicit ingestion controls that prevent unreviewed content from becoming retrievable. The work is mostly unglamorous. The payoff is that, when the auditor asks ``how did this document get into the result that produced this incident,'' you have an answer.
+
+\textbf{Memory hygiene} treats the agent's persistent state as untrusted on every read. Memory entries should carry provenance and risk tags. Sensitive content should be redacted at write time. TTLs should be short enough that stale state does not silently accumulate. Updates that change the agent's behavior in load-bearing ways --- ``treat this source as trusted,'' ``always include the full audit trail'' --- should require a review step, not silent acceptance. \citet{chen2024memorypoison}'s AgentPoison work shows the attack class; the defense is not a tool you buy, it is a policy on what memory is for.
+
+\begin{TNinpractice}{Northwind Bank}
+\textit{Northwind connected its wealth-management agent to two tool servers via an MCP gateway: a market-data server (read-only) and a portfolio-position server (read-write).} A misconfiguration in the gateway granted the agent the position server's write scope when it only needed read. The agent did not misbehave. No customer position was modified. The audit team caught the misconfiguration during quarterly review and tightened the scope the same day. The lesson Northwind took into its hardening review: the gateway is only as good as the policy it enforces, and the policy is only as good as the review process that maintains it. They added a quarterly scope-audit gate to every certified agent, with a named owner accountable for diffs.
+\end{TNinpractice}
+
+\section{The control checklist for one tool call}
+
+The whole chapter compresses to a single checklist applied to one tool call. If your team can answer all of these for a representative call in your customer-service agent, they have the architecture. If they can't, you know what's missing.
+
+\begin{table*}[tb]
+\centering
+\caption{The nine-line control checklist for one tool call.}
+\begin{tabular}{ll}
+\toprule
+\textbf{Layer} & \textbf{Question your team must answer} \\
+\midrule
+Identity & Who is the agent, and on whose behalf is it acting on this call? \\
+Delegation & What scoped claims (user, purpose, tenant, duration) ride with the call? \\
+Authorization & Which specific tool function is allowed, with what arguments, at what risk class? \\
+Decision (PDP) & What policy and runtime signals contributed to the allow/deny decision? \\
+Enforcement (PEP) & Where is the gateway, and can it be bypassed by the agent calling the tool directly? \\
+Validation & What schema, parameter, and output checks ran before the call left the gateway? \\
+Audit & What immutable record exists of the proposal, decision, enforcement, and outcome? \\
+Containment & What budgets, rate limits, and circuit breakers caught a runaway? \\
+Revocation & How quickly can the agent's tool access be revoked, and by whom? \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+A ``yes, with name and number'' answer on each line is the architecture this chapter has been building toward. A ``we'll get to it'' answer on any line is the line where the next incident will land. \citet{narajala2025securing} walk a similar checklist as part of their ATFAA/SHIELD framework --- ATFAA (Agentic Threats and Failures Analysis and Assessment) is the threat taxonomy; SHIELD (Secure Hardening, Identity, Egress, Logging, Defense) is the matching control framework. The OWASP AI Agent Security Cheat Sheet covers most of the same ground in two pages.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Zero Trust applied to agents means: verify explicitly, least privilege, assume breach --- on every tool call, retrieval, and memory read.
+\item Every agent needs its own workload identity. When acting on behalf of a user, delegation is explicit, scoped, and short-lived.
+\item The tool gateway is the policy enforcement point for agent actions; pair it with a policy decision point so decision logic is reusable and auditable.
+\item \textbf{Propose $\rightarrow$ Decide $\rightarrow$ Enforce $\rightarrow$ Record} is the mental model for every tool call; the model's ``intent'' is a proposal, not authority.
+\item MCP standardizes the tool-call wire format and increases the number of trust boundaries you operate. The policy enforcement on each boundary is still your responsibility.
+\item Data-path hardening --- provenance, retrieval governance, memory hygiene --- defends against the indirect-injection threat class from \autoref{ch:20-hardening-06-defending}.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Confirm every production agent has a unique workload identity, not a shared service principal.
+\item For agents that act on behalf of users, verify delegated tokens are short-lived and scope-limited per request.
+\item Identify your tool gateway (PEP) and your policy decision point (PDP) --- they should be named components, not ``the orchestrator.''
+\item Run the nine-line control checklist against one representative tool call and find the line that has no good answer.
+\item For any MCP integration, confirm each MCP server has its own auth scope, its own audit trail, and an owner.
+\item Tag retrieved content with provenance at ingestion; verify the agent can distinguish ``approved internal'' from ``open web.''
+\item Schedule a quarterly scope-audit of every certified agent, with a named owner accountable for diffs between reviews.
+\end{TNchecklist}
+
+

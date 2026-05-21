@@ -1,0 +1,109 @@
+\TNchapter[This is the chapter where your team learns to read a benchmark score honestly. AgentBench, SWE-bench (and \textit{SWE-bench Verified}), $\tau$-bench, GAIA, and HELM each measure something different --- and each is widely misquoted. The chapter walks the five named benchmarks, explains what each one really tests, gives the attribution your team should use when they cite it, and introduces \textit{pass\textasciicircum k} --- the metric that tells you whether your agent is \textit{occasionally} good or \textit{reliably} good. For most enterprise deployments, you are paying for reliably good.]{Capability benchmarks: what they measure}
+\label{ch:30-benchmarking-10-capability}
+
+\section{The benchmark map}
+
+Five benchmarks come up in every serious vendor conversation about an enterprise agent. They measure different things, were built by different research groups, and answer different questions about what an agent can do. If a vendor cites one as if it stands for ``general agent capability,'' they are either confused or hoping you are.
+
+The table below is the version your team should keep on the wall.
+
+\begin{table*}[tb]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}p{0.15\textwidth}XXX@{}}
+\toprule
+\textbf{Benchmark} & \textbf{What it measures} & \textbf{What it doesn't} & \textbf{Useful when} \\
+\midrule
+\textbf{AgentBench} \citep{liu2023agentbench} & Generalist agent ability across eight environments --- OS, database, web, code, knowledge & Domain-specific quality; production reliability & You need a breadth-of-capability sanity check \\
+\addlinespace
+\textbf{SWE-bench Verified} \citep{jimenez2024swebench,openai-swebench-verified-2024} & Resolving real GitHub issues in twelve Python repositories, on a 500-case human-vetted subset & Anything but code; non-Python; novel codebases & You're scoping a code-fixing or code-reviewing agent \\
+\addlinespace
+\textbf{$\tau$-bench} \citep{yao2024taubench} & Multi-turn dialogue with a simulated user; reliability across repeated runs & Single-turn tasks; non-conversational agents & You're scoping a customer-service or eliciting-goals agent \\
+\addlinespace
+\textbf{GAIA} \citep{mialon2023gaia} & Multi-step, multi-modal tasks easy for humans, hard for AI & Speed; cost; production fit & You want a hard general-assistant test \\
+\addlinespace
+\textbf{HELM} \citep{liang2022helm} & Models across many axes --- accuracy, calibration, robustness, fairness, efficiency & Agent loops; tool use; multi-turn behavior & You're choosing the base model, not the agent on top \\
+\bottomrule
+\end{tabularx}
+\caption{The five public benchmarks that come up in serious vendor conversations.}
+\end{table*}
+
+\starttwocol
+
+The five together do not add up to ``your agent will work for your job.'' They add up to ``this agent is or is not in the right capability class.'' The ``for your job'' answer comes from Part IV.
+
+\section{Reading a vendor score honestly}
+
+The benchmark numbers on a vendor's slide deck are the marketing version of how good their agent is. There's also a real version. The two are rarely the same, and the gap matters because the only thing standing between you and a \$4M agent project that doesn't work is your team's ability to read a benchmark score honestly.
+
+Three things go wrong, in roughly this order.
+
+\textbf{First, vendors quote the version of a benchmark that flatters them.} Most benchmarks exist in three flavors --- the original, a cleaned-up version where a third party went through and removed broken or ambiguous tests, and various private forks. A 60\% score on the original is not a 60\% score on the cleaned-up version, because some of the ``failures'' in the original turned out to be cases where the test itself was broken.
+
+\begin{TNinpractice}{SWE-bench Verified} In 2024 OpenAI's team, working with the original \textit{SWE-bench} authors, went through every test in the benchmark by hand. About a third didn't survive --- they were ambiguous, broken, or impossible. The cleaned-up subset is called \textit{SWE-bench Verified}, and it is what every serious reference now means when it says ``SWE-bench'' \citep{jimenez2024swebench,openai-swebench-verified-2024}. When a vendor quotes a SWE-bench number, ask which version. \end{TNinpractice}
+
+\textbf{Second, vendors quote the score from the kindest measurement.} They let the agent try once. They cherry-pick the easy slice. In practice your team will be using these agents differently --- multiple attempts, harder cases, real users --- and the score that matters is the one that holds up under those conditions.
+
+\begin{TNdefinition}{Pass@k} the probability that an agent gets a task right in \textit{at least one of k} attempts. A useful ``ceiling'' metric; an optimistic ``reliability'' metric. What this means for your decision: if a vendor quotes pass@k for k > 1, they are telling you the best the agent can do under retries, not what it does on a typical attempt. \end{TNdefinition}
+
+\begin{TNdefinition}{Pass\textasciicircum k} the probability that an agent succeeds at the same task on \textit{every} one of k independent attempts (not ``at least one of k''). A model that wins 80\% of the time on a single try but only 30\% of the time across eight independent tries is \textit{occasionally} good, not \textit{reliably} good. For most enterprise deployments, you're paying for reliably good. Introduced by Yao et al. 2024 in $\tau$-bench \citep{yao2024taubench}. The closed-form expression --- useful when your team's data scientist wants to compute it from raw single-shot success counts --- is \texttt{1 - C(n-c, k) / C(n, k)} for a benchmark of n tasks where the agent succeeded on c of them in single-shot runs. \end{TNdefinition}
+
+\textbf{Third --- and your team will hate to hear this --- there is no clean way to know whether the model has already seen the test.} Today's frontier LLMs are trained on huge sweeps of the public web. Benchmarks live on the public web. The technical name for the problem is ``test set contamination.'' The practical version is: when a new model release jumps ten points on a six-month-old benchmark, the most likely explanation is that the test got into the training data.
+
+\begin{TNinpractice}{Aurora Retail} \textit{A retail team evaluating a code-fixing agent for their backend platform.} The vendor's deck quoted a 64\% score on SWE-bench. Aurora's engineering lead asked which version. The answer was \textit{original}, not \textit{Verified}. She asked whether the score came from a single attempt or the best of several. \textit{Single attempt; the best-of-five number was 47\%.} She asked whether the benchmark's bug fixes might already be in the model's training data. \textit{Probably yes, but unmeasurable.} Aurora didn't kill the deal --- the agent was still credible --- but they negotiated a ninety-day production trial against their own held-out test set, not the vendor's number. \end{TNinpractice}
+
+The fourth thing to do, in other words, is to not trust a vendor's benchmark on its own. The fifth, which is the subject of \autoref{ch:30-benchmarking-11-speed-cost}, is to learn how to run your own.
+
+\section{$\tau$-bench and the metric that changed the conversation}
+
+The benchmark that did the most for enterprise agent evaluation in 2024 was not the one that got the most press. It was $\tau$-bench, from Sierra, which did two things the older suites had not.
+
+\begin{TNinpractice}{$\tau$-bench} Sierra's \textit{$\tau$-bench} \citep{yao2024taubench} measures something SWE-bench doesn't: how an agent handles a multi-turn conversation with a simulated user who has goals the agent has to elicit. The agent is given access to tools (look up a flight, change a booking, refund a charge) and a policy document, and is graded not on whether it can solve the puzzle in a single shot but on whether it can hold a conversation and reach the right outcome --- and reach it consistently. The benchmark introduced \textit{pass\textasciicircum k} for exactly this reason: a customer-service agent that succeeds 80\% of the time on a single attempt is not what you want; you want one that succeeds the same way every time. \end{TNinpractice}
+
+This matters for Maya because customer-service, claims, and triage agents --- the ones most enterprises are buying --- look a lot more like $\tau$-bench's setup than like SWE-bench's. If a vendor quotes a SWE-bench score for a customer-service agent, they are showing you a benchmark that does not measure the thing you are buying.
+
+A $\tau$-bench score of 0.43, taken by itself, means: across all the conversations tested, the agent reached the correct outcome 43\% of the time. A pass\textasciicircum 4 of 0.21 on the same agent means: across four independent runs of the same conversation, the agent reached the correct outcome every time on 21\% of conversations. The pass\textasciicircum k number is almost always lower, sometimes dramatically so, and it is the one that predicts whether your customers will get the same answer twice.
+
+\section{AgentBench, GAIA, HELM --- the rest of the leaderboard}
+
+The other three benchmarks your team will encounter sit at different points on the capability map.
+
+\textbf{AgentBench} \citep{liu2023agentbench} tests an agent across eight environments --- running shell commands, querying databases, navigating the web, completing coding tasks, retrieving knowledge --- to see whether it generalizes or specializes. AgentBench is useful as a breadth check. It is not useful as a deployment signal. An agent that scores 0.71 on AgentBench is in the right capability class for a generalist enterprise role; whether it can do your specific job is unknowable from this number alone.
+
+\textbf{GAIA} \citep{mialon2023gaia} is designed to be easy for humans and hard for AI. It tests whether an agent can complete multi-step tasks that combine retrieval, reasoning, and tool use --- finding a specific file in a filesystem, following instructions across applications. Top systems in 2024 scored around 40--50\%; humans score above 90\%. The gap is the point of the benchmark. GAIA is most useful as a hard-mode sanity check; it tells you whether an agent has hit a capability ceiling, not whether it will pay for itself in production.
+
+\textbf{HELM} \citep{liang2022helm} is not strictly an agent benchmark. It evaluates the underlying language model across many axes: accuracy, calibration, robustness, fairness, bias, toxicity, efficiency. If your team is choosing the model the agent runs on (rather than choosing a packaged agent), HELM is the most comprehensive single source. If your team is choosing a packaged agent from a vendor, HELM is one or two layers below the decision.
+
+\textbf{BFCL --- the Berkeley Function-Calling Leaderboard} \citep{bfcl-2024} --- sits beside this list and is worth knowing. It measures something narrower than $\tau$-bench but more specific than AgentBench: whether a model can construct a correct tool call from a natural-language instruction. For any agent that calls APIs, BFCL is the cleanest single signal of tool-use competence. Most production agent failures trace back to broken tool calls; BFCL is the benchmark that catches that class of failure first.
+
+\begin{TNdefinition}{BFCL (Berkeley Function-Calling Leaderboard)} a public leaderboard \citep{bfcl-2024} that scores models on their ability to translate a natural-language instruction into a correct, well-formed function call with the right arguments. The narrowest of the agent-relevant benchmarks; the one most likely to predict whether an agent's tool calls will work in your stack. \end{TNdefinition}
+
+\section{What no public benchmark can tell you}
+
+A public benchmark cannot tell you whether the agent will work on your data. It cannot tell you whether the agent's pattern of failures is one your customers will tolerate. It cannot tell you what the agent costs to operate at your volume. It cannot tell you whether the agent will still be working in six months, after the model has been updated twice and the world has moved.
+
+What public benchmarks can tell you is whether an agent is in the right capability class to be a serious candidate. That is a smaller claim than the marketing makes, and a more useful one. Use the benchmarks to shortlist. Use your own evaluations --- the subject of Part IV --- to decide.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Each public agent benchmark measures one slice of capability. None of them measures ``your job.''
+\item SWE-bench Verified is what every serious reference means by ``SWE-bench'' since August 2024. Ask which version.
+\item $\tau$-bench (Yao et al., Sierra 2024) is the benchmark closest to most enterprise use cases, and the one that introduced pass\textasciicircum k as a reliability metric.
+\item Pass@k tells you what the agent can do with retries. Pass\textasciicircum k tells you what it does the same way every time. You usually want the second.
+\item Contamination is real, unmeasurable, and the most plausible explanation when scores jump in lockstep with model releases.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item For every benchmark on a vendor's deck, write down which version (original or verified), the value of k, and the date the score was measured.
+\item If your agent is conversational, weight $\tau$-bench above SWE-bench in your evaluation; ask for the pass\textasciicircum k number, not just pass@1.
+\item If your agent calls tools, add BFCL to your evaluation checklist.
+\item Never accept a single-attempt score as a reliability signal. Demand the multi-attempt number.
+\item Treat any benchmark whose score jumped in the last six months as a question --- could this be contamination?
+\item Shortlist on public benchmarks; decide on your own evaluations.
+\end{TNchecklist}
+
+
+

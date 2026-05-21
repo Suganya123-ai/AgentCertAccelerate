@@ -1,0 +1,121 @@
+\TNchapter[The hardest things to evaluate are the things that fail rarely and catastrophically. This chapter covers the evaluations that catch them: safety and refusal quality, fairness across demographic groups (equalized odds, demographic parity), calibration (expected calibration error), and the continuous-evaluation systems that watch the agent's behavior change in production. It closes Part IV by handing your team the discipline to answer ``what's changed?'' with an honest number rather than a shrug.]{Safety, Fairness, and Ongoing Checks}
+\label{ch:40-evaluation-16-safety}
+
+\starttwocol
+
+\section{Safety evaluation: refusal, jailbreaks, and the harm an agent can cause}
+
+The first three chapters of this part are about whether the agent does its job. This chapter is about everything else --- the failure modes that do not show up on a functional dashboard but will show up in a regulator's question, a journalist's article, or a class-action complaint.
+
+Safety evaluation operates at three levels.
+
+\textit{Content-level safety} checks the text the agent produces: hate speech, violence, dangerous instructions, sexual content involving minors.
+
+\textit{Behavioral safety} checks the actions the agent takes: tool calls outside its authorized scope, multi-step workflows that produce harm in aggregate, decisions that violate policy.
+
+\textit{System-level safety} checks the agent's resistance to adversarial conditions: prompt injection, jailbreaks, attempts at goal hijacking.
+
+Each level has its own measurement techniques. Each is dominated by failure modes the agent's developers did not predict \citep{wang2023decodingtrust}.
+
+The two metrics every agent program should run are \textit{refusal quality} and \textit{jailbreak resistance}. Refusal quality measures whether the agent says ``I can't do that'' for the right reasons and not the wrong ones --- testing the agent against a curated set of prompts where the right answer is to refuse, alongside a set where the right answer is to comply, and measuring how often the agent draws the line in the right place. Jailbreak resistance measures whether the agent holds its safety rules when a user actively tries to bend them: through role-play, prompt injection from retrieved content, hypothetical framings, encoded instructions, or the standard manipulations documented in the safety literature. Both need adversarial test sets, both should run on a cadence, and both should be reported separately because they fail for different reasons.
+
+The DecodingTrust benchmark \citep{wang2023decodingtrust} is the closest the academic field has to a comprehensive trust score for LLMs, covering toxicity, stereotype bias, adversarial robustness, out-of-distribution generalization, robustness to adversarial demonstrations, privacy, machine ethics, and fairness. It is a useful sanity check; it is not a substitute for safety evaluation on your own data and your own tool surface. The same caveats from \autoref{ch:40-evaluation-13-vs-benchmarking} apply: a benchmark compares, an evaluation answers.
+
+\begin{TNwarning}
+Most safety evaluation programs are static. The team builds an adversarial test set in week three, runs it on every release, and then stops adding to it. The attackers do not. By month nine the test set is testing for last year's manipulations, the model has been fine-tuned against them, and the safety dashboard says 99.7\% --- while novel jailbreaks are landing in production with no measurement at all. A safety eval set has the same expiry pattern as a benchmark: it is a snapshot, and snapshots go stale.
+\end{TNwarning}
+
+\section{Bias and fairness: the metrics worth running}
+
+Bias in AI systems is one of the most rehearsed and least well-measured topics in enterprise AI. The conversation typically gets stuck on definitions --- \textit{what does fairness even mean here?} --- because there are several inequivalent definitions, and they sometimes conflict \citep{bender2021parrots, hardt2016fairness, chouldechova2017fair}. The practical answer is to pick the definition your regulator and your business actually care about, measure against it consistently, and report the metric your audit committee can defend.
+
+Two definitions cover most enterprise cases. They sound similar and they are not the same.
+
+\begin{TNdefinition}{Demographic parity}
+The rate at which the agent makes a particular positive decision is the same across demographic groups. Formally, $P(\textrm{decision} = \textrm{positive} \mid \textrm{group} = A) \approx P(\textrm{decision} = \textrm{positive} \mid \textrm{group} = B)$. Often the easiest fairness criterion to explain to a board; often the wrong one for compliance work because it can mask differences in the underlying populations \citep{hardt2016fairness}.
+\end{TNdefinition}
+
+\begin{TNdefinition}{Equalized odds}
+The agent's error rates are the same across demographic groups, conditional on the ground truth. Formally, the true-positive rate and the false-positive rate are each approximately equal across groups: $P(\textrm{decision} = \textrm{positive} \mid \textrm{group} = A, \textrm{truth} = \textrm{positive}) \approx P(\textrm{decision} = \textrm{positive} \mid \textrm{group} = B, \textrm{truth} = \textrm{positive})$, and similarly for the false-positive rate. Stricter than demographic parity. Closer to what regulators in regulated industries actually require \citep{hardt2016fairness, raji2020closing}.
+\end{TNdefinition}
+
+The two metrics can disagree. An agent can satisfy demographic parity --- same approval rate across groups --- while failing equalized odds, because the false-negative rate is higher for one group than another. Different groups can be denied at the same overall rate while qualified individuals from one group are denied disproportionately. Demographic parity catches the headline; equalized odds catches the discrimination underneath it.
+
+There is a third metric worth knowing about: \textit{equal opportunity}, which is equalized odds restricted to the true-positive rate only. It is the right metric when the cost of a false negative is much higher than the cost of a false positive --- for example, a clinical screening agent where missing a positive case is more harmful than flagging a negative one.
+
+\begin{TNdefinition}{ECE (Expected Calibration Error)}
+A measure of how well the agent's stated confidence matches its real accuracy. Computed by bucketing predictions by stated confidence, comparing the bucket's stated confidence to its observed accuracy, and averaging the gap weighted by bucket size. An ECE of 0 means a model that says ``I am 90\% sure'' is right exactly 90\% of the time. An ECE of 0.1 means it is off by 10 percentage points on average. Calibration matters when the agent's confidence is used downstream --- to escalate, to defer, to be trusted. The closed form, for the team's data scientist: $\textrm{ECE} = \sum_b (n_b / N) \cdot |\textrm{acc}(b) - \textrm{conf}(b)|$, summed over confidence buckets $b$.
+\end{TNdefinition}
+
+The defensible practice for fairness measurement has four parts. Pick the metric the use case requires --- demographic parity for portfolio-level audit-friendly statements, equalized odds for decisions that affect individuals, equal opportunity for screening contexts. Stratify the golden dataset by the protected attributes your regulator names --- typically race, sex, age, sometimes geography or socioeconomic proxies. Run the metric on a rolling basis with confidence intervals; a single snapshot is statistically thin, and fairness measurements drift. Document the metric, the strata, the thresholds, and the cadence in the binder your auditors will read.
+
+\begin{TNinpractice}{Helix Health}
+\textit{Helix's eligibility-determination agent for a payer-affiliated function had been measured for accuracy for nine months. It had not been measured for fairness.} When the team finally instrumented the metrics, the headline number looked clean: demographic parity held across racial and socioeconomic strata to within 2 percentage points. The equalized-odds check told a different story. False-negative rates --- qualified patients denied --- were 6 points higher for one group than another. The agent was denying everyone at roughly the same rate, but the wrong patients were being denied. Two things followed. The team rebalanced the training and judge calibration data, and Helix added equalized-odds to its recertification triggers. The finding was the kind that costs careers when it is published before it is found; Helix found it first, and the rebuild was conducted on a planned schedule rather than during a media call.
+\end{TNinpractice}
+
+\section{Red-teaming as part of the evaluation suite}
+
+Safety evaluation that only uses curated test sets misses the failure mode that matters most: the adversary your team has not imagined yet. Red-teaming --- running adversarial prompts deliberately designed to break the agent --- is now standard practice in serious enterprise programs \citep{perez2022redteam}.
+
+Three classes of red-team technique are worth naming.
+
+\textit{Manual red-teaming} uses human attackers, often outsourced to a specialized firm, to probe the agent over days or weeks.
+
+\textit{Automated adversarial generation} uses algorithmic techniques to generate adversarial prompts at scale --- useful for broad coverage, weaker on the kind of novel manipulation a creative human attacker invents.
+
+\textit{Hybrid} programs combine the two: automated generation for breadth, manual review for depth, with the human-discovered patterns feeding the automated suite.
+
+\begin{TNinpractice}{Automated red-team techniques}
+\textit{Common methods you will see named in the safety literature include PAIR (Prompt Automatic Iterative Refinement), TAP (Tree of Attacks with Pruning), AutoDAN, and GCG (Greedy Coordinate Gradient). Each generates adversarial prompts differently; together they form the standard suite a serious red-team firm will run against an agent before sign-off. See the further-reading list for the original papers.}
+\end{TNinpractice}
+
+The metric that comes out of red-teaming is \textit{attack success rate}: the fraction of adversarial prompts that get the agent to produce the unsafe output. A serious program tracks this over time per attack technique and per agent version. The number should go down with hardening work, and an unexpected uptick is one of the strongest signals that something in the safety stack has regressed \citep{perez2022redteam, inan2023llamaguard}.
+
+\section{Continuous evaluation: sampling production, detecting drift}
+
+Everything in this part so far has been about catching failures before they ship. Continuous evaluation is about catching them after.
+
+\begin{TNdefinition}{Drift}
+The slow change in an agent's behavior over time. Three flavors: \textit{model drift} (the model itself was updated), \textit{data drift} (the world the agent sees has changed), and \textit{concept drift} (what counts as a correct answer has changed). All three are inevitable; only continuous evaluation catches them in time to act.
+\end{TNdefinition}
+
+A production evaluation pipeline samples a fraction of live traffic --- typically 1\% to 5\%, weighted toward high-stakes interactions --- and runs the same kinds of grading the offline framework does, asynchronously and out-of-band. The sampling strategy matters. \textit{Random sampling} gives an unbiased baseline but misses rare failure modes. \textit{Stratified sampling} across use cases, user segments, and complexity bands prevents blind spots in low-volume but high-stakes categories. \textit{Adaptive sampling} increases the rate in segments where the early signal is bad --- when error rates rise, or when LLM-as-judge confidence drops, the system samples more aggressively until the cause is found.
+
+The pipeline runs three loops in parallel. \textit{Quality scoring} runs an LLM-as-judge against sampled traces and flags low-scoring sessions for human review. \textit{Drift detection} compares the rolling distribution of inputs and outputs to a baseline and triggers alerts when the distance exceeds a threshold. \textit{Feedback harvesting} takes the cases that failed in production and feeds them back into the offline golden dataset --- so the next release tests against the failure that just happened. Closing this loop is what turns continuous evaluation into a discipline; without the feedback, the production samples accumulate and nobody acts on them.
+
+\begin{TNwarning}
+The single most common failure mode in continuous evaluation is ``you stopped looking after launch.'' The pipeline gets built before go-live, runs for the first eight weeks, and then quietly degrades --- the on-call rotation rotates, the dashboards stop being checked, the drift threshold has not triggered in a month, so someone assumes nothing is wrong. By the time the next incident lands, the team is reading traces from three months ago and cannot reconstruct what changed. Continuous evaluation is operational work, not a project. Treat it like a monitor that has to be on someone's quarterly review, or it will go dark.
+\end{TNwarning}
+
+The recertification trigger is where continuous evaluation hands off to the next pillar. When a drift alert fires, when a fairness metric crosses a threshold, when the attack-success rate jumps after a model update, the agent re-enters the certification flow at a depth determined by the severity. That trigger discipline is the subject of the certification chapters that follow; the evaluation work in this chapter is what makes the trigger possible.
+
+\section{What the regulator will ask, in advance}
+
+Most of the metrics in this chapter are also the metrics that show up in the regulatory frameworks. The EU AI Act \citep{euAIact2024} requires conformity assessment for high-risk AI systems, and conformity here includes fairness measurement, post-market monitoring, and incident reporting --- all of which the metrics above feed into. The NIST AI 600-1 GenAI Profile \citep{nist-genai-600-1} names hallucination, dangerous content, data leakage, and bias as risks that require measurement and mitigation. ISO/IEC 42001:2023 \citep{iso-iec-42001} sets the management-system controls under which all of this evaluation work gets documented.
+
+The practical implication is that the dashboard you build for your own production safety is the same dashboard your regulator will want to see, minus the trade-secret details and plus a few documentation artifacts. Build it once. Document it well. Make it readable in fifteen minutes. The detail of how this evidence stack feeds certification is in the certification part that follows.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Safety evaluation needs three layers --- content, behavioral, system --- and two headline metrics: refusal quality and jailbreak resistance, each run against a regularly refreshed adversarial set.
+\item Demographic parity catches the headline, equalized odds catches the discrimination underneath; pick the right one for the use case and the regulator, and report both if either is borderline.
+\item Calibration (ECE) matters whenever the agent's confidence is used downstream --- to escalate, to defer, to gate a decision. An uncalibrated agent is one whose ``I'm 90\% sure'' means nothing.
+\item Continuous evaluation closes the loop between production and the offline golden dataset; without the loop, both go stale.
+\item The metrics in this chapter are also the metrics regulators ask for; build the dashboard once and it serves both audiences.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Confirm that each agent has both a refusal-quality and a jailbreak-resistance evaluation that runs on every release, against a set refreshed at least quarterly.
+\item For any agent that makes individual-level decisions, pick the right fairness metric --- equalized odds for most regulated use cases --- and stratify the golden dataset accordingly.
+\item Compute and report ECE for any agent whose confidence is consumed by a downstream system (an escalation routing, a deferral, a confidence-gated tool call).
+\item Stand up a continuous-evaluation pipeline that samples production traffic, scores it, and feeds failures back into the offline set; put the pipeline on someone's named ownership.
+\item Schedule a red-team engagement (manual or hybrid) at least annually, and track attack-success rate across releases.
+\item Identify which evaluation metrics will trigger a recertification (drift alert, fairness breach, attack-success regression) and document the threshold and the action.
+\item Map your dashboard to the EU AI Act, NIST AI 600-1, and ISO/IEC 42001 evidence requirements your audit team has flagged; close any gaps before the next conformity review.
+\end{TNchecklist}
+
+
+

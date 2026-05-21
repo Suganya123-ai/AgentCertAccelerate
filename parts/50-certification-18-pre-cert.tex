@@ -1,0 +1,136 @@
+\TNchapter[Certification is mostly paperwork --- and the paperwork is mostly things that should have existed already. This chapter is the pre-certification chapter: model cards, data governance documents, the architecture and dependency record (the SBOM), the agent's published behavior contract, and the trail of evals and benchmarks that show it has been measured. The chapter is organized around the question, \textit{what does the audit committee need before it can even start the conversation?} By the end, you know the eight artifacts that should be in the binder before your first certification.]{What You Need Before You Can Certify}
+\label{ch:50-certification-18-pre-cert}
+
+\starttwocol
+
+\section{The pre-cert binder --- what's in it, who owns it}
+
+When the certification review board sits down with an agent for the first time, the first thing they ask is not how the agent performs. It is whether the agent has the paperwork. The collection of artifacts that answers that question is the \textbf{pre-cert binder}.
+
+The binder is not glamorous. It is mostly things your team should have built while building the agent: a model card, a record of where the training and retrieval data came from, an inventory of the components the agent ships with, a threat model, the eval and benchmark reports you produced in Parts III and IV, a behavior contract for what the agent will and will not do, and a named owner. Eight artifacts in all. None are exotic. Almost all of them get cut by teams trying to ship faster.
+
+\begin{TNinpractice}{Meridian Logistics} \textit{Meridian's audit team asked for the pre-cert binder for the dispatch agent on a Thursday.} The model card did not exist. The eval reports lived as screenshots in a Slack channel. The threat model was a half-finished Confluence page from week three of the build. The team spent the next six weeks reconstructing artifacts that should have existed in week one. The agent itself was fine; the binder was the work. The lesson Meridian's COO took into the next agent project was that the pre-cert binder is mostly the work of running an agent responsibly, not extra work for certification. \end{TNinpractice}
+
+The distinction worth holding onto is between \textit{evaluation evidence} (what your team measured) and \textit{certification evidence} (what the certifier records). The first one is for your team's confidence. The second one is for the binder. The eval results you produced in the evaluation chapters of Part IV are the raw material; the binder is the curated subset that survives a year of audits.
+
+\begin{TNdefinition}{Model card} a short, structured document published with a model (or an agent), describing what it was trained on, what it is good at, what it is bad at, and what has been tested. Originally proposed by Mitchell and colleagues \citep{mitchell2019modelcards}; now a near-universal expectation for any model going into production. \end{TNdefinition}
+
+\section{Model cards and system documentation}
+
+A model card is the cover sheet of the binder. It is the document the next reader --- your CISO six months from now, an external assessor a year from now, a regulator two years from now --- will read first. If the card is sloppy, everything after it is suspect.
+
+The fields that matter are the ones Mitchell and colleagues laid out and refined in the years since: the model's intended use, its training data sources, its known limitations, its performance on the evaluations that matter, and the population it was tested on. For an agent rather than a model, you extend the card to cover the tool list, the trust boundaries, the kill-switch contract, and the version of every prompt that ships with it. A model card that does not name the system prompt by version is an incomplete card.
+
+The eight fields you can ask your team to produce by Friday, in plain terms:
+
+\begin{enumerate}
+\item \textit{What is this agent for?} One paragraph; the job, the user, the bounded scope.
+\item \textit{What does it use?} The model, the prompts, the tools, the data sources.
+\item \textit{Who built it, who owns it, who deploys it?} Names, not roles.
+\item \textit{What can it not do?} The negative scope; the things you have explicitly bounded.
+\item \textit{What evidence have you collected that it works?} The eval and benchmark reports, by version.
+\item \textit{What evidence have you collected that it can fail safely?} The threat model and the red-team report.
+\item \textit{What has changed since the last version of this card?} The delta.
+\item \textit{Who approves changes to this card?} The single named owner of the binder.
+\end{enumerate}
+
+For agents whose footprint is bigger than a single model --- most enterprise agents --- the model card gets paired with a \textbf{system card} that documents the wider deployed system: the tools, the policies, the populations served, the safeguards. \autoref{ch:50-certification-20-keeping-certified} returns to system cards. For pre-certification, the model card is the artifact your audit committee will open first.
+
+\begin{TNwarning} A model card that ages in place is not a model card. The single most common pre-cert failure is a card that describes the agent as it was at week four of the build, not as it is today. Date every card. If the date is older than the agent's last deploy, the card is stale and the binder is incomplete. \end{TNwarning}
+
+\section{Data governance and provenance evidence}
+
+The next section of the binder is about the data the agent reads, retrieves, learns from, and writes. It has three parts.
+
+The first is \textbf{data lineage} --- for every dataset the agent touches in training or retrieval, you can answer where it came from, how it was filtered, and what licensing or consent regime governs it. For a retrieval-augmented agent, the lineage extends to the document collection it queries; if the agent retrieves from your customer-support knowledge base, the lineage record names the systems that feed it.
+
+The second is \textbf{data provenance} for the records the agent produces or modifies. A claims-triage agent that writes a recommendation to the case file is creating a record that downstream systems and regulators will rely on; the binder needs to show how those records are attributed to the agent, versioned, and disposed of when the case closes.
+
+The third is the \textbf{retention and access record} --- who can read what data, for how long, and under which legal regime. For agents that touch personal data in the EU, this section maps directly to the EU AI Act's data-governance obligation (Article 10), which requires that training, validation, and test data be relevant, representative, and to the extent possible free of errors and complete. Pushkarna and colleagues \citep{pushkarna2022datacards} proposed \textit{Data Cards} as the standardized artifact for documenting datasets the way model cards document models; their format is a good starting point for the data-lineage section of your binder.
+
+The audit committee is not going to read every row. They are going to spot-check. The binder needs to make spot-checking possible.
+
+\section{Architecture and dependency documentation (SBOM)}
+
+Production agents are not single artifacts. They are assemblies --- a model from one vendor, prompts authored by your team, tools provided by three different services, an MCP server here, a retrieval pipeline there, a guardrail library somewhere else. Each piece is a dependency. Each dependency is a thing that can change, fail, or be compromised without you noticing. The binder needs to enumerate them.
+
+\begin{TNdefinition}{SBOM (software bill of materials)} a formal, machine-readable list of every component an agent ships with: model weights, datasets, libraries, prompts, MCP servers, third-party tool integrations, and the versions of each. The artifact an audit team will ask for first when investigating an incident. \end{TNdefinition}
+
+An agent SBOM goes further than a traditional software SBOM. It lists the model weights and their version, the system prompts and their version, the tool servers and their scopes, the retrieval indices and their freshness dates, and the guardrails layered on top. For agents that consume MCP servers --- Anthropic's open standard for how agents call tools --- each server is its own line item, with its own scope and its own audit trail.
+
+The architecture documentation that sits alongside the SBOM is a one-page diagram of how the agent fits together: where the model lives, where the tools live, where the data flows, and where the trust boundaries fall. If your team cannot produce this diagram in an hour, the agent is not ready for certification --- not because it is broken, but because nobody can explain it under cross-examination.
+
+Agents in production also depend on services that change under them. A vendor pushes a model update; an MCP server adds a new tool; a retrieval index is re-built. The binder needs to record not only what the agent depends on today but how those dependencies are monitored for change. \autoref{ch:50-certification-20-keeping-certified} returns to this when change becomes a recertification trigger.
+
+\section{Risk assessment and red-teaming}
+
+A pre-cert binder without a risk assessment is a binder that says \textit{trust us}. The audit committee will not.
+
+The risk assessment for an agent is structurally simple. For each piece of the attack surface laid out in the hardening chapters --- prompt, tools, retrieved data, memory --- you list what could go wrong, what the consequence is, what control catches it, and how you tested the control. The list does not need to be exhaustive. It needs to be honest. An assessment that names ten realistic failure modes and how the agent handles each one is more useful than an assessment that names fifty and waves at them.
+
+The companion artifact is the \textbf{red-team report}. Red-teaming for agents is the practice of running deliberate attacks against the deployed system to surface failures that the eval suite misses. The OWASP Top 10 for LLM Applications \citep{owaspLLM2025} is a usable scope; for high-risk agents, an external red team adds credibility the internal team cannot. The artifact you put in the binder is not the full red-team log; it is the summary of which categories were attacked, what got through, what was fixed, and what residual risk the team accepted with the owner's signature on it.
+
+Two specific risks deserve their own sections in the binder for any agent above the lowest tier: \textit{prompt injection} (direct and indirect; \citealp{greshake2023promptinj}) and \textit{memory or knowledge-base poisoning} \citep{chen2024memorypoison}. Both have been documented in deployed systems. Both will be the first thing a sophisticated assessor probes.
+
+\begin{TNwarning} A red-team report whose conclusion is \textit{no issues found} is a red-team report whose scope was too narrow. If the report has nothing to say, you tested the wrong thing or the wrong way. Send it back. \end{TNwarning}
+
+\section{The behavior contract}
+
+The last artifact of the binder is the one teams forget most often. The \textbf{behavior contract} is the short, public document that says what the agent will do, what it will not do, and what it will escalate. It is the document a customer reads when they want to know what they are interacting with, and it is the document your team can be held to when a regulator or a customer disputes an outcome.
+
+A serviceable behavior contract is three paragraphs and a list. The first paragraph names the agent and its job. The second paragraph names the bounds --- the things it will refuse, the things it will escalate to a human, the kinds of decisions it will not make on its own. The third paragraph names the human or team responsible for the agent and how to reach them. The list at the bottom is the kinds of failure the agent will own up to: hallucinations, missed escalations, tool errors, the standard transparency report your team will publish for the next quarter.
+
+A behavior contract is voluntary today. It will not be voluntary much longer. The EU AI Act's \textit{Article 13} already requires transparency obligations for high-risk systems; the spirit of the obligation is the behavior contract. Get ahead of it.
+
+\section{The evidence chain --- from eval to certification}
+
+The pre-cert binder is not raw material. It is curated evidence. The discipline of curation is what this book has been calling the \textbf{evidence chain}: the traceable links from a deployed agent backward through its evals, benchmarks, training, and data. The chain is what an auditor follows when they ask, \textit{how do you know?}
+
+For a low-tier agent, the chain is short. For a high-tier agent --- the kind the EU AI Act calls high-risk, or the kind your CFO cares about because of dollar exposure --- the chain has to be defensible end to end. Each artifact in the binder is one link. The binder as a whole is the documented chain. When you walk into the conformity assessment in \autoref{ch:50-certification-19-process}, it is what you bring.
+
+The eight artifacts, in summary, are listed below; most of these existed in some form before you started thinking about certification. The work of pre-certification is mostly the work of finding them, dating them, and putting them in one place.
+
+\begin{table*}[ht]
+\centering
+\caption{The eight pre-cert binder artifacts.}
+\small
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{\#} & \textbf{Artifact} & \textbf{Purpose} \\
+\midrule
+1 & Model card & Cover sheet: intended use, training data, limitations, evals, owner. \\
+2 & Data lineage and provenance record & Where data came from, how it was filtered, retention and access. \\
+3 & SBOM and architecture diagram & Every component (model, prompts, tools, MCP servers, indices) by version. \\
+4 & Risk assessment & Attack surface, failure modes, controls, tests. \\
+5 & Red-team report & Categories attacked, what got through, what was fixed, residual risk. \\
+6 & Functional eval and benchmark reports & Evidence the agent does its job, versioned. \\
+7 & Behavior contract & Public statement of what the agent will, won't, and will escalate. \\
+8 & Named-owner sign-off & A single human accountable for the binder. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Pre-certification is mostly evidence curation, not new work --- almost everything in the binder should already exist somewhere.
+\item The eight-artifact binder (model card, lineage, SBOM, risk assessment, red-team report, eval reports, behavior contract, owner sign-off) is the minimum a serious certification expects.
+\item The model card is the cover sheet. If it is sloppy or stale, everything else in the binder is suspect.
+\item An agent SBOM goes beyond traditional software SBOM and enumerates models, prompts, tools, MCP servers, and retrieval indices by version.
+\item The evidence chain is what an auditor follows from a deployed agent back through every measurement that supports it. Make it traceable.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Take inventory of the eight pre-cert artifacts for one in-flight agent; list which exist, which are stale, and which do not exist.
+\item Assign a named owner for each artifact --- not a team, a person --- and a date by which they will produce or refresh it.
+\item Stand up a model card with the eight fields above. If your team cannot fill it in by Friday, the agent is not ready.
+\item Commission an architecture diagram and an SBOM for one production agent. Print them. Put them on a wall.
+\item Ask your CISO to run (or commission) a red-team engagement scoped to the OWASP LLM Top 10. Read the report yourself.
+\item Draft a behavior contract for one customer-facing agent. Publish it on your website.
+\item Set a quarterly calendar reminder to refresh the binder for each tier-medium or tier-high agent.
+\end{TNchecklist}
+
+
+

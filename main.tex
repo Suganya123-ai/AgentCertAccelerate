@@ -1,0 +1,65 @@
+\documentclass[a4paper, 11pt, twoside]{scrbook}
+\usepackage{tn-style}
+\usepackage[numbers,square,sort&compress]{natbib}
+
+\setbooktitle{ARIA: From Advice to Action}
+
+\hypersetup{
+  pdftitle={ARIA: From Advice to Action},
+  pdfauthor={Infosys Knowledge Institute},
+  pdfsubject={Enterprise Agentic AI}
+}
+
+\begin{document}
+
+\frontmatter
+
+\input{frontmatter/title-page}
+\tableofcontents
+\input{frontmatter/foreword}
+\input{frontmatter/about-aria}
+\input{frontmatter/executive-summary}
+
+\mainmatter
+
+\pillarpage{Alignment}
+\input{parts/10-alignment-01-what-it-means}
+\input{parts/10-alignment-02-training}
+\input{parts/10-alignment-03-runtime}
+\input{parts/10-alignment-04-oversight}
+
+\pillarpage{Hardening}
+\input{parts/20-hardening-05-why}
+\input{parts/20-hardening-06-defending}
+\input{parts/20-hardening-07-identity}
+\input{parts/20-hardening-08-production}
+
+\pillarpage{Benchmarking}
+\input{parts/30-benchmarking-09-strategy}
+\input{parts/30-benchmarking-10-capability}
+\input{parts/30-benchmarking-11-speed-cost}
+\input{parts/30-benchmarking-12-comparing}
+
+\pillarpage{Evaluation}
+\input{parts/40-evaluation-13-vs-benchmarking}
+\input{parts/40-evaluation-14-framework}
+\input{parts/40-evaluation-15-production}
+\input{parts/40-evaluation-16-safety}
+
+\pillarpage{Certification}
+\input{parts/50-certification-17-framework}
+\input{parts/50-certification-18-pre-cert}
+\input{parts/50-certification-19-process}
+\input{parts/50-certification-20-keeping-certified}
+
+\pillarpage{Synthesis}
+\input{backmatter/synthesis}
+
+\backmatter
+
+\input{backmatter/glossary}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

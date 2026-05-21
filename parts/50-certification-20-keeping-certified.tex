@@ -1,0 +1,128 @@
+\TNchapter[A certificate is not a passport; it is a lease. The agent's first launch is not its last. This chapter closes the book on the operational side of certification: documentation that stays current, version control that ties every change to a certificate, the triggers that force a recertification (model upgrade, material change, time elapsed), and the public disclosure obligations an enterprise will increasingly owe. It is also the chapter that argues --- quietly --- that the work of keeping an agent certified is most of the work of running a responsible agent program, and that the binder is also the playbook.]{Keeping an Agent Certified}
+\label{ch:50-certification-20-keeping-certified}
+
+\starttwocol
+
+\section{Documentation as a living artifact}
+
+The first thing your team will get wrong about certification, the day after launch, is to think it is finished. The binder closes. The owner moves to the next project. The model card, the SBOM, the behavior contract --- all of them age in place. Six months later, the agent your audit committee certified bears only a passing resemblance to the agent that is running in production.
+
+The discipline is to treat every artifact in the binder as a living document. The model card has a \textit{last reviewed} date. The SBOM regenerates on every deploy. The behavior contract has a version number. The risk assessment is reopened on every material change. If your audit committee asks for the current state of any artifact and your team has to ``go check,'' the binder is stale.
+
+The good news is that most of the artifacts can be wired to the systems that produce them. A model card can be generated from the model registry and the eval pipeline. An SBOM can be generated from the dependency graph. The traces and the evals can be queried from the observability stack. The work is in the wiring, not in the writing. Once wired, the binder refreshes itself.
+
+\section{Version control for the certified system}
+
+A certificate attaches to a specific version of an agent. The version is not just the model. It is the model, the prompts, the tools, the retrieval indices, the guardrails, and the dependencies --- the whole system whose SBOM you wrote in \autoref{ch:50-certification-18-pre-cert}. When any of these changes, the certified system is no longer the deployed system, and the binder no longer matches what is in production.
+
+This is the place where most enterprises break their certification discipline first. The model vendor pushes a quarterly update. The product team tweaks the system prompt. An MCP server adds a tool. Each change is small. None of them, on its own, looks like a recertification event. Together, they have made the certificate obsolete.
+
+The pattern that works is to tie the certificate to a \textit{configuration snapshot} --- a recorded, immutable record of every component the agent shipped with on the day it was certified --- and to require an explicit decision when any component changes. The decision is one of three: no recertification needed (the change is below the threshold); partial recertification (only the affected evidence needs to be refreshed); or full recertification (the change is material, the whole binder reopens). The threshold and the partial-recertification rules are themselves part of the binder, and they are reviewed annually.
+
+\begin{TNwarning} Certifying an agent once and never again is the single most common failure mode of an enterprise certification program. The certificate that hangs on the wall a year after launch describes an agent that no longer exists. When the regulator or the incident review asks how the agent was approved for production, the answer ``we certified it in March'' is the wrong answer if it is now November and the model has been upgraded twice. \end{TNwarning}
+
+\section{Recertification triggers}
+
+The discipline of keeping a certificate current lives in \textbf{recertification triggers} --- the documented events that force the agent back through some or all of the certification process.
+
+\begin{TNdefinition}{Recertification trigger} a documented condition (time elapsed, model upgraded, threshold breached, incident occurred) that forces an agent through certification again. Without triggers, certification is a one-time event; with them, it is a discipline. \end{TNdefinition}
+
+The four trigger categories that cover most cases are summarized in the table below.
+
+\begin{table*}[ht]
+\centering
+\caption{Recertification trigger categories.}
+\small
+\begin{tabularx}{\textwidth}{@{}l X l@{}}
+\toprule
+\textbf{Category} & \textbf{What fires it} & \textbf{Mechanism} \\
+\midrule
+\textbf{Time-based} & Twelve months elapsed (quarterly for high-tier); full binder refresh and review-board re-approval. & Calendar \\
+\addlinespace
+\textbf{Change-based} & Material change to the model, prompts, tools, data pipeline, or guardrails; ``material'' is defined in the binder. For EU AI Act systems: ``substantial modification'' per Article 43. Triggers partial recertification scoped to affected evidence. & Owner files \\
+\addlinespace
+\textbf{Metric-based} & A drop in a key production metric (accuracy, escalation rate, time-to-recover, hallucination rate) past a defined threshold. Fed by the continuous evaluation discipline. & Monitor \\
+\addlinespace
+\textbf{Incident-based} & A documented production incident, regardless of the calendar. The incident becomes part of the next binder. & Incident review \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The triggers are mechanical. The mechanism that turns them into action is a calendar, a monitor, and a named owner. The calendar fires the time-based triggers. The monitor fires the metric-based ones. The owner files the change-based ones. The board reviews them on a fixed cadence.
+
+\begin{TNinpractice}{Aurora Retail} \textit{Aurora's dynamic-pricing agent had been certified in March and recertified in October, eighteen months later, after a model upgrade and a regulatory rule change.} The first recertification was painful --- six weeks, two thousand hours of staff time, three rounds of evidence assembly. The team treated it as a one-off. The second recertification was easier. The model card regenerated from the registry. The SBOM updated itself. The behavior contract had been versioned all along. The eval reports came out of the same pipeline that produced them in March. The cycle took two weeks and four hundred hours. The lesson was not that the second cycle was cheaper --- it was that the first cycle, done right, made the second one cheap. The binder had become the playbook. \end{TNinpractice}
+
+For agents in scope of the EU AI Act, the post-market monitoring obligations of Articles 72 and 73 add a regulatory backstop to the metric-based and incident-based triggers. Article 72 requires providers of high-risk systems to operate a documented post-market monitoring system; Article 73 requires reporting of serious incidents within a defined window. Both feed your trigger calendar.
+
+\section{Public disclosure and the registry}
+
+The last piece of the lifecycle is what the rest of the world sees. For low-tier agents, public disclosure is light --- a behavior contract on a marketing page, a privacy notice. For high-tier agents, especially those in regulated domains, disclosure is heavier and increasingly required.
+
+Three artifacts carry the disclosure weight: a \textit{system card}, a \textit{transparency report}, and (for EU high-risk systems) a \textit{public registry entry}.
+
+A \textbf{system card} is a model card's bigger cousin. Where the model card describes a model, the system card describes the deployed system --- the model, the tools, the populations served, the safeguards. It is the public version of much of what the binder contains. OpenAI, Anthropic, and other vendors now publish system cards for their major releases; large enterprises will increasingly publish them for their customer-facing agents.
+
+A \textbf{transparency report} is a recurring (typically annual or quarterly) public summary of what the agent did and how it performed. The categories that belong in such a report are the transparency obligations introduced in the alignment chapters: what the agent did, what it refused, what it escalated, and what failed. The reader is your customer, your regulator, or your civil-society watcher. The goal is not perfect candor --- it is verifiable candor.
+
+The \textbf{public registry entry} is the EU AI Act's specific obligation for Annex III high-risk systems. Article 71 of the Act requires registration in an EU-maintained public database before deployment, with the registration kept current through the agent's lifecycle. The data points the database collects mirror the model card and the system card. The discipline of keeping the registry entry accurate is the discipline of keeping the binder current.
+
+\begin{figure*}[ht]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  stage/.style={draw=TNNavy, line width=0.6pt, rounded corners=2pt,
+    fill=TNNavyTint, text width=2.3cm, align=center, inner sep=6pt,
+    minimum height=1.2cm, font=\sffamily\bfseries\color{TNNavy}},
+  arr/.style={-{Stealth}, TNTealDeep, line width=0.7pt},
+  arrlabel/.style={font=\sffamily\footnotesize\itshape\color{TNBodyText}, align=center}
+]
+  \node[stage] (a) at (0,0)     {Develop};
+  \node[stage] (b) at (2.9,0)   {Pre-cert};
+  \node[stage] (c) at (5.8,0)   {Certify};
+  \node[stage] (d) at (8.7,0)   {Operate};
+  \node[stage] (e) at (11.6,0)  {Trigger};
+  \node[stage] (f) at (14.5,0)  {Re-certify};
+  \foreach \x/\y/\lbl in {a/b/{evidence}, b/c/{review}, c/d/{verdict},
+                          d/e/{incident or drift}, e/f/{reassessment}}
+    \draw[arr] (\x) -- node[arrlabel, above]{\lbl} (\y);
+  \draw[arr, dashed] (f.south) .. controls +(0,-1) and +(0,-1) .. node[arrlabel, below]{back to operate}  (d.south);
+\end{tikzpicture}%
+}
+\caption{The certification lifecycle. Certification is not a one-time stamp; an incident or material change loops the agent back through reassessment.}
+\end{figure*}
+
+\section{Why the binder is also the playbook}
+
+The binder is something a certifier reads. It is also something your team can run on. Done well, the eight artifacts of the pre-cert binder, the recertification triggers, the trace-and-eval discipline, and the review-board cadence are not extra work on top of running an agent. They are the work of running an agent --- observably, accountably, with the ability to say what it does and why.
+
+This is the quiet argument the five pillars have been making all along. Alignment is what makes the agent do what you meant. Hardening is what bounds the cost of when it doesn't. Benchmarking is how you compare the agent to alternatives. Evaluation is how you measure it against the job you hired it for. Certification is how you defend it to the people who will hold you to account. The five pillars are not optional, they are not sequential, and they are not ``done'' --- they are continuously maintained capabilities. The first launch is the beginning, not the end.
+
+Maya's customer-service agent --- the one with the \$4M budget request that opened this book --- does not need a 200-page certification binder before launch. It needs the eight artifacts, the right tier, the right standard, the right review board, the right triggers, and the discipline to keep all of them current. If your team can build and maintain that, you have a defensible agent program. If they cannot, you have a vendor problem.
+
+The book closes by handing Maya, and you, a single sentence to take into the Monday meeting with the team: \textit{the binder is the playbook, the playbook is the program, and the program is what you are actually buying when you approve the project.}
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item A certificate attaches to a specific version of an agent --- model, prompts, tools, data, guardrails. When any of those changes, the certified system is no longer the deployed system.
+\item Recertification triggers (time, change, metric, incident) are what turn certification from a one-time event into a discipline.
+\item The artifacts in the binder must be living documents, wired to the systems that produce them, not snapshots that age on a shared drive.
+\item Public disclosure --- system cards, transparency reports, registry entries --- is becoming a baseline expectation, not a regulatory edge case.
+\item The binder, well maintained, is also the playbook for running a responsible agent program; the work of certification and the work of operating are the same work.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Define the four trigger categories for each tier of agent and write them into the binder template.
+\item Wire your model card and SBOM to regenerate on every deploy; treat manual updates as a failure mode.
+\item Set a calendar for time-based recertification --- twelve months for medium tier, quarterly for high tier.
+\item Tie one production metric per agent to a metric-based trigger; review the threshold every six months.
+\item Decide, in writing, which model-vendor updates count as ``material'' for your portfolio.
+\item Publish one transparency report this year --- quarterly is the goal, annual is the floor.
+\item For any agent in EU AI Act Annex III scope, confirm the public-registry entry exists and is current.
+\end{TNchecklist}
+
+
+

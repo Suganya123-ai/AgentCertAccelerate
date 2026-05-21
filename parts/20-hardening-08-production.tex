@@ -1,0 +1,125 @@
+\TNchapter[The first hardened agent your company deploys is the easy one. The hundredth is the one that exposes your operational gaps. This chapter is about what changes between ``we've shipped an agent'' and ``we run an agent estate.'' It covers observability --- traces, logs, and evals enough to answer \textit{what did this agent do and why?} --- incident response when an agent misbehaves at 2 a.m., and a four-level maturity model you can show your board. It closes Part II by handing you the vocabulary you need to read Part III's benchmarking numbers honestly, and Part IV's evaluations next to them.]{Running agents in production}
+\label{ch:20-hardening-08-production}
+
+\starttwocol
+
+\section{What changes at scale}
+
+The day your company runs one agent in production is the day you start learning. The day you run fourteen is the day you discover whether you have a hardening program or a habit. Three things break when an organization moves from one agent to many.
+
+The first is \textbf{shared observability}. Each agent's team built their own monitoring stack. The dashboards are different colors. The traces are stored in three places. Nobody can answer ``which agents drove the cost increase last month'' without three days of analysis. The fix is treating observability as a platform service, not a per-agent build. Once an agent estate exists, the platform is the only place observability can live.
+
+\begin{TNdefinition}{Agent estate}
+the full collection of agents an organization runs in production. The operational problem shape stops looking like AI and starts looking like IT service management once you have more than three.
+\end{TNdefinition}
+
+The second is \textbf{policy consistency}. Different teams pick different identity scopes, different retention policies, different definitions of ``high-risk action.'' The variance starts as a feature (``each team knows its domain'') and becomes a liability the first time an auditor crosses two agents at once. A shared platform with opinionated defaults is what holds the line.
+
+The third is \textbf{incident learning}. An incident in one agent should make every other agent in the estate measurably safer. Without a shared platform, the lessons get written down in one team's runbook and stay there. With a shared platform, the new control becomes a default. Anthropic's \textit{Computer Use} \citep{anthropic-building-agents-2024} is a useful illustration: any agent that controls a desktop demands sandboxed runtime as a default, not as a per-team decision.
+
+\begin{TNinpractice}{Aurora Retail}
+\textit{Aurora had scaled from one production agent to fourteen across e-commerce, supply, and HR. The operations team had built each one's monitoring stack ad-hoc.} When the model vendor raised token prices and the agent fleet's cost doubled overnight, no one could answer ``which agents drove the cost increase'' for three days. Aurora's response was to build a shared observability layer with mandatory adoption: every new agent had to emit a defined set of traces and metrics, in a defined shape, before it could go to production. The audit trail problem that triggered the investment was also the wedge for getting the platform funded. Six months later, the same kind of incident took 90 minutes to diagnose.
+\end{TNinpractice}
+
+\section{Observability --- what an agent's audit trail looks like}
+
+Observability is the operational hardening control most teams under-invest in until they need it once. After that they over-invest. The discipline is to know what you're collecting, why, and for how long, before the first incident forces the question.
+
+\begin{TNdefinition}{Observability (for agents)}
+the combination of traces, logs, and evaluations that lets you answer \textit{what did this agent do, and why?} after the fact. Distinct from traditional application performance monitoring (APM); the unit of observation is the agent turn, not the HTTP request.
+\end{TNdefinition}
+
+An agent turn is the right unit because the failure modes are turn-shaped. A single turn includes a user prompt (or upstream input), the agent's plan, the tool calls it made, the responses it read, and the output it produced. A useful trace stitches all of that together with correlation IDs that survive across the model call, the gateway, the tool execution, and the audit store. Without the correlation, an incident becomes archaeology.
+
+Three layers of signal belong in every agent's observability stack. Traces are the per-turn records: what was proposed, decided, enforced, and recorded (the Propose $\rightarrow$ Decide $\rightarrow$ Enforce $\rightarrow$ Record sequence from \autoref{ch:20-hardening-07-identity}). Logs are the structured events: policy decisions, denied actions, tool errors, budget breaches. Evals are the operational measurements --- accuracy, refusal-quality, hallucination rate --- sampled on live traffic. The eval layer is the bridge to the evaluation part of the book; for hardening purposes it answers \textit{is this agent still doing what the controls were designed to keep it doing?}
+
+Two metrics tend to matter more than your team initially thinks. \textbf{Mean time to detection (MTTD)} is the gap between an agent misbehaving and someone noticing. Mean time to recovery (MTTR) is the companion: the gap between noticing and being back in correct operation. Neither acronym is exotic --- your SRE team uses both every day for traditional services --- but for agents the numbers can be alarming.
+
+An agent's misbehavior often looks normal in logs until someone asks the question that surfaces it. A high MTTD is the operational signature of an under-instrumented estate.
+
+The audit trail itself should be tamper-evident: signed, append-only, with retention long enough to support both incident response and regulatory disclosure. The EU AI Act's Article 72 (post-market monitoring) \citep{euAIact2024} sets the floor for high-risk systems in the EU; ISO/IEC 42001:2023 \citep{iso-iec-42001} sets a voluntary baseline elsewhere. The action is to keep the audit trail for at least as long as the regulatory bound that applies to your highest-tier agent.
+
+\begin{TNwarning}
+A retention setting of ``seven days'' is the most common gap auditors find in agent estates. Seven days is fine for normal application logs and useless for incident response on agents --- a poisoned memory entry can persist far longer than the trail that would show how it got there. The fix is to set the audit trail's retention based on the slowest plausible incident discovery time for your highest-blast-radius agent, then add a buffer.
+\end{TNwarning}
+
+\section{Incident response --- the runbook for when an agent goes wrong}
+
+The first agent incident your team handles will be the one that proves whether you have a runbook or a Slack channel. The runbook is a real document. The Slack channel is what runs the runbook.
+
+A good agent incident response runbook covers five things, in order: detection, containment, forensics, recovery, post-incident. Detection is how the incident gets called --- an alert, a customer complaint, an internal report, an audit anomaly. Containment is the immediate action: revoke the agent's tool tokens, throttle its traffic, isolate the affected memory store, hit the kill switch if the blast radius warrants it.
+
+Forensics is the trace-following work that the observability stack made possible. Recovery is restoring the agent --- with new policy, new memory, new prompt, or new model --- to correct operation. Post-incident is the work that prevents the same shape of incident next time: the new control, the new test, the disclosure if disclosure is required.
+
+The kill switch deserves its own paragraph. It is the single most important hardening control that no team builds until they've needed it once. The kill switch is a documented, tested, single-button mechanism that disables the agent in production within seconds. It revokes the agent's tool tokens, drains its queue, and serves a graceful-degradation response to in-flight requests.
+
+It does not require a meeting. It does not require a deploy. It exists. The reason it exists is that during an incident --- say, a confirmed indirect prompt injection that has the agent emailing customer files --- the cost of a delayed shutdown rises faster than the cost of an unnecessary one.
+
+\begin{TNdefinition}{Graceful degradation}
+the agent's response when under load, facing a tool outage, or operating in a kill-switched state: it falls back to a smaller, safer mode rather than failing hard. The agent's version of the airplane's ``memorized standard turn.''
+\end{TNdefinition}
+
+The companion concept is \textbf{incident learning at the estate level}. If an attack works against one of your agents, the response is not just to patch that agent. It is to ask which other agents in the estate are vulnerable to the same chain, and to add the new control as a default. Without that step, every team is learning independently. With it, the estate gets safer with every incident --- slowly the first year, faster the second.
+
+The Anthropic and OpenAI agent guides \citep{anthropic-building-agents-2024,openai-practical-agents-2025} both recommend running a tabletop exercise on a realistic incident before launch. Most teams skip it. The teams who don't skip it discover the gaps before the auditor does.
+
+\section{A hardening maturity model you can show your board}
+
+A four-level maturity model is one of the few formats a board will read. It also happens to be a useful instrument for honest internal assessment. The version below is adapted from CISA's Zero Trust Maturity Model v2 \citep{cisa-ztmm-v2} and tailored for agent hardening.
+
+\begin{TNinpractice}{Continuous Hardening Maturity}
+Most enterprises start somewhere between Level 1 and Level 2 and don't realize it. The diagnostic value of the model is partly that it gives you language to say ``we're at Level 2.5'' without bluffing, and partly that it tells you what Level 3 would actually require.
+\end{TNinpractice}
+
+\begin{table*}[tb]
+\centering
+\small
+\caption{A four-level hardening maturity model for agent estates.}
+\begin{tabularx}{\textwidth}{@{}clXX@{}}
+\toprule
+\textbf{Level} & \textbf{Name} & \textbf{What's in place} & \textbf{What's missing} \\
+\midrule
+1 & Ad-hoc & Basic system prompts, some logging, manual code review. Each team handles its own agent's risk in its own way. & Shared observability, named control surfaces, an estate-level view, repeatable evidence. \\
+\addlinespace
+2 & Proactive & Tool scopes are defined per agent. Structured logs land in a shared store. A documented set of pre-launch checks runs on every release. & Cross-agent policy consistency. Runtime anomaly detection. Tested kill switches. \\
+\addlinespace
+3 & Adaptive & Runtime anomaly detection, circuit breakers and budgets, automatic quarantine of suspicious sources, role isolation across agents. & Continuous verification under load. Automated containment with human-in-the-loop. Estate-level incident learning. \\
+\addlinespace
+4 & Continuous & Dynamic throttling, automated containment with human confirmation, continuous verification against red-team probes, estate-level metrics that drive next-quarter investments. & Mostly: budget. Capabilities are in place; cost discipline is the constraint. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The diagnostic question Maya should ask is not ``what level are we?'' but ``for which agent in our portfolio is the answer different?'' Most estates have a high-blast-radius agent that's at Level 3, an experimental agent at Level 1, and a long tail of mid-blast-radius agents at Level 2. The work of governance is to make sure each agent is at the level its blast radius requires, not to drive every agent to Level 4. A model card review at every level transition is a useful checkpoint; the pre-certification chapter formalizes the artifact.
+
+\section{Handing off to benchmarking}
+
+Hardening is one of the pillars where measurement is the substrate. Every control in this chapter --- observability, monitoring, the audit trail, the kill switch --- exists to produce signal. Some of that signal is for security. Some is for the next pillar, \textbf{benchmarking}, which is about whether your agent is good in a way that compares to alternatives, and which uses the same telemetry stack the hardening work paid for.
+
+Later chapters return to the regression-detection use case for production telemetry from both the benchmarking and the evaluation sides. For now the takeaway is small: the stack you built to harden the agent is the stack that lets you measure it. The investments compound. The audit trail that protects you in an incident is also the dataset that tells you, three months in, whether the agent is drifting.
+
+The agent that closes Part II is the same one that opens Part III: the one in production, that your team understands deeply, with the controls you can defend, with the telemetry you trust. The next part of the book is about what it actually does --- measured honestly, compared honestly, costed honestly. The picture you need before you can read those numbers is the picture this part has built.
+
+\TNrule
+
+\stoptwocol
+
+\begin{TNkeytakeaways}
+\item Running an agent estate is a different problem from running one agent; shared observability, policy consistency, and incident learning are the platform investments that scale.
+\item Agent observability is built around the \textit{turn} as the unit, with traces, logs, and evals all stitched together by correlation IDs.
+\item The kill switch is the single most important control no team builds until they need it once; build it, document it, and test it before launch.
+\item MTTD (mean time to detection) and MTTR (mean time to recovery) are the operational metrics that signal whether your hardening is real or theatrical.
+\item The maturity model is a diagnostic for your portfolio, not a goal for every agent --- the question is whether each agent's level matches its blast radius.
+\end{TNkeytakeaways}
+
+\begin{TNchecklist}
+\item Designate a platform owner for shared observability across your agent estate, with a budget and a roadmap.
+\item Confirm every production agent emits a defined set of traces and metrics in the shared format before launch.
+\item Set audit-trail retention based on your highest-blast-radius agent and your applicable regulatory bound, plus a buffer.
+\item Document the kill switch for each agent: who can hit it, what it disables, and how long recovery takes.
+\item Run one tabletop exercise per quarter that walks an indirect-injection or Denial-of-Wallet incident from detection through post-incident review.
+\item Place each agent on the four-level maturity model and confirm its level matches its blast radius --- escalate the ones that don't.
+\item Tie the hardening telemetry stack into your benchmarking and evaluation reads so the investment compounds.
+\end{TNchecklist}
+
+
