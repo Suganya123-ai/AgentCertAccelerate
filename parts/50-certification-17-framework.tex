@@ -46,6 +46,36 @@ Most enterprises end up with three tiers like this, with the boundary between me
 
 \begin{TNwarning} Over-certifying low-risk agents teaches your team that certification is bureaucratic. They will then under-certify the high-risk ones to prove the point. Match the rigor to the risk before you map a single artifact. \end{TNwarning}
 
+\section{Autonomy class: orthogonal to risk}
+
+The risk-based tier is one axis. \textit{Autonomy class} is the other, and the two are routinely confused in the first round of any certification program. Risk tier says \textit{how bad it is if the agent is wrong}. Autonomy class says \textit{how much the agent decides on its own}. They answer different questions, and they slot into the binder independently. A low-risk HR FAQ bot can perfectly reasonably be fully autonomous; a high-risk clinical decision aid can be locked to advisory-only. The certification answer depends on both.
+
+\begin{TNdefinition}{Autonomy class} the degree to which the agent acts without human intervention. \end{TNdefinition}
+
+\stoptwocol
+
+\begin{center}
+\captionof{table}{Autonomy classes.}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Class} & \textbf{What it does} \\
+\midrule
+\textbf{Informative} & Surfaces information; the human does the work. \\
+\addlinespace
+\textbf{Advisory} & Proposes an action; the human approves before execution. \\
+\addlinespace
+\textbf{Autonomous with reversal} & Executes; a defined window (typically seconds for a transaction, hours for a written document, days for a procurement order) exists in which the human can roll back without consequence. \\
+\addlinespace
+\textbf{Fully autonomous} & Executes and commits; no reversal window. Used only for actions where reversal would be more expensive than the failure mode. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\starttwocol
+
+The certification rubric in \autoref{ch:50-certification-19-process} applies to both axes. A high-risk fully-autonomous agent needs the heaviest evidence set the binder can carry; a low-risk informative agent the lightest. The two-axis grid is what replaces the implicit ``tier equals how much evidence'' shorthand the previous section used --- a shorthand that holds up until the first time someone proposes shipping an Annex III agent in advisory-only mode and the team has no language for why that changes the answer.
+
 \section{The standards landscape Maya keeps hearing about}
 
 You will hear three names a lot in this part of the book: the EU AI Act, ISO/IEC 42001, and the NIST AI Risk Management Framework. They are not interchangeable. Each does something different, and your certification program has room --- and reason --- for all three.

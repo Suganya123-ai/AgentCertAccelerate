@@ -93,6 +93,24 @@ The number to put on the dashboard is \textit{pass\textasciicircum k} at the $k$
 \textit{Aurora's assortment-recommendation agent passed offline evaluation with a 92\% functional accuracy on the curated golden set. The CFO was delighted.} Three months in, the customer-service queue showed something the dashboard had missed. The same shopper, asking the same question forty minutes apart, was getting different product recommendations --- sometimes by a wide margin. The agent was 92\% accurate in single-shot evaluation and 38\% consistent across paired runs of identical inputs. The 14\% gap between functional accuracy and contextual hallucination (citing products that did not exist in the live catalog) was its own problem. The fix was a re-anchored evaluation: \textit{pass\textasciicircum 5} replaced \textit{pass\textasciicircum 1} as the primary release-gate metric, and contextual hallucination joined the dashboard as a separate KPI. The CFO was less delighted and considerably better informed.
 \end{TNinpractice}
 
+\section{Memory and context retention}
+
+\autoref{ch:10-alignment-04-oversight} is the wrong pointer for this one --- the memory-hygiene \textit{controls} (provenance tags, TTLs, redaction policies) are defined in the identity and access hardening chapter. Chapter 15's job is the other half: evaluating whether those controls hold up under real session load. Without an eval, a memory control is unverifiable, and an unverifiable control is a footnote rather than a safeguard.
+
+Three metric families do most of the work.
+
+\textbf{Memory-recall accuracy} asks whether the agent correctly retrieves and uses stored context from prior turns. The cleanest instrumentation is paired sessions: a fact is established in turn 1, and the answer in turn N depends on it. The score is the fraction of paired sessions where the turn-N answer correctly reflects the turn-1 fact. Run it across a spread of intervening turn counts and you have both a headline number and a curve.
+
+\textbf{Memory staleness} asks at what session length the agent's grasp of earlier context starts to degrade. Plot accuracy decay over turn count; the bend in the curve is the practical session-length budget. Past the bend, the agent is technically still in-session but operationally amnesiac, and the dashboard should treat the budget as a hard threshold rather than a guideline.
+
+\textbf{Ablation comparison} runs the agent with and without the memory layer on the same workload. The accuracy and consistency delta is what memory is actually contributing. If the delta is small, the memory is decorative --- it is adding latency and storage cost without changing outcomes, and the team is paying for the illusion of continuity.
+
+\begin{TNinpractice}{Aurora Retail}
+\textit{Aurora's styling agent appeared to ``remember'' customer preferences across sessions --- the product team showcased it at a board demo.} An ablation run, six weeks later, told a different story. Turning the memory layer off cost less than a point of recall accuracy and nothing measurable on consistency. The agent was inferring preferences from the current message; the persistent store was along for the ride. The team thinned the memory layer to a small set of high-signal fields, and end-to-end latency dropped roughly 20\% with no quality loss. The lesson was not that memory is useless; it was that memory without an ablation is a story rather than a measurement.
+\end{TNinpractice}
+
+Persistent memory in production also has alignment implications --- what the agent retains about users, and for how long, is an oversight question as much as an evaluation one --- and is treated in \autoref{ch:10-alignment-04-oversight}.
+
 \section{Edge cases, robustness, and the boundary conditions that ship the incident}
 
 Most agents fail on the inputs nobody thought to test. Edge-case evaluation is the discipline of finding those inputs before production does. The categories are well-rehearsed: ambiguous instructions, out-of-scope queries, extremely long conversations near the context window, incomplete context, multilingual prompts, adversarial inputs, and failures in upstream tools or APIs.

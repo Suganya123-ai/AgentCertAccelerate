@@ -77,6 +77,22 @@ The deeper rule is Goodhart's Law, the social-science observation that ``when a 
 
 The benchmark caught what the team thought to look at. The evaluation caught what the benchmark missed. That is the bridge from Part III to Part IV.
 
+\section{When to retire a benchmark}
+
+A benchmark earns its place by predicting production behavior. When it stops predicting --- because the model class has moved past it, because the test set leaked into training data, because the use case shifted under it --- it stops being useful and starts being misleading. The benchmarks your team trusted in 2023 are not the benchmarks worth running in 2026, and the discipline of noticing the difference is its own skill.
+
+Three sunset signals are worth naming.
+
+\textbf{Saturation.} Every credible agent now scores in the top 5\% on the benchmark. The numbers crowd into a band that is narrower than the noise on any one of them, and the benchmark is no longer differentiating. A score at the top of a saturated benchmark tells you the agent is competent at a problem the field has solved; it does not tell you which agent to pick.
+
+\textbf{Drift from production.} Improvements on the benchmark stop correlating with improvements your team observes in production. A new release climbs two points on the public board and changes nothing your operators can feel; a release that drops a point ships a meaningful gain on your own traffic. The benchmark and the job have parted ways. When this happens repeatedly, the benchmark is measuring something your work no longer is.
+
+\textbf{Contamination beyond rescue.} The benchmark's test set has leaked into model training data so thoroughly that no agent can be evaluated against it honestly. The SWE-bench to SWE-bench Verified migration was a clean version of this story --- the community accepted that the original was compromised and built a successor. Most benchmarks do not get that treatment; they quietly stop being trustworthy and keep being cited.
+
+\begin{TNdefinition}{Benchmark sunset} the retirement of a benchmark from the decision-making suite. Sunset is terminal: distinct from rotation, where the benchmark gets refreshed and stays in use. \end{TNdefinition}
+
+The evaluation framework chapter (\autoref{ch:40-evaluation-14-framework}) covers when to refresh internal golden datasets; this chapter is about when to retire \textit{public} benchmarks. Both run on quarterly review at minimum.
+
 \section{Where benchmarking stops and evaluation starts}
 
 Benchmarking compares. Evaluation answers. Benchmarking is shared; evaluation is yours. Benchmarking gives you the language to read a vendor's deck and a model release note. Evaluation gives you the language to know whether your agent is doing the job you hired it for, on your data, today.

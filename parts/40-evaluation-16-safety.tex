@@ -25,6 +25,30 @@ The DecodingTrust benchmark \citep{wang2023decodingtrust} is the closest the aca
 Most safety evaluation programs are static. The team builds an adversarial test set in week three, runs it on every release, and then stops adding to it. The attackers do not. By month nine the test set is testing for last year's manipulations, the model has been fine-tuned against them, and the safety dashboard says 99.7\% --- while novel jailbreaks are landing in production with no measurement at all. A safety eval set has the same expiry pattern as a benchmark: it is a snapshot, and snapshots go stale.
 \end{TNwarning}
 
+\section{A red-team taxonomy for agents}
+
+``Do a red team'' is a sentence every CISO has said. The harder question is: which red team? Generic LLM red-teaming --- jailbreaks, prompt extraction, the manipulations that fit on a slide --- is a fraction of what an agent's threat surface needs. An agent reads tools, writes to systems, holds memory, and in multi-agent settings talks to peers. Each of those interfaces is its own attack class, and each needs its own exercise. Below is the working taxonomy used in 2026 enterprise programs.
+
+\stoptwocol
+\begin{center}
+\captionof{table}{Red-team exercise classes for agents.}
+\begin{tabular}{p{0.32\textwidth} p{0.6\textwidth}}
+\hline
+\textbf{Exercise} & \textbf{What it tries} \\
+\hline
+Direct prompt injection & Make the model violate its system prompt with input crafted to override it. \\
+Indirect injection via retrieved data & Poison a source the agent reads and watch the behavior change downstream \citep{greshake2023promptinj}. \\
+Delegated action abuse & Induce the agent to call a tool that does damage on its behalf --- transfer, write, delete. \\
+Cross-agent interference & In multi-agent setups, get one agent to manipulate another's prompt or memory. \\
+Denial-of-wallet & Drive the agent into a cost loop until budgets blow. \\
+Jailbreak chains & Multi-step prompts that pass each step's filter individually but compound into a policy break. \\
+\hline
+\end{tabular}
+\end{center}
+\starttwocol
+
+The discipline is to run all six against any production-bound agent, not just whichever one the vendor demonstrated mitigation for. The cadence, the attack-success-rate reporting, and the question of who delivers the exercise come up later in this chapter.
+
 \section{Bias and fairness: the metrics worth running}
 
 Bias in AI systems is one of the most rehearsed and least well-measured topics in enterprise AI. The conversation typically gets stuck on definitions --- \textit{what does fairness even mean here?} --- because there are several inequivalent definitions, and they sometimes conflict \citep{bender2021parrots, hardt2016fairness, chouldechova2017fair}. The practical answer is to pick the definition your regulator and your business actually care about, measure against it consistently, and report the metric your audit committee can defend.
@@ -75,9 +99,7 @@ The metric that comes out of red-teaming is \textit{attack success rate}: the fr
 
 Everything in this part so far has been about catching failures before they ship. Continuous evaluation is about catching them after.
 
-\begin{TNdefinition}{Drift}
-The slow change in an agent's behavior over time. Three flavors: \textit{model drift} (the model itself was updated), \textit{data drift} (the world the agent sees has changed), and \textit{concept drift} (what counts as a correct answer has changed). All three are inevitable; only continuous evaluation catches them in time to act.
-\end{TNdefinition}
+The three flavors of drift --- model, data, and concept --- were defined in \autoref{ch:10-alignment-04-oversight}. All three are inevitable; only continuous evaluation catches them in time to act on the alert before the next incident.
 
 A production evaluation pipeline samples a fraction of live traffic --- typically 1\% to 5\%, weighted toward high-stakes interactions --- and runs the same kinds of grading the offline framework does, asynchronously and out-of-band. The sampling strategy matters. \textit{Random sampling} gives an unbiased baseline but misses rare failure modes. \textit{Stratified sampling} across use cases, user segments, and complexity bands prevents blind spots in low-volume but high-stakes categories. \textit{Adaptive sampling} increases the rate in segments where the early signal is bad --- when error rates rise, or when LLM-as-judge confidence drops, the system samples more aggressively until the cause is found.
 
