@@ -263,8 +263,11 @@
   \textcolor{TNBorderGray}{\rule{\linewidth}{0.4pt}}\par\vspace{0.4em}}
 
 %% ─── Pillar page ─────────────────────────────────────────
+\newcounter{pillarpart}
+
 \newcommand{\pillarpage}[2][TNNavy]{%
   \clearpage
+  \refstepcounter{pillarpart}%
   \thispagestyle{empty}%
   \begin{tikzpicture}[remember picture, overlay]
     \fill[#1] (current page.south west) rectangle (current page.north east);
@@ -278,6 +281,8 @@
       };
     \node[anchor=west, text width=15cm]
       at ([xshift=2.2cm, yshift=-0.5cm]current page.west) {%
+        \fontsize{13}{16}\selectfont\bfseries\sffamily\color{TNTeal}%
+        \MakeUppercase{Part \Roman{pillarpart}}\\[0.25em]%
         \fontsize{56}{64}\selectfont\bfseries\sffamily\color{white}%
         #2%
       };
@@ -287,7 +292,7 @@
         Infosys\textsuperscript{\textregistered}\ \textbar\ Knowledge Institute%
       };
   \end{tikzpicture}%
-  \addcontentsline{toc}{part}{\protect\textbf{#2}}%
+  \addcontentsline{toc}{part}{\protect\textbf{Part \Roman{pillarpart}: #2}}%
   \clearpage
 }
 
