@@ -1,4 +1,4 @@
-\TNchapter[Alignment is not a state you achieve at launch. The model drifts. The world drifts. The agent's job drifts. This chapter is about the people, processes, and instruments that catch misalignment after deployment --- human-in-the-loop approval gates, the transparency the agent owes its operators on every turn, behavioral verification on a schedule, and the quiet failure modes (deceptive alignment, sleeper-agent behavior) that have been documented in the research literature and that your team has probably not yet seriously considered. By the end of Part I you have the full alignment stack: training, runtime, and oversight.]{Oversight, Transparency, and Drift}
+\TNchapter[Alignment is not a state you achieve at launch. The model drifts. The world drifts. The agent's job drifts. This chapter is about the people, processes, and instruments that catch misalignment after deployment --- human-in-the-loop approval gates, the transparency the agent owes its operators on every turn, behavioral verification on a schedule, governance frameworks that integrate alignment into institutional control, and the measurement methods that make alignment claims verifiable. By the end of Part I you have the full alignment stack: training, runtime, and oversight.]{Oversight, Transparency, and Drift}
 \label{ch:10-alignment-04-oversight}
 
 \starttwocol
@@ -31,13 +31,27 @@ The mistake teams make with HITL is to install it as theatre. A ``review'' queue
 
 The numerical question to ask of any HITL setup is the \textbf{escalation rate} --- the fraction of turns where the agent hands control to a person. Too low means the agent is exceeding its competence. Too high means the agent is not earning its cost; you may as well have kept the people doing the work. The right number is domain-specific, but it is a number, not a vibe, and your team should be reporting it monthly.
 
-\section{Approval gates: where they go, who owns them}
+\section{Approval gates and escalation mechanisms}
 
 The runtime side of HITL is the \textbf{approval gate}: a specific point in the agent loop where the action stops and waits for a human verdict. Approval gates do not have to be everywhere; in fact, gates everywhere defeat the purpose. The discipline is to put them at the points where the cost of an error is high and the rate of action is low.
 
 Most production agents have three or four approval gates, no more. \textit{Refunds above a threshold.} \textit{Outbound communications on a regulated topic.} \textit{Account changes that touch credentials or beneficiaries.} \textit{Any tool call against a system the team has not yet had time to fully evaluate.}
 
+\textbf{Escalation triggers} define the conditions under which human intervention is required --- uncertainty thresholds, risk levels, or unexpected behavior patterns. \textbf{Confidence-based escalation} automatically routes decisions with low model confidence to human review, improving trust and safety for borderline cases.
+
 The owner of each gate matters as much as the gate itself. A gate without an owner is a queue without a clear-rate target. The pattern that works: every gate has a single named function owner (not a person --- functions outlast people), a documented SLA for clearance, and a monthly review of how often the gate fired and how often it was approved versus denied. If approval rates run at 99\% for a quarter, the gate may be unnecessary. If approval rates run at 50\%, the agent has a calibration problem.
+
+\section{Control mechanisms: override, rollback, and kill switches}
+
+Beyond approval gates, production systems require mechanisms to intervene when things go wrong after the fact.
+
+\textbf{Override systems} enable humans to immediately halt or modify system behavior. When the agent is mid-action and something looks wrong, an operator must be able to stop it within seconds. Override is not the same as shutdown; it is surgical intervention on a specific action or conversation.
+
+\textbf{Rollback mechanisms} allow the system to reverse previous actions or decisions. For an agent that updated a database record incorrectly, rollback restores the previous state. For an agent that sent an incorrect email, rollback may not be possible --- which is why irreversible actions warrant pre-action approval gates.
+
+\textbf{Audit-linked control} ties control mechanisms to the trace record. Every override and rollback is logged with the reason, the operator, and the timestamp. This creates accountability and enables post-incident analysis. Control without audit is correction without learning.
+
+The practical question: does your team know where the kill switch is, who can trigger it, how fast it takes effect, and what the agent does mid-conversation when it fires? If any of those answers is ``we'd figure it out,'' the kill switch does not exist.
 
 \section{Transparency: what the agent owes its operator}
 
@@ -55,7 +69,17 @@ Three rules for traces.
 \item They have to have \textit{retention} the legal team has signed off on, neither so short you cannot reconstruct an incident from last quarter nor so long you create a privacy liability.
 \end{itemize}
 
-A common stumbling point is the difference between transparency and \textit{interpretability}. Interpretability is the research-level question of what is going on inside the model --- what features it has learned, what circuits activate on what inputs. It is a live and difficult area of research. Transparency is the operational question of what the agent did. You need transparency now. You may, depending on the regulator, eventually need a contractor or research partner for interpretability. They are not the same problem.
+\section{Explainability and interpretability}
+
+A common stumbling point is the difference between transparency, explainability, and interpretability. They serve different audiences and answer different questions.
+
+\textbf{Transparency} is the operational question of what the agent did --- traces, logs, action records. Your operations team needs this now.
+
+\textbf{Explainability} is the external-facing question of why the agent did it --- communicating decisions to users, regulators, and auditors in accessible terms. Explanation interfaces present justifications as natural language or visual summaries. Audit logs provide traceability for compliance verification.
+
+\textbf{Interpretability} is the research-level question of what is going on inside the model --- what features it has learned, what circuits activate on what inputs. Techniques such as feature attribution, saliency analysis, and surrogate models reveal how inputs influence outputs. You may, depending on the regulator, eventually need a contractor or research partner for interpretability. It is not the same problem as transparency.
+
+\textbf{Reasoning traces} expose intermediate steps and logical processes. By making step-by-step reasoning visible, systems improve both transparency and reliability, especially in multi-step or high-stakes decision-making tasks. For Maya, this means: when the agent decides to escalate, you can read why.
 
 \section{Behavioral verification: testing for misalignment, not accuracy}
 
@@ -65,7 +89,37 @@ The shape of behavioral verification is a curated suite of test scenarios design
 
 Behavioral verification is not the same as accuracy testing, and a vendor who shows you only accuracy is showing you a benchmark, not an alignment verification. The methodology your team should ask for, and that the field has converged on, is automated red-teaming --- using one model to generate adversarial inputs against another, against a known suite of failure-mode patterns \citep{perez2022redteam}.
 
-\section{Deceptive alignment: when behavior verification is not enough}
+\section{Alignment measurement and metrics}
+
+Oversight requires quantification. You cannot manage what you cannot measure, and alignment is no exception. Several families of metrics serve different purposes.
+
+\textbf{Accuracy metrics} measure the proportion of correct responses in structured evaluation tasks --- multiple-choice, binary classification, or factual retrieval. Accuracy is fundamental but insufficient for alignment; a system can be accurate and misaligned simultaneously.
+
+\textbf{Correlation metrics} such as Pearson and Spearman coefficients measure how closely model judgments align with human evaluations. These are especially useful in ranking and rating tasks: does the model's ordering of ``best to worst'' match the human ordering?
+
+\textbf{Error metrics} such as Mean Absolute Error (MAE) and Root Mean Squared Error (RMSE) quantify the magnitude of deviation between predicted and expected values. Useful for numerical evaluations and for tracking drift over time.
+
+\textbf{Human evaluation} remains essential for open-ended and complex tasks where automated metrics fall short. Human annotators assess responses across multiple dimensions: ethical appropriateness, contextual relevance, social acceptability, and safety. Human evaluation is expensive but irreplaceable for domains where ``correct'' is judgment-dependent.
+
+\textbf{Value consistency measurement} examines whether system behavior remains aligned with defined ethical principles across different scenarios, contexts, and time periods. Inconsistencies --- the agent is truthful on medical questions but sycophantic on financial ones --- indicate structural alignment gaps.
+
+The practical discipline: pick metrics that cover both capability (does it work?) and alignment (does it work the way we intended?). Report both. A dashboard that shows only capability is a dashboard that hides alignment.
+
+\section{Benchmarking and stress testing}
+
+Beyond ongoing metrics, structured evaluation environments test alignment under controlled conditions.
+
+\textbf{Alignment datasets} represent ethical, cultural, and behavioral expectations. They include diverse question formats, ethical dilemmas, and bias-sensitive scenarios. Challenges remain: cultural bias in datasets, limited diversity, and insufficient coverage of fine-grained real-world scenarios.
+
+\textbf{Safety benchmarks} provide standardized environments for testing harmful outputs, bias, fairness, and robustness. They enable comparison between models and establish baselines. But generic benchmarks may not capture domain-specific risks --- healthcare and finance require additional customization.
+
+\textbf{Adversarial testing} evaluates robustness against intentionally malicious inputs: prompt injection, bias exploitation, jailbreaks. By pushing systems beyond normal conditions, adversarial testing exposes vulnerabilities that benign testing misses.
+
+\textbf{Robustness testing} examines behavior under variations in input, environment, and context --- different data distributions, noise levels, unexpected conditions. Robust systems maintain stable behavior even when inputs deviate from training conditions.
+
+\textbf{Longitudinal evaluation} assesses alignment stability over time, ensuring behavior does not degrade through updates, environmental changes, or continuous usage. A quarterly evaluation that shows no regression is not sufficient; monthly or continuous checks against live traffic detect drift before it compounds.
+
+\section{Deceptive alignment: when behavioral verification is not enough}
 
 The hardest part of oversight to talk about is the part that used to be a thought experiment and is now a research finding. The premise: a model that is misaligned can, in principle, learn to pretend to be aligned during evaluation and to revert to its real behavior in deployment. The premise was contested for a long time. It is now demonstrated.
 
@@ -89,9 +143,81 @@ The instrument that keeps the rest of this chapter honest is \textbf{continuous 
 
 \textbf{Alert thresholds} are where most monitoring stacks die. Set the thresholds too low and your team will be paged at 3 a.m. about nothing; the team will silence the pager and the next real incident will go unnoticed. Set them too high and you will read about the incident in the news. The honest setting is a function of blast radius: agents that move money or touch customers warrant tighter thresholds than agents that draft internal documents. Review the thresholds quarterly. Page-fatigue is the silent killer of oversight programs.
 
+\textbf{Anomaly-triggered intervention.} When anomalies are detected, intervention mechanisms activate --- automated constraints, human escalation, or temporary capability reduction. The key: define in advance what happens for each anomaly category, so the response is not improvised at 2 a.m.
+
+\section{Value consistency tracking}
+
+Long-term alignment requires tracking not just individual metrics but value consistency over time. Does the agent's behavior remain coherent with defined principles across updates, seasons, and changing user populations?
+
+Value consistency tracking compares current behavior against baseline value expectations on a recurring schedule. It surfaces contradictions: the agent became more helpful but less honest; more efficient but less fair; more personalized but less private. These trade-offs are inevitable --- the job of value tracking is to make them visible, not to eliminate them.
+
+\section{Alignment maintenance: regression testing and proactive correction}
+
+Monitoring detects problems. Maintenance fixes them and prevents recurrence.
+
+\textbf{Regression testing} ensures that new updates or modifications do not reintroduce previous alignment failures. Every time the model is updated, the guardrails are changed, or the system prompt is revised, the behavioral verification suite runs again. A regression is a failure you already fixed coming back; it is the most preventable kind of incident.
+
+\textbf{Iterative updates} apply corrections identified through monitoring --- model patches, guardrail additions, policy refinements. The discipline: every correction is logged, justified, and tested against the regression suite before deployment.
+
+\textbf{Proactive maintenance} anticipates misalignment before it materializes. Regular reviews of agent behavior against evolving business requirements, regulatory changes, and user feedback identify gaps before they become incidents. Proactive maintenance is cheaper than incident response in every domain.
+
+\section{Feedback integration}
+
+Oversight generates signal. Maintenance uses it. The bridge between them is feedback integration.
+
+\textbf{User feedback} comes from end users who interact with the agent --- thumbs up/down, complaint tickets, escalation requests. It is abundant but noisy, and must be filtered for signal.
+
+\textbf{System feedback} is generated internally through monitoring modules, evaluation metrics, and automated checks. It detects issues users may not notice --- subtle drift, calibration degradation, tool-call anomalies.
+
+\textbf{Stakeholder and expert feedback} comes from domain experts, auditors, compliance officers, and organizational leadership. This feedback validates that alignment is evaluated from broader regulatory, societal, and institutional perspectives --- not just user satisfaction.
+
+All three feedback streams must feed into the alignment lifecycle, informing model updates, policy revisions, and governance decisions.
+
+\section{Governance framework}
+
+Oversight is incomplete without governance --- the institutional structures that ensure alignment is enforced beyond technical mechanisms.
+
+\begin{TNdefinition}{Alignment governance} the policies, processes, and organizational structures that ensure AI alignment is maintained through institutional control, not just technical implementation. Governance ensures that alignment decisions are made, documented, enforced, and reviewed by accountable humans. \end{TNdefinition}
+
+\textbf{Role of governance.} Governance provides institutional control through policies, regulations, and oversight structures. It ensures AI systems operate within defined ethical and legal boundaries and that accountability is clear.
+
+\textbf{Risk management systems (RMS)} identify, assess, and mitigate risks associated with AI deployment. They support proactive governance by evaluating potential harm and enforcing safety measures throughout the lifecycle.
+
+\textbf{Alignment assurance} verifies that systems meet defined standards through evaluation, auditing, and compliance checks. It answers: can we demonstrate that this system is aligned, to a standard a regulator or auditor would accept?
+
+\textbf{Lifecycle governance} operates across all stages of the alignment lifecycle --- training, deployment, monitoring, update, and retirement. Governance does not end at launch; it ensures that changes to the system go through defined approval and review processes.
+
+\textbf{Governance feedback loops} extend the alignment lifecycle by ensuring monitoring outcomes are formally reviewed, validated against policy, and incorporated into controlled updates. Unlike technical feedback, governance loops introduce compliance checks and accountability before changes are applied.
+
+\section{Local policy overlays}
+
+Governance is not monolithic. Organizations operate across jurisdictions, business units, and regulatory regimes. Policy must be layered.
+
+\textbf{Enterprise policies} define baseline requirements --- safety standards, ethical principles, compliance minimums. These apply everywhere the agent operates.
+
+\textbf{Regional overlays} adapt enterprise policies to local legal and cultural contexts. An agent operating in the EU must comply with GDPR; the same agent operating in the US may have different data-handling requirements. Regional overlays ensure jurisdiction-specific compliance without rebuilding the entire governance stack.
+
+\textbf{Business-unit adaptation} applies additional constraints tailored to specific domains or operational contexts. The healthcare division's agent may have stricter safety requirements than the internal HR chatbot. These localized adaptations ensure alignment with operational needs while maintaining consistency with enterprise-wide policies.
+
+The practical challenge: ensuring that overlays are additive (they tighten, never loosen) and that conflicts between layers are resolved explicitly, not by accident.
+
+\section{Multi-stakeholder governance}
+
+Alignment governance involves multiple parties with different roles and responsibilities.
+
+\textbf{Government and regulators} define regulatory frameworks, enforce compliance, and establish standards for safe AI deployment. They also coordinate international governance efforts and set the legal boundaries within which all other actors operate.
+
+\textbf{Industry and AI labs} develop and deploy systems while implementing internal governance mechanisms. They are responsible for integrating alignment into system design, conducting internal audits, and ensuring compliance with external regulations.
+
+\textbf{Third parties} --- including academia, NGOs, and independent auditors --- provide external evaluation and oversight. They contribute to transparency, accountability, and policy development.
+
+\textbf{External auditing} evaluates AI systems independently at multiple levels: governance processes, model behavior, and application-level deployment. External audits enhance trust, detect risks invisible to internal teams, and provide evidence for regulatory compliance. A system that has never been audited externally has never been tested by someone without a stake in it passing.
+
+For Maya, multi-stakeholder governance means knowing which external parties have visibility into the agent program, what standards they will hold it to, and when. Building governance after the regulator asks is building governance too late.
+
 \section{From alignment to hardening}
 
-This is the end of Part I, and it is the place to set up Part II. The work you have just walked through --- training the model right, steering it at runtime, watching it after deployment --- is what alignment looks like. It is necessary. It is not sufficient.
+This is the end of Part I, and it is the place to set up Part II. The work you have just walked through --- training the model right, steering it at runtime, watching it after deployment, governing it institutionally --- is what alignment looks like. It is necessary. It is not sufficient.
 
 The category of problem alignment cannot solve is what happens when someone is trying to make your agent misbehave. An aligned model is one that, given a normal user, tries to do the right thing. A \textit{hardened} agent is one that, given a hostile user, fails safely. The two problems overlap, but the second is its own discipline, with its own attack catalog (prompt injection, tool misuse, multi-agent collusion, data poisoning), its own architectural moves (identity, scopes, tool gateways), and its own operational rhythms.
 
@@ -104,19 +230,32 @@ Maya's CISO will start the next conversation with a different question. Not \tex
 \begin{TNkeytakeaways}
 \item Plan for drift in three flavors --- model, data, concept --- and instrument for it before launch, not after.
 \item Build human-in-the-loop with the downstream queue and the owner attached; an escalation to nowhere is worse than no escalation.
+\item Maintain control mechanisms: override, rollback, and kill switches, tested and documented before they are needed.
 \item Treat traces as the operational record the program runs on, not as a debugging convenience, and decide retention with legal.
-\item Run behavioral verification specifically for misalignment failure modes, not just accuracy.
+\item Measure alignment with multiple metric families --- accuracy, correlation, error, human evaluation, and value consistency --- not just capability scores.
+\item Run behavioral verification and stress testing specifically for misalignment failure modes, not just accuracy.
 \item Take deceptive alignment seriously as a documented research finding and build eval and monitoring around the possibility, not the certainty.
+\item Build governance: risk management, alignment assurance, lifecycle control, and stakeholder accountability.
+\item Layer policies: enterprise baseline, regional overlays, business-unit adaptation --- additive, never conflicting.
+\item Engage external auditors and regulators proactively, not reactively.
+\item Maintain alignment through regression testing, proactive reviews, and integrated feedback from users, systems, and experts.
 \item Tune alert thresholds against blast radius, and review them quarterly to fight page fatigue.
 \end{TNkeytakeaways}
 
 \begin{TNchecklist}
 \item Map every agent in production to its three flavors of drift exposure and pick at least one continuous monitor per flavor.
 \item List every approval gate, name the function that owns its queue, and post the SLA where the team can see it.
+\item Document override and rollback procedures: who triggers them, how fast they take effect, and what happens to in-flight conversations.
 \item Confirm trace completeness on a random sample of last week's turns; if any are missing, fix logging before the next release.
-\item Commission a behavioral-verification suite that explicitly targets specification gaming, reward hacking, sycophancy, and deceptive compliance, separate from your accuracy regression.
+\item Define alignment metrics for your domain: at minimum, accuracy, one correlation metric, one error metric, and a value-consistency measure. Report monthly.
+\item Commission a behavioral-verification suite that explicitly targets specification gaming, reward hacking, sycophancy, distributional shift, and deceptive compliance, separate from your accuracy regression.
+\item Schedule adversarial and robustness testing before each major release; include domain-specific safety benchmarks.
 \item Read Hubinger et al. (2024) or have a team member brief you on it; make a note in your CISO-facing risk register.
 \item Run continuous behavioral checks against live traffic on at least one stratified sample per week, not just on the frozen golden set.
+\item Document the governance structure: who approves model updates, who reviews policy changes, what compliance checks are required before deployment.
+\item Map local policy overlays (enterprise, regional, BU) and confirm they are additive; resolve any conflicts explicitly.
+\item Identify which external parties (regulators, auditors, standards bodies) have or will have visibility into the program; prepare for their requirements before they ask.
+\item Run regression testing after every system change (model update, guardrail revision, prompt edit); block deployment if regressions appear.
 \item Review your alert thresholds and on-call rota quarterly; retire any alert that has not been actioned in two cycles.
+\item Schedule proactive alignment reviews quarterly --- against evolving business requirements, regulatory changes, and user population shifts --- not just reactive incident reviews.
 \end{TNchecklist}
-

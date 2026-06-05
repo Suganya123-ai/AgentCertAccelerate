@@ -72,21 +72,43 @@ The \textbf{public registry entry} is the EU AI Act's specific obligation for An
 \begin{tikzpicture}[
   font=\sffamily\small,
   stage/.style={draw=TNNavy, line width=0.6pt, rounded corners=2pt,
-    fill=TNNavyTint, text width=2.3cm, align=center, inner sep=6pt,
-    minimum height=1.2cm, font=\sffamily\bfseries\color{TNNavy}},
+    fill=TNNavyTint, text width=2.35cm, align=center, inner sep=7pt,
+    minimum height=1.3cm, font=\sffamily\bfseries\color{TNNavy}},
   arr/.style={-{Stealth}, TNTealDeep, line width=0.7pt},
-  arrlabel/.style={font=\sffamily\footnotesize\itshape\color{TNBodyText}, align=center}
+  arrlabel/.style={font=\sffamily\footnotesize\itshape\color{TNBodyText},
+    align=center, text width=2.05cm}
 ]
-  \node[stage] (a) at (0,0)     {Develop};
-  \node[stage] (b) at (2.9,0)   {Pre-cert};
-  \node[stage] (c) at (5.8,0)   {Certify};
-  \node[stage] (d) at (8.7,0)   {Operate};
-  \node[stage] (e) at (11.6,0)  {Trigger};
-  \node[stage] (f) at (14.5,0)  {Re-certify};
-  \foreach \x/\y/\lbl in {a/b/{evidence}, b/c/{review}, c/d/{verdict},
-                          d/e/{incident or drift}, e/f/{reassessment}}
-    \draw[arr] (\x) -- node[arrlabel, above]{\lbl} (\y);
-  \draw[arr, dashed] (f.south) .. controls +(0,-1) and +(0,-1) .. node[arrlabel, below]{back to operate}  (d.south);
+  % ── Top row: forward certification path ──────────────────────────────
+  \node[stage] (a) at ( 0.0,  0) {Develop};
+  \node[stage] (b) at ( 4.1,  0) {Pre-cert};
+  \node[stage] (c) at ( 8.2,  0) {Certify};
+  \node[stage] (d) at (12.3,  0) {Operate};
+
+  % ── Bottom row: Trigger and Re-certify sit below the forward path
+  \node[stage] (e) at ( 4.1, -4.5) {Trigger};
+  \node[stage] (f) at ( 8.2, -4.5) {Re-certify};
+
+  % Top-row forward arrows; labels sit above the rectangles in open space.
+  \draw[arr] (a.east) -- (b.west);
+  \draw[arr] (b.east) -- (c.west);
+  \draw[arr] (c.east) -- (d.west);
+  \node[arrlabel] at ( 2.05, 0.95) {evidence};
+  \node[arrlabel] at ( 6.15, 0.95) {review};
+  \node[arrlabel] at (10.25, 0.95) {verdict};
+
+  % Operate → Trigger: route below the top row before turning left
+  \draw[arr]
+    (d.south) -- ++(0,-1.2) -| (e.north);
+  \node[arrlabel, text width=2.45cm] at (8.35, -1.55) {incident or drift};
+
+  % Trigger → Re-certify: right along the bottom row (label below)
+  \draw[arr] (e.east) -- (f.west);
+  \node[arrlabel, text width=2.25cm] at (6.15, -5.45) {reassessment};
+
+  % Re-certify → Operate: outer loop avoids the rectangles entirely
+  \draw[arr, dashed]
+    (f.south) -- ++(0,-0.7) -| (d.south);
+  \node[arrlabel, text width=2.3cm] at (13.25, -3.45) {back to operate};
 \end{tikzpicture}%
 }
 \caption{The certification lifecycle. Certification is not a one-time stamp; an incident or material change loops the agent back through reassessment.}

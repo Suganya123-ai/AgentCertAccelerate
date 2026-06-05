@@ -13,9 +13,11 @@ The binder is not glamorous. It is mostly things your team should have built whi
 
 The distinction worth holding onto is between \textit{evaluation evidence} (what your team measured) and \textit{certification evidence} (what the certifier records). The first one is for your team's confidence. The second one is for the binder. The eval results you produced in the evaluation chapters of Part IV are the raw material; the binder is the curated subset that survives a year of audits.
 
-\begin{TNdefinition}{Model card} a short, structured document published with a model (or an agent), describing what it was trained on, what it is good at, what it is bad at, and what has been tested. Originally proposed by Mitchell and colleagues \citep{mitchell2019modelcards}; now a near-universal expectation for any model going into production. \end{TNdefinition}
+The discipline of curation has a name: the \textbf{evidence chain}. Each artifact in the binder is a link --- model card, data lineage record, SBOM, risk assessment, red-team report, eval reports, behavior contract, owner sign-off. The chain runs from the agent's intended job, backward through every measurement that supports it, to the humans who approved it. An auditor who asks \textit{how do you know?} is asking to walk the chain. If any link is missing, stale, or unsigned, the chain does not hold. The eight sections that follow each cover one link.
 
 \section{Model cards and system documentation}
+
+\begin{TNdefinition}{Model card} a short, structured document published with a model (or an agent), describing what it was trained on, what it is good at, what it is bad at, and what has been tested. Originally proposed by Mitchell and colleagues \citep{mitchell2019modelcards}; now a near-universal expectation for any model going into production. \end{TNdefinition}
 
 A model card is the cover sheet of the binder. It is the document the next reader --- your CISO six months from now, an external assessor a year from now, a regulator two years from now --- will read first. If the card is sloppy, everything after it is suspect.
 
@@ -42,11 +44,11 @@ For agents whose footprint is bigger than a single model --- most enterprise age
 
 The next section of the binder is about the data the agent reads, retrieves, learns from, and writes. It has three parts.
 
-The first is \textbf{data lineage} --- for every dataset the agent touches in training or retrieval, you can answer where it came from, how it was filtered, and what licensing or consent regime governs it. For a retrieval-augmented agent, the lineage extends to the document collection it queries; if the agent retrieves from your customer-support knowledge base, the lineage record names the systems that feed it.
+The first is \textbf{data lineage} --- for every dataset the agent touches in training or retrieval, you can answer where it came from, how it was filtered, and what licensing or consent regime governs it. For a retrieval-augmented agent, the lineage extends to the document collection it queries; if the agent retrieves from your customer-support knowledge base, the lineage record names the systems that feed it. Pushkarna and colleagues \citep{pushkarna2022datacards} proposed \textit{Data Cards} as the standardized artifact for documenting datasets the way model cards document models; their format is a practical starting point for this section of the binder.
 
 The second is \textbf{data provenance} for the records the agent produces or modifies. A claims-triage agent that writes a recommendation to the case file is creating a record that downstream systems and regulators will rely on; the binder needs to show how those records are attributed to the agent, versioned, and disposed of when the case closes.
 
-The third is the \textbf{retention and access record} --- who can read what data, for how long, and under which legal regime. For agents that touch personal data in the EU, this section maps directly to the EU AI Act's data-governance obligation (Article 10), which requires that training, validation, and test data be relevant, representative, and to the extent possible free of errors and complete. Pushkarna and colleagues \citep{pushkarna2022datacards} proposed \textit{Data Cards} as the standardized artifact for documenting datasets the way model cards document models; their format is a good starting point for the data-lineage section of your binder.
+The third is the \textbf{retention and access record} --- who can read what data, for how long, and under which legal regime. For agents that touch personal data in the EU, this section maps directly to the EU AI Act's data-governance obligation (Article 10), which requires that training, validation, and test data be relevant, representative, and to the extent possible free of errors and complete.
 
 The audit committee is not going to read every row. They are going to spot-check. The binder needs to make spot-checking possible.
 
@@ -74,21 +76,41 @@ Two specific risks deserve their own sections in the binder for any agent above 
 
 \begin{TNwarning} A red-team report whose conclusion is \textit{no issues found} is a red-team report whose scope was too narrow. If the report has nothing to say, you tested the wrong thing or the wrong way. Send it back. \end{TNwarning}
 
+\section{Evaluation and benchmark reports}
+
+The binder needs the eval and benchmark reports your team produced in Parts III and IV --- but not all of them. The certifier is not re-running the evaluations. They are confirming that the evals were run, that results were recorded against agreed definitions, and that the version of the agent tested matches the version being certified.
+
+Three properties make an eval report certifiable rather than merely informative. First, a version tag that matches the SBOM: the report must identify the model, the prompts, and the tool configuration it was run against. Second, a pass/fail threshold that was set before testing began, not after the results were seen. A threshold chosen retrospectively is not a threshold; it is a rationalisation. Third, a named reviewer who understood the methodology and can speak to it under cross-examination.
+
+For benchmark reports specifically, the certifier will ask whether the benchmarks represent production-realistic conditions. A suite of academic benchmarks bearing no resemblance to the actual task the agent performs is a gap in coverage, not evidence of fitness. Chapter~\ref{ch:30-benchmarking-09-strategy} covered how to design production-relevant benchmarks; the pre-cert question is whether your team used them.
+
+What goes in the binder is the curated subset: the evaluations that test the agent against its stated job, the safety benchmarks that match the tier's requirements, and the regression results that show the agent has not degraded since the last version. The full eval log stays with your team. The binder carries the summary and the verdict.
+
 \section{The behavior contract}
 
-The last artifact of the binder is the one teams forget most often. The \textbf{behavior contract} is the short, public document that says what the agent will do, what it will not do, and what it will escalate. It is the document a customer reads when they want to know what they are interacting with, and it is the document your team can be held to when a regulator or a customer disputes an outcome.
+The artifact teams forget most often is the \textbf{behavior contract} --- the short, public document that says what the agent will do, what it will not do, and what it will escalate. It is the document a customer reads when they want to know what they are interacting with, and it is the document your team can be held to when a regulator or a customer disputes an outcome.
 
 A serviceable behavior contract is three paragraphs and a list. The first paragraph names the agent and its job. The second paragraph names the bounds --- the things it will refuse, the things it will escalate to a human, the kinds of decisions it will not make on its own. The third paragraph names the human or team responsible for the agent and how to reach them. The list at the bottom is the kinds of failure the agent will own up to: hallucinations, missed escalations, tool errors, the standard transparency report your team will publish for the next quarter.
 
-A behavior contract is voluntary today. It will not be voluntary much longer. The EU AI Act's \textit{Article 13} already requires transparency obligations for high-risk systems; the spirit of the obligation is the behavior contract. Get ahead of it.
+The EU AI Act's \textit{Article 13} already requires transparency obligations for high-risk systems; the spirit of the obligation is the behavior contract. Voluntary adoption now is the on-ramp to a requirement that is already visible on the horizon.
 
-\section{The evidence chain --- from eval to certification}
+\section{Named-owner sign-off}
 
-The pre-cert binder is not raw material. It is curated evidence. The discipline of curation is what this book has been calling the \textbf{evidence chain}: the traceable links from a deployed agent backward through its evals, benchmarks, training, and data. The chain is what an auditor follows when they ask, \textit{how do you know?}
+The eighth artifact is the simplest and the most important. Someone has to sign the binder.
 
-For a low-tier agent, the chain is short. For a high-tier agent --- the kind the EU AI Act calls high-risk, or the kind your CFO cares about because of dollar exposure --- the chain has to be defensible end to end. Each artifact in the binder is one link. The binder as a whole is the documented chain. When you walk into the conformity assessment in \autoref{ch:50-certification-19-process}, it is what you bring.
+Named-owner sign-off is not a field in the model card. It is a standalone record: a named individual, a date, a statement of scope, and an acknowledgement of the approval authority they hold. The statement is short --- \textit{I am accountable for the accuracy and completeness of this binder as of this date} --- but it is consequential. The certification review board will not issue a certificate to a binder that has no living, reachable human on the signature line.
 
-The eight artifacts, in summary, are listed below; most of these existed in some form before you started thinking about certification. The work of pre-certification is mostly the work of finding them, dating them, and putting them in one place.
+The sign-off matters for two reasons. The first is accountability: when a regulator or an incident review asks who approved this agent for production, the answer must be a person, not a team or a process. The second is continuity: when that person moves roles or leaves, the binder needs an ownership-transfer record --- the departing owner's final sign-off, the incoming owner's written acceptance, and the date of transfer. A binder whose owner has left without transferring accountability is, for certification purposes, unsigned.
+
+The sign-off requires no legal formality at the low or medium tier. A named entry in the binder's version control, with the owner's written acknowledgement, is sufficient. For high-tier agents and EU AI Act Annex III systems, the sign-off is a formal document that appears as a numbered artifact in the binder and is referenced in the Declaration of Conformity.
+
+\section{Assembling the chain}
+
+With all eight artifacts in place, the evidence chain is complete. Each artifact is a link: the model card establishes what the agent is and who owns it; the lineage record shows what data it is built on; the SBOM names every component and its version; the risk assessment and red-team report document what can go wrong and what has been tested; the eval and benchmark reports show the agent does its job; the behavior contract states so publicly; and the named-owner sign-off attaches a human being to the whole structure.
+
+For a low-tier agent the chain is short. For a high-tier agent --- the kind the EU AI Act calls high-risk, or the kind your CFO cares about because of dollar exposure --- the chain has to be defensible end to end. When you walk into the conformity assessment in \autoref{ch:50-certification-19-process}, the binder is what you bring.
+
+The eight artifacts are summarized below. Most existed in some form before certification was on anyone's agenda. The work of pre-certification is mostly the work of finding them, dating them, versioning them, and putting them in one place.
 
 \begin{table*}[ht]
 \centering
@@ -118,8 +140,10 @@ The eight artifacts, in summary, are listed below; most of these existed in some
 \item Pre-certification is mostly evidence curation, not new work --- almost everything in the binder should already exist somewhere.
 \item The eight-artifact binder (model card, lineage, SBOM, risk assessment, red-team report, eval reports, behavior contract, owner sign-off) is the minimum a serious certification expects.
 \item The model card is the cover sheet. If it is sloppy or stale, everything else in the binder is suspect.
-\item An agent SBOM goes beyond traditional software SBOM and enumerates models, prompts, tools, MCP servers, and retrieval indices by version.
-\item The evidence chain is what an auditor follows from a deployed agent back through every measurement that supports it. Make it traceable.
+\item An agent SBOM goes beyond a traditional software SBOM and enumerates models, prompts, tools, MCP servers, and retrieval indices by version.
+\item Eval and benchmark reports are only certifiable if they carry a version tag matching the SBOM, a pre-agreed pass/fail threshold, and a named reviewer.
+\item Named-owner sign-off is a standalone artifact, not a field in the model card. When the owner changes, the binder requires an ownership-transfer record.
+\item The evidence chain is what an auditor follows from a deployed agent back through every measurement that supports it. Make every link traceable.
 \end{TNkeytakeaways}
 
 \begin{TNchecklist}
@@ -128,7 +152,9 @@ The eight artifacts, in summary, are listed below; most of these existed in some
 \item Stand up a model card with the eight fields above. If your team cannot fill it in by Friday, the agent is not ready.
 \item Commission an architecture diagram and an SBOM for one production agent. Print them. Put them on a wall.
 \item Ask your CISO to run (or commission) a red-team engagement scoped to the OWASP LLM Top 10. Read the report yourself.
+\item Audit your eval reports: does each one carry a version tag matching the SBOM, a pre-agreed threshold, and a named reviewer? If not, it is not certifiable.
 \item Draft a behavior contract for one customer-facing agent. Publish it on your website.
+\item Record a named-owner sign-off for each agent in your portfolio. If the owner has changed since the last certification, file a transfer record now.
 \item Set a quarterly calendar reminder to refresh the binder for each tier-medium or tier-high agent.
 \end{TNchecklist}
 

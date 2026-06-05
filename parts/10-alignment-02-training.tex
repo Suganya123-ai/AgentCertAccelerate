@@ -1,4 +1,4 @@
-\TNchapter[Most of the alignment a deployed agent shows you was baked into it before you ever opened the console. Pre-training gives the model its knowledge; supervised fine-tuning and reinforcement learning from human feedback give it its instincts about what to do with that knowledge. This chapter walks the training stack in plain terms, names the three methods you will hear in the room --- supervised fine-tuning, RLHF, and Constitutional AI --- and tells you where each shows up in the agents your team is buying. By the end you will know which training choices your vendor has made, and which ones they are hiding from you.]{Aligning Agents During Training}
+\TNchapter[Most of the alignment a deployed agent shows you was baked into it before you ever opened the console. Pre-training gives the model its knowledge; supervised fine-tuning and reinforcement learning from human feedback give it its instincts about what to do with that knowledge. This chapter walks the training stack in plain terms, names the methods you will hear in the room --- supervised fine-tuning, RLHF, Constitutional AI, DPO, IPO, KTO, GRPO, and RLVR --- and tells you where each shows up in the agents your team is buying. It also covers the architectural alignment of agents themselves and the challenge of coordinating multiple agents. By the end you will know which training choices your vendor has made, and which ones they are hiding from you.]{Aligning Agents During Training}
 \label{ch:10-alignment-02-training}
 
 \starttwocol
@@ -11,6 +11,18 @@ The second pass teaches the model the \textit{shape} of the job --- how a helpfu
 
 The training stack is where alignment becomes a discipline rather than an aspiration. The vendor questions in this chapter let you tell which vendors take it seriously.
 
+\section{Forward and backward alignment}
+
+Before walking the training methods, a framing distinction is useful. Alignment work divides into two directions.
+
+\textbf{Forward alignment} focuses on embedding values directly into models during training and inference. It includes pre-training alignment, supervised fine-tuning, reinforcement learning, and runtime mechanisms that shape behavior before or during execution. Forward alignment is proactive --- it builds alignment in.
+
+\textbf{Backward alignment} focuses on evaluating and governing behavior after deployment. It includes monitoring, auditing, feedback integration, and corrective updates that ensure systems remain aligned over time. Backward alignment is reactive --- it catches alignment failures and corrects them.
+
+Neither direction is sufficient alone. Forward alignment without backward alignment assumes you got everything right at training time. Backward alignment without forward alignment assumes you can fix a fundamentally misaligned model through monitoring. Both assumptions fail in practice.
+
+The rest of this chapter covers forward alignment --- the training-time methods. \autoref{ch:10-alignment-04-oversight} covers backward alignment.
+
 \section{Supervised fine-tuning: teach by example}
 
 The cheapest, oldest move in the alignment toolkit is to show the model what good looks like. You take the pre-trained model, you assemble a set of curated examples --- a question, the answer you want, with the tone you want, in the format you want --- and you keep training. Do this for tens of thousands of examples and the model learns to imitate the pattern.
@@ -18,6 +30,8 @@ The cheapest, oldest move in the alignment toolkit is to show the model what goo
 \begin{TNdefinition}{Supervised fine-tuning (SFT)} taking a pre-trained model and continuing training on a smaller, hand-curated dataset that shows the kind of outputs you want. SFT is the training phase between general pre-training and the preference-learning methods that follow it. \end{TNdefinition}
 
 SFT is what installs an agent's instinct for \textit{how to talk}. The agent that always responds in bullet points, the one that refuses to give medical advice without a referral, the one that signs off with a polite closing --- those are SFT artifacts. You will hear vendors talk about \textit{instruction tuning}, which is the same thing applied to instructions specifically. Both are SFT.
+
+Types of SFT include instruction-based fine-tuning, where models learn to follow structured prompts, and contrastive fine-tuning, where both aligned and misaligned examples are used to improve discrimination between acceptable and harmful outputs.
 
 What SFT cannot do, on its own, is teach the model which of two plausible answers is better. The examples teach by example. They do not teach by preference. For that you need the next pass.
 
@@ -37,6 +51,14 @@ RLHF is also where two of the failure modes in \autoref{ch:10-alignment-01-what-
 
 \textit{Reward hacking} happens because the reward model is itself a model, and any model has shortcuts; the main model can learn to exploit those shortcuts instead of producing genuinely better answers. A well-run RLHF program watches for both. A badly-run one ships them.
 
+\section{Reward model design}
+
+Reward models play a critical role in guiding system behavior. They estimate the quality of outputs based on feedback signals, but must be carefully designed to avoid unintended optimization.
+
+The effectiveness of a reward model depends on three factors: the quality of feedback data it was trained on, its robustness to adversarial manipulation (can the agent find inputs that score high but are clearly wrong?), and its ability to generalize beyond training examples. A reward model that is accurate on the training distribution but brittle elsewhere will produce an agent that games the boundary.
+
+For Maya, the practical question is whether the vendor can describe how they validated their reward model against adversarial inputs and out-of-distribution scenarios. A vendor who cannot answer this question has shipped a reward model that the agent is already exploiting.
+
 \section{Constitutional AI and why it scaled}
 
 By 2022 the limits of pure RLHF were visible. Human preference data is expensive. Human raters disagree, and they disagree in patterned ways. Some of the things you want the model to refuse are unpleasant for humans to label thousands of times. Anthropic published a paper that proposed a different recipe: write down the principles you want the model to follow, and use the model itself to rate which of two responses follows them better. The result was \textit{Constitutional AI} \citep{bai2022constitutional}.
@@ -47,27 +69,71 @@ The practical implication for Maya is that she will hear this term in vendor dec
 
 \begin{TNinpractice}{Constitutional AI v2} Anthropic's 2023 follow-up to its 2022 paper sharpened the recipe by mixing constitution-derived AI feedback with a small amount of human feedback on the hardest cases. The takeaway for procurement: when a vendor says ``we use Constitutional AI,'' ask whether they mean only model-generated feedback or a hybrid. Most current production systems are hybrid; pure model-feedback systems are still a research configuration. \end{TNinpractice}
 
-\section{The newer methods you will see named}
+\section{The newer methods: DPO, IPO, KTO, GRPO, and RLVR}
 
-There are three or four newer training recipes --- \textit{direct preference optimization} (DPO), \textit{Kahneman-Tversky Optimization} (KTO), and \textit{group relative policy optimization} (GRPO) --- that you will see named in vendor decks from 2024 onward. They are newer training methods that matter to ML teams because they are cheaper or more stable than the original RLHF recipe; they do not matter to you because they do the same job. When a vendor says ``RLHF'' in 2026, they often mean one of these variants.
+From 2024 onward, several newer training recipes appear in vendor decks. They are cheaper or more stable than the original RLHF pipeline but solve the same problem. When a vendor says ``RLHF'' in 2026, they often mean one of these variants.
+
+\textbf{Direct Preference Optimization (DPO)} fine-tunes language models using pairs of preferred and rejected responses, skipping the reward model entirely. It learns directly from preference data, simplifying the pipeline and improving efficiency. DPO is especially useful for enterprise AI where models must reflect domain language, brand voice, compliance needs, and multilingual expectations.
+
+\textbf{Intervened Preference Optimization (IPO)} frames preference learning as a constrained optimization problem, regularized by divergence from a reference policy. It replaces the classification loss used in DPO with a mean-squared-error objective that anchors the trained model to a fixed or adaptive reference, enabling more stable alignment. IPO variants (IPO-MD, MIPO, A-IPO) extend to online, adaptive, and multimodal scenarios, and are particularly useful when reward modeling is unreliable or preference data is noisy and imbalanced.
+
+\textbf{Kahneman-Tversky Optimization (KTO)} aligns models using simple binary feedback --- thumbs-up or thumbs-down --- instead of paired comparisons. Inspired by prospect theory, it models how humans perceive gains and losses relative to a reference point. KTO works well with practical datasets like user ratings or support logs, making it attractive for enterprise deployments where paired preference data is hard to collect but binary feedback is abundant.
+
+\textbf{Group Relative Policy Optimization (GRPO)} employs reinforcement learning for post-training, particularly for tasks requiring complex reasoning. It is integrated into training pipelines for models like DeepSeek-R1 and is effective at enhancing reasoning capacity without the computational overhead of traditional RLHF.
+
+\textbf{Reinforcement Learning with Verifiable Rewards (RLVR)} represents the most consequential shift in 2025: moving from human preference labels to verifiable rewards for reasoning tasks. For math, code, and structured reasoning, a unit test, a proof checker, or a mathematical verifier provides a binary signal that is faster, cheaper, and more consistent than any human annotator. DeepSeek-R1 demonstrated that pure RLVR can produce emergent reasoning capabilities --- including self-reflection and dynamic strategy adaptation --- without any human-labeled reasoning traces.
 
 For Maya, the practical question is not which method the vendor used. It is what they did with it: what preferences they trained against, who labeled them, whether the constitution (if any) is reviewable, and how they tested for sycophancy and reward hacking on the way out. Those questions do not change across methods.
 
 \section{Pre-training choices alignment also depends on}
 
-Two extra knobs sit upstream of the methods above, both of them owned by the vendor, both worth asking about.
+Three extra knobs sit upstream of the methods above, all of them owned by the vendor, all worth asking about.
 
 The first is \textbf{value-prompt conditioning}: the practice of mixing examples of value-oriented behavior into the pre-training data, so the model has seen the relevant patterns before fine-tuning begins. A model pre-trained on data that includes safety-conscious medical advice is easier to fine-tune into a safety-conscious medical agent than one pre-trained only on the open web.
 
-The second is \textbf{safety-aware curriculum}: ordering the data so that the model is shown safer, less ambiguous material earlier and harder, more adversarial material later. This is the analog of how a hospital trains a new doctor.
+The second is \textbf{multi-task learning}: training value-related tasks such as bias detection or ethical classification alongside primary language objectives. This allows the model to simultaneously learn task performance and value distinctions, strengthening its ability to recognize harmful or inappropriate outputs before fine-tuning begins.
 
-Neither of these is something your team will do. Both are things your vendor either did or did not do, and a vendor who can describe them in specific terms is a vendor who has thought about the problem.
+The third is \textbf{safety-aware curriculum}: ordering the data so that the model is shown safer, less ambiguous material earlier and harder, more adversarial material later. This is the analog of how a hospital trains a new doctor.
+
+None of these is something your team will do. All are things your vendor either did or did not do, and a vendor who can describe them in specific terms is a vendor who has thought about the problem.
+
+\section{Agent architecture alignment}
+
+Beyond training the underlying model, alignment must be embedded in the agent's architecture --- the structural components that determine how it reasons, remembers, and acts.
+
+\textbf{Profile definition.} Agent behavior is guided by predefined roles, goals, and constraints that form its operational identity. A well-defined profile ensures consistent decision-making: the agent knows what it is, what it is responsible for, and what falls outside its scope.
+
+\textbf{Memory mechanisms.} Agents that retain context across interactions can maintain alignment over time --- remembering prior decisions, user preferences, and constraints. But memory also creates risk: stale or poisoned memories can drift the agent away from its intended behavior. Memory requires governance.
+
+\textbf{Reasoning and planning.} Structured reasoning improves decision quality. Agents that plan before acting --- decomposing goals into steps, evaluating alternatives, predicting consequences --- are more likely to remain aligned during complex tasks. Planning also makes behavior more auditable.
+
+\textbf{Tool use governance.} External tools enable agents to act in the world, but each tool call requires validation to ensure safe and aligned execution. Tool use is where abstract alignment meets concrete consequences.
+
+\textbf{Reflection loops.} Agents that evaluate their own decisions iteratively can catch misalignment before it reaches the user. A reflection loop asks: did my action match my goal? Was my reasoning sound? Should I try a different approach?
+
+\textbf{Value evaluator.} Evaluation modules assess outputs against value criteria --- acting as internal alignment checks. These can be separate models, rule-based filters, or constitutional principles applied before the agent commits an action.
+
+Together, these components form the agent's ``alignment architecture'' --- the structural substrate in which training-time alignment lives or dies at runtime.
+
+\section{Multi-agent alignment}
+
+When multiple agents operate together --- sharing tasks, exchanging information, or competing for resources --- alignment becomes a coordination problem. Three approaches dominate.
+
+\textbf{Cooperative learning.} Agents collaborate by sharing information, dividing roles, and jointly optimizing for shared objectives. The risk: agents may converge on locally optimal strategies that violate global constraints, or develop implicit coordination patterns that are opaque to human oversight.
+
+\textbf{Debate-based alignment.} Multiple agents challenge and refine each other's responses through structured argumentation. One agent proposes, another critiques, and the result is evaluated against both. Debate reduces individual agent failures by introducing adversarial checks, but depends on the evaluator's ability to judge the debate correctly.
+
+\textbf{Hierarchical agent systems.} Supervisory agents oversee subordinate agents, validating their decisions and enforcing constraints. This mirrors organizational structure: a manager-agent checks that worker-agents follow policy. The risk: if the supervisor is misaligned, everything downstream inherits the misalignment.
+
+For Maya, multi-agent alignment matters the moment she has more than one agent in production, or the moment a single agent calls another agent as a tool. The coordination failure is not a future problem; it is a today problem for any team running orchestration frameworks.
 
 \section{Trade-offs and the alignment tax}
 
 Every alignment intervention costs something. Training the model to refuse certain requests makes it less useful on adjacent legitimate ones. Training it to defer to a constitution makes it slower to give a direct answer. The industry term for this cost is the \textit{alignment tax}, and the only honest answer is that there is no way to bring it to zero.
 
 What you can do is keep the tax visible. Vendors who report only capability scores and not refusal-quality scores are showing you half the picture. Vendors who report both, and who can show you the trade-off curve they chose, are showing you the whole.
+
+A key challenge in training-time alignment is scalability: maintaining consistent alignment becomes more difficult with increasing model size, task diversity, and deployment complexity. Methods that work at one scale may fail at another.
 
 The next chapter looks at the levers you have once the model lands in your stack. The system prompt, the guardrails, the output filters --- those are not substitutes for the training. They are the second line, and they do not work without the first.
 
@@ -77,19 +143,24 @@ The next chapter looks at the levers you have once the model lands in your stack
 
 \begin{TNkeytakeaways}
 \item Know the three passes --- pre-training, supervised fine-tuning, preference learning --- and which one your vendor controls vs. which one you can influence.
+\item Understand the forward/backward alignment distinction: training builds alignment in; oversight catches what training missed.
 \item Treat RLHF as the technique that installs both helpfulness and sycophancy; ask about both when you evaluate a model.
 \item Read Constitutional AI as scalable, transparent, and partial --- the constitution catches what its authors knew to write down, and nothing else.
-\item Recognize newer methods (DPO, KTO, GRPO) by name without confusing the method with the problem; the method is implementation, the problem is yours.
+\item Recognize newer methods (DPO, IPO, KTO, GRPO, RLVR) by name without confusing the method with the problem; the method is implementation, the problem is yours.
+\item Design agent architecture for alignment: profile, memory, reasoning, tool governance, reflection, and value evaluation are structural, not cosmetic.
+\item Plan for multi-agent coordination from the first orchestration call, not after the first coordination failure.
 \item Insist on the alignment tax being visible: capability and refusal-quality together, never alone.
 \end{TNkeytakeaways}
 
 \begin{TNchecklist}
-\item Ask each shortlisted vendor which training methods they used (SFT, RLHF, Constitutional) and in what combination.
+\item Ask each shortlisted vendor which training methods they used (SFT, RLHF, Constitutional, DPO, RLVR) and in what combination.
 \item Ask who labeled the preference data --- number of raters, domain expertise, hourly cost --- and get something other than ``internal contractors.''
 \item If the vendor uses Constitutional AI, request the constitution (or a redacted version) and read it before the buy decision.
+\item Ask how the reward model was validated against adversarial inputs and out-of-distribution scenarios.
 \item Request the model card or its equivalent before procurement closes; treat its absence as a red flag.
 \item Ask for the refusal-quality and sycophancy evaluation results, not just the capability benchmark.
+\item Document the agent architecture: what memory it retains, what reflection loops exist, what value evaluators operate.
+\item If running multiple agents, document how they coordinate and who arbitrates conflicts between them.
 \item Confirm in writing what your team can fine-tune on top, and what your vendor will not let you change.
 \item Identify a single person --- yours --- who owns ``knowing what training choices our agent inherits.'' Without an owner, you will buy the next model without noticing.
 \end{TNchecklist}
-

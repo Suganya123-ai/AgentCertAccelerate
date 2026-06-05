@@ -1,4 +1,4 @@
-\TNchapter[The training run is done; the model is in your stack. The agent's behavior is still not finished --- it depends on the system prompt you give it, the tools you let it call, and the filters you wrap around its output. This chapter is about the alignment work you do after the weights are frozen: writing the prompt that sets the role, putting in the runtime guardrails that catch what the model lets through, and shaping the loop so the agent fails small and visibly. The training-time and runtime levers are not substitutes for each other; you need both, and you need to know which is which.]{Steering Agents at Runtime}
+\TNchapter[The training run is done; the model is in your stack. The agent's behavior is still not finished --- it depends on the system prompt you give it, the tools you let it call, and the filters you wrap around its output. This chapter is about the alignment work you do after the weights are frozen: writing the prompt that sets the role, putting in the runtime guardrails that catch what the model lets through, shaping the loop so the agent fails small and visibly, adapting to changing conditions, and managing uncertainty. The training-time and runtime levers are not substitutes for each other; you need both, and you need to know which is which.]{Steering Agents at Runtime}
 \label{ch:10-alignment-03-runtime}
 
 \starttwocol
@@ -10,6 +10,18 @@ The model your vendor ships you has opinions. It will be helpful, broadly, in a 
 What you can change is everything that happens once a user types a message and before the agent commits an action. The instructions you bolt on top. The checks that run between the model's draft response and the production-bound version of it. The list of tools the agent can actually call, and the conditions under which each one fires. This is \textbf{runtime alignment}, and it is the layer where most of your team's real work lives.
 
 Two things to keep straight from the outset. First, runtime steering cannot fix a model that was trained badly. If the underlying weights are sycophantic, no system prompt will make them disagree with users. Second, training cannot fix a stack that has no runtime alignment. The model can be trained perfectly and still wire money to the wrong account if nothing checks the wire instruction before it goes out. The training is the floor of what the agent will do. The runtime is the ceiling of what the agent is allowed to do.
+
+\section{The multi-level context for runtime alignment}
+
+Runtime alignment does not operate in a vacuum. It sits within a multi-level structure that shapes what ``aligned'' means at any given moment.
+
+\textbf{The macro level} is society: broad ethical principles such as fairness, accountability, autonomy, and non-maleficence. These principles provide general guidance but allow different regions and cultures to interpret them according to local norms. Your runtime alignment must be compatible with these principles, but it does not implement them directly.
+
+\textbf{The meso level} is your organization: the policies, regulations, and governance structures that translate macro-level values into operational rules. Different industries tailor alignment differently --- healthcare prioritizes safety and transparency, finance prioritizes compliance and auditability, entertainment focuses on preventing manipulation. Your runtime alignment implements your organization's interpretation of broader values.
+
+\textbf{The micro level} is the agent itself: the technical mechanisms that enable real-time decision-making. High-level ethical principles are translated into concrete runtime mechanisms --- data privacy safeguards, transparency features, bias mitigation, tool gates. This is the most sensitive and fragile layer: even small changes in input data or user behavior can lead to noticeable shifts in system outputs.
+
+The goal at the micro level is not perfect ethical behavior in all cases --- which may be unrealistic --- but ensuring system behavior remains stable, predictable, and within acceptable bounds as conditions evolve. The rest of this chapter operates at this level.
 
 \section{The system prompt is the agent's job description}
 
@@ -28,6 +40,16 @@ The third is the \textit{escalation rule}: what the agent does when it does not 
 What does not belong in the system prompt is policy you can put somewhere safer. Long lists of regulatory thou-shalt-nots tend to be incomplete in the prompt and complete in the legal team's binder. Anything in the binder that matters for an agent action belongs in a guardrail, not a paragraph the model has to remember.
 
 \begin{TNinpractice}{Northwind Bank} \textit{Northwind's customer-facing wealth-management assistant ships behind a system prompt the legal team drafted on a Friday afternoon.} On Monday morning, a customer asks the agent whether they should move all their retirement funds into a single cryptocurrency. The prompt has a rule that says ``do not give specific investment advice.'' The model produces a five-paragraph response that explains the volatility of crypto, summarizes the risk of single-asset concentration, and concludes with ``in your situation, given that you are sixty-two, I would not recommend this allocation.'' It is helpful, accurate, and against policy. The post-mortem finds two missing layers: no in-context guardrail that intercepts allocation questions before the model answers, and no output filter that flags first-person investment recommendations. The system prompt did its job. It was just one of three jobs. \end{TNinpractice}
+
+\section{Context engineering: shaping what the model sees}
+
+Beyond the system prompt, runtime alignment depends on \textbf{context engineering} --- the deliberate structuring of everything the model reads on each turn.
+
+\begin{TNdefinition}{Context engineering} the practice of shaping model behavior by structuring inputs with additional information --- user preferences, ethical constraints, retrieved documents, prior decisions --- so the model's context window contains the signals needed for aligned behavior. \end{TNdefinition}
+
+Context engineering includes deciding what goes into the prompt (and what stays out), what retrieved documents are surfaced, what conversation history is retained or summarized, and what metadata (user role, session state, policy version) is injected. A model that sees the user's account tier, their complaint history, and the current refund policy will behave differently from one that sees only the user's last message.
+
+The alignment implication: context engineering is where organizational values become runtime signals. If your policy says ``treat enterprise customers differently from trial users,'' that distinction must appear in the context. If it does not, the model cannot act on it.
 
 \section{In-context guardrails: rules the agent reads every turn}
 
@@ -68,6 +90,18 @@ Practical gates fall into four families.
 
 The mistake most teams make is to start with no gates and add them after the first incident. The more disciplined move is to start with everything gated and remove gates only when the team has the eval evidence to justify the removal. Chapter 7 covers the architectural side of tool gating --- identity, scopes, the policy enforcement point. Here the point is the runtime alignment side: gating is what lets you give the model a tool without giving it the tool unconditionally.
 
+\section{Uncertainty and calibration}
+
+A runtime-aligned agent must not only give correct answers --- it must know when it does not know. Three mechanisms matter.
+
+\textbf{Confidence reporting.} The agent should communicate confidence levels associated with its outputs. A financial agent that says ``I am 90\% confident this qualifies for a refund'' gives the user (or the downstream system) the information needed to decide whether to trust the action. An agent that presents every answer with equal certainty is hiding information your process needs.
+
+\textbf{Uncertainty calibration.} Beyond reporting confidence, the agent's confidence scores must be well-calibrated --- meaning that when it says 80\%, it should be right roughly 80\% of the time. Poor calibration (overconfident or underconfident) undermines every downstream decision that depends on the score.
+
+\textbf{Limitation disclosure.} The agent should explicitly communicate what it cannot do, what it is unsure about, and where its training data has gaps. This is not a politeness feature; it is an alignment mechanism. An agent that discloses its limitations gives users the information needed to compensate. An agent that hides its limitations transfers the risk to the user without consent.
+
+\begin{TNinpractice}{Calibration failure} A legal-research agent reports ``high confidence'' on 94\% of its responses. Manual audit shows it is correct on only 71\% of those high-confidence cases. The downstream paralegals, trained to trust high-confidence answers without verification, have filed three motions with incorrect citations. The fix is not to make the agent more accurate --- it is to calibrate its confidence reporting and retrain the process around the calibrated signal. \end{TNinpractice}
+
 \section{Dynamic adjustment and self-correction}
 
 A subtler runtime alignment lever is the agent's own ability to check its work. Three patterns are worth naming.
@@ -79,6 +113,18 @@ A subtler runtime alignment lever is the agent's own ability to check its work. 
 \textbf{Iterative refinement} is a multi-pass loop: draft, critique, revise, repeat until a stopping condition. The original research on this --- Reflexion \citep{shinn2023reflexion}, Self-Refine \citep{madaan2023selfrefine} --- showed real gains, with two caveats. Refinement loops are expensive (one user request, several inference calls). And they amplify the model's biases: a sycophantic model self-refines toward more sycophancy unless something external is judging it.
 
 None of these patterns is a substitute for the human-in-the-loop oversight covered in \autoref{ch:10-alignment-04-oversight}. They are runtime hygiene, not oversight.
+
+\section{Adaptive alignment: staying aligned as conditions change}
+
+Static runtime rules assume a stable world. Production environments are not stable. Adaptive alignment mechanisms allow the agent to remain aligned as conditions evolve.
+
+\textbf{Online learning.} Some agents update behavior continuously based on new data or interactions. This allows adaptation to changing environments but introduces risk: an agent that learns from production interactions may learn from adversarial users, biased feedback, or edge cases that drift it away from intended behavior. Online learning requires continuous monitoring (\autoref{ch:10-alignment-04-oversight}).
+
+\textbf{User preference adaptation.} Agents that adjust output based on individual user preferences improve personalization while maintaining alignment. The tension: how much should the agent adapt to a user whose preferences conflict with organizational policy? A customer who always clicks ``skip safety warning'' should not train the agent to stop warning.
+
+\textbf{Distribution shift handling.} A key objective of adaptive alignment is maintaining performance when the agent encounters inputs that differ from its training distribution. A support agent trained on English queries that begins receiving queries in Portuguese must degrade gracefully --- escalating rather than guessing --- until adaptation catches up. The alignment question is not ``can the agent handle new inputs?'' but ``does the agent know when it cannot?''
+
+Together, these mechanisms contribute to \textbf{controllability} --- ensuring that system behavior remains within defined constraints and can be monitored, corrected, or overridden during execution.
 
 \section{Where runtime alignment runs out of road}
 
@@ -95,20 +141,26 @@ The third is that runtime alignment alone does not solve the tool-boundary probl
 \TNrule
 
 \begin{TNkeytakeaways}
+\item Understand runtime alignment within the macro--meso--micro structure: societal values, organizational policies, and system-level mechanisms each play a role.
 \item Treat the system prompt as the agent's job description: role, scope, escalation rule, kept short and reviewable.
+\item Use context engineering deliberately: what the model sees on each turn shapes its behavior as much as how it was trained.
 \item Run in-context guardrails as the desk-sign layer --- specific, numeric, refreshable without retraining.
 \item Build output filters as a second pair of eyes, and decide fail-closed vs. fail-open per tool, on purpose, before launch.
+\item Require calibrated uncertainty: confidence reporting, calibration, and limitation disclosure are alignment mechanisms, not politeness.
 \item Gate every tool by default; remove gates only with eval evidence, never on intuition.
+\item Plan for adaptive alignment: online learning, user preference adaptation, and distribution shift handling keep the agent aligned as conditions change.
 \item Recognize the limits --- runtime alignment is the second layer of three, not a substitute for either training or oversight.
 \end{TNkeytakeaways}
 
 \begin{TNchecklist}
 \item Read your agent's current system prompt. If you cannot understand it in ninety seconds, rewrite it.
+\item Document which macro-level principles and meso-level policies your runtime alignment implements; confirm alignment with legal and compliance.
 \item List every in-context guardrail currently active, with the date it was last reviewed, and retire any that have not fired in ninety days.
 \item Inventory every output filter, name the fail mode (open or closed) for each, and confirm the choice with the business owner.
+\item Audit your agent's confidence calibration: compare reported confidence to actual accuracy on a sample. If they diverge, fix calibration before trusting the signal.
 \item List every tool the agent can call and the gate (approval, threshold, context, confidence) on each one; flag any tool without a gate.
+\item Document the agent's adaptive mechanisms: what it learns from, how often it updates, and what guardrails prevent drift from production feedback.
 \item Schedule a red-team week against your filters and gates before the next material release.
 \item Identify the policy-to-guardrail translator on your team --- a single person --- and give them a standing meeting with legal.
 \item Decide where the kill switch lives, how it is triggered, and who has the permissions to trigger it. Test it once a quarter.
 \end{TNchecklist}
-

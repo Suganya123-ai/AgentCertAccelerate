@@ -1,4 +1,4 @@
-\TNchapter[The point of certification is not to slow you down. It is to give you --- and the people on either side of your decision --- a defensible answer to the question of how you know an agent is ready. This chapter introduces the certification framework as a stack of three things: the standard you certify against, the evidence you collect, and the governance that approves it. It introduces risk-based tiers, walks the EU AI Act and ISO/IEC 42001 callouts that frame the rest of Part V, and gives you the template you can take to your audit committee in the second half of the chapter.]{The Certification Framework}
+\TNchapter[The point of certification is not to slow you down. It is to give you --- and the people on either side of your decision --- a defensible answer to the question of how you know an agent is ready. This chapter introduces the certification framework as a stack of three things: the standard you certify against, the evidence you collect, and the governance that approves it. It introduces risk-based tiers, surveys the three regulatory frameworks --- the EU AI Act, ISO/IEC 42001, and the NIST AI Risk Management Framework --- that shape the rest of Part V, and builds toward the three-layer stack diagram you can carry into your first audit-committee conversation.]{The Certification Framework}
 \label{ch:50-certification-17-framework}
 
 \starttwocol
@@ -23,7 +23,7 @@ The cleaner pattern is a \textbf{risk-based tier}. You assign each agent in your
 
 \begin{TNdefinition}{Risk-based certification tier} a classification (typically low, medium, or high) that determines how heavy a certification process an agent needs. Borrowed from financial regulation; in agents, the EU AI Act sets the floor for some tiers via Annex III. \end{TNdefinition}
 
-For a low-stakes internal agent (an HR FAQ bot, say), the answer can be light: a model card, a test report, an owner. For an agent that moves money or makes clinical recommendations, the answer needs to be heavy --- a documented risk assessment, a third-party assurance, a re-certification schedule, and a public registry entry. The risk-based tier you place an agent in determines what \textit{ready} means.
+The three tiers --- low, medium, and high --- each set a different threshold for what \textit{ready} means. A low-tier agent (an HR FAQ bot, a meeting summarizer) needs a model card, a functional eval report, and a named owner. A medium-tier agent adds a threat model, a red-team report, and review-board sign-off. A high-tier agent --- one that moves money, writes to systems of record, or makes clinical recommendations --- requires third-party assurance, a conformity assessment where mandated, and a public registry entry. The tier you assign an agent determines the work that follows.
 
 \begin{table*}[ht]
 \centering
@@ -42,13 +42,13 @@ For a low-stakes internal agent (an HR FAQ bot, say), the answer can be light: a
 \end{tabularx}
 \end{table*}
 
-Most enterprises end up with three tiers like this, with the boundary between medium and high set by whoever the regulator is. For agents deployed in the EU, the regulator has already drawn that boundary for you.
+Most enterprises settle on these three tiers, with the boundary between medium and high set by the relevant regulator. For agents deployed in the EU, that boundary has already been drawn for you.
 
 \begin{TNwarning} Over-certifying low-risk agents teaches your team that certification is bureaucratic. They will then under-certify the high-risk ones to prove the point. Match the rigor to the risk before you map a single artifact. \end{TNwarning}
 
-\section{The standards landscape Maya keeps hearing about}
+\section{The standards landscape}
 
-You will hear three names a lot in this part of the book: the EU AI Act, ISO/IEC 42001, and the NIST AI Risk Management Framework. They are not interchangeable. Each does something different, and your certification program has room --- and reason --- for all three.
+Three frameworks come up again and again in this part of the book: the EU AI Act, ISO/IEC 42001, and the NIST AI Risk Management Framework. They are not interchangeable. Each does something different, and your certification program has room --- and reason --- for all three.
 
 \begin{TNinpractice}{EU AI Act (Regulation 2024/1689)} The European Union's horizontal regulation for AI, in force since August 2024 \citep{euAIact2024}. For any agent you deploy in the EU, the Act sorts your system into a risk band: prohibited, high-risk, limited-risk, or minimal-risk. The high-risk band is enumerated in \textit{Annex III} --- biometric identification, critical infrastructure, education, employment, essential public and private services, law enforcement, migration, and the administration of justice. If your agent lands in Annex III, \textit{Article 6} triggers the heavy obligations; \textit{Articles 9 through 15} spell out the risk management, data governance, technical documentation, transparency, human oversight, and accuracy-and-robustness requirements; and \textit{Article 43} requires a \textit{conformity assessment} before launch and again on every material change. \autoref{ch:50-certification-19-process} formalizes the conformity-assessment procedure. For now, the sentence that matters: \textit{if any agent in your portfolio touches an Annex III domain, the EU AI Act is the law, and it sets your minimum bar.} \end{TNinpractice}
 
@@ -62,7 +62,9 @@ The third piece is the United States baseline.
 
 \begin{TNinpractice}{NIST AI RMF 1.0 + AI 600-1 (GenAI Profile)} The US National Institute of Standards and Technology's \textit{AI Risk Management Framework} \citep{nist-airmf-100-1} is voluntary, principles-based, and organized around four functions --- \textit{Govern, Map, Measure, Manage}. The companion \textit{NIST AI 600-1} \citep{nist-genai-600-1} is the Generative AI Profile, published July 2024, and it does the unglamorous work of naming the GenAI-specific risks (confabulation, dangerous content, data leakage, information integrity, environmental harm) and the controls. NIST AI RMF is what your federal-government customers will ask about; AI 600-1 is the checklist your enterprise can use to scope a GenAI-specific certification program. \end{TNinpractice}
 
-You do not have to choose one of these three. Most enterprises end up using all three: the EU AI Act sets the floor for EU-deployed agents, ISO/IEC 42001 provides the management-system spine, and the NIST documents fill in the GenAI-specific controls. Your legal team's first job is to map each ARIA pillar to the relevant articles, clauses, and functions across all three regimes.
+You do not have to choose one of these three. Most enterprises end up using all three: the EU AI Act sets the floor for EU-deployed agents, ISO/IEC 42001 provides the management-system spine, and the NIST documents fill in the GenAI-specific controls. Your legal team's first job is to map each of the four prior pillars --- alignment, hardening, benchmarking, and evaluation --- to the relevant articles, clauses, and functions across all three regimes.
+
+\begin{TNinpractice}{Northwind Bank} \textit{A regional commercial bank certifying its first customer-facing agent --- a wealth-management assistant that explains portfolio choices but never executes trades.} Northwind's first instinct was to apply its existing model risk management framework (SR 11-7 --- the US Federal Reserve's 2011 supervisory guidance on model risk management, the default banking framework for model governance, predating LLMs and AI agents) and call it done. Halfway through, the audit team realized SR 11-7 assumed a model with a fixed input and a fixed output. The agent had tools, memory, and the ability to be re-prompted by a user. The team ended up overlaying ISO/IEC 42001's AI management system controls on top of SR 11-7, mapping each ISO clause to an existing model-risk artifact where one existed and authoring a new one where it didn't. The result was a hybrid framework Northwind could defend to both its CRO and its regulators. \end{TNinpractice}
 
 \section{Who decides --- the certification authority}
 
@@ -70,7 +72,7 @@ A certification artifact is signed by someone. The question is by whom, and agai
 
 In most enterprises, that body is a \textbf{certification review board}. It includes a product or engineering lead (who knows what the agent is supposed to do), a domain subject-matter expert (who knows whether it actually does it), a security and risk lead (who owns the threat model and the kill switch), and a compliance or legal lead (who owns the regulator-facing artifacts). For high-tier agents, the board also includes someone who does not work for the company --- an external assessor, an internal-audit partner, or, where the EU AI Act demands it, a notified body.
 
-The discipline Maya will hear named in vendor and consultancy decks is \textit{Know Your Agent (KYA)}. It is an emerging concept, deliberately analogous to Know Your Customer in financial services. The idea is that an agent's owner is responsible for knowing, at any moment, what data the agent sees, what tools it can call, what evaluations it has passed, and who approved its current deployment. KYA is not yet a formal standard. It is a useful framing for the discipline a certification authority enforces; we treat it that way in this book.
+An emerging discipline increasingly named in vendor and consultancy literature is \textit{Know Your Agent (KYA)}, deliberately analogous to Know Your Customer in financial services. The idea is that an agent's owner is responsible for knowing, at any moment, what data the agent sees, what tools it can call, what evaluations it has passed, and who approved its current deployment. KYA is not yet a formal standard. It is a useful framing for the discipline a certification authority enforces; we treat it that way in this book.
 
 \begin{TNdefinition}{Know Your Agent (KYA)} the emerging discipline (analogous to KYC) by which an agent's owner is accountable for, at any moment, what data the agent sees, what tools it can call, what evaluations it has passed, and who approved its current deployment. Not yet a formal standard. \end{TNdefinition}
 
@@ -86,7 +88,7 @@ A certification framework, in other words, is a stack of three things:
 \item The \textit{governance} that approves, denies, and re-evaluates.
 \end{enumerate}
 
-Each of the next three chapters covers one layer of the stack. \autoref{ch:50-certification-18-pre-cert} walks the evidence --- the model cards, data governance documents, security posture summaries, and SBOM that have to exist before certification can even start. \autoref{ch:50-certification-19-process} walks the process --- who reviews, against what criteria, with what authority to say no --- and formalizes the EU AI Act Article 43 conformity assessment. \autoref{ch:50-certification-20-keeping-certified} closes the part with what changes after certification: recertification triggers, version control, and the public disclosure obligations a serious agent program owes its users.
+Each of the next three chapters covers one layer of the stack. \autoref{ch:50-certification-18-pre-cert} walks the evidence layer --- the model cards, data governance documents, security posture summaries, and SBOM that have to exist before certification can even start. \autoref{ch:50-certification-19-process} walks the governance layer --- who reviews, against what criteria, with what authority to say no --- and formalizes the EU AI Act Article 43 conformity assessment. \autoref{ch:50-certification-20-keeping-certified} closes the part with what changes after certification: recertification triggers, version control, and the public disclosure obligations a serious agent program owes its users. When you arrive at the conformity assessment in Chapter 19, the pre-cert binder assembled in Chapter 18 is what you bring.
 
 \begin{figure*}[ht]
 \centering
@@ -112,8 +114,6 @@ Each of the next three chapters covers one layer of the stack. \autoref{ch:50-ce
 }
 \caption{The certification stack. Standards set the criteria; evidence shows you met them; governance approves, denies, and revisits the verdict.}
 \end{figure*}
-
-\begin{TNinpractice}{Northwind Bank} \textit{A regional commercial bank certifying its first customer-facing agent --- a wealth-management assistant that explains portfolio choices but never executes trades.} Northwind's first instinct was to apply its existing model risk management framework (SR 11-7 --- the US Federal Reserve's 2011 supervisory guidance on model risk management, the default banking framework for model governance, predating LLMs and AI agents) and call it done. Halfway through, the audit team realized SR 11-7 assumed a model with a fixed input and a fixed output. The agent had tools, memory, and the ability to be re-prompted by a user. The team ended up overlaying ISO/IEC 42001's AI management system controls on top of SR 11-7, mapping each ISO clause to an existing model-risk artifact where one existed and authoring a new one where it didn't. The result was a hybrid framework Northwind could defend to both its CRO and its regulators. \end{TNinpractice}
 
 \TNrule
 

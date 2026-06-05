@@ -100,20 +100,38 @@ The \textit{regulator} (or its proxy --- the external assessor, the customer's a
 \begin{tikzpicture}[
   font=\sffamily\small,
   corner/.style={draw=TNNavy, line width=0.8pt, rounded corners=3pt,
-    fill=TNNavyTint, text width=3.6cm, align=center, inner sep=8pt,
+    fill=TNNavyTint, text width=3.8cm, align=center, inner sep=8pt,
     minimum height=1.4cm, font=\sffamily\bfseries\color{TNNavy}},
-  rel/.style={font=\sffamily\footnotesize\itshape\color{TNTealDeep}, align=center}
+  rel/.style={font=\sffamily\footnotesize\itshape\color{TNTealDeep},
+    align=center, text width=2.4cm}
 ]
-  \node[corner] (owner)  at (-5,0) {Owner\\\footnotesize\mdseries product / engineering};
-  \node[corner] (board)  at ( 5,0) {Review board\\\footnotesize\mdseries risk, legal, security};
-  \node[corner] (reg)    at ( 0,-3.5) {Regulator or external\\\footnotesize\mdseries assessor, auditor, registry};
+  \node[corner] (owner)  at (-6.0,  0)   {Owner\\\footnotesize\mdseries product / engineering};
+  \node[corner] (board)  at ( 6.0,  0)   {Review board\\\footnotesize\mdseries risk, legal, security};
+  \node[corner] (reg)    at ( 0,   -5.0) {Regulator or external\\\footnotesize\mdseries assessor, auditor, registry};
 
-  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (owner)  -- node[rel, above]{evidence binder} (board);
-  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (board)  -- node[rel, above]{conditions / findings} (owner);
-  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (board)  -- node[rel, right, xshift=4pt]{conformity report} (reg);
-  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (reg)    -- node[rel, left,  xshift=-4pt]{standard updates} (board);
-  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (owner)  -- node[rel, left,  xshift=-4pt]{incidents, disclosures} (reg);
-  \draw[-{Stealth}, TNTealDeep, line width=0.7pt] (reg)    -- node[rel, right, xshift=4pt]{registry obligations} (owner);
+  % Top edge: opposing bends place one label above the arc, one below
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt]
+    (owner) to[bend left=12]
+    node[rel, above, yshift=2pt]{evidence binder} (board);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt]
+    (board) to[bend right=12]
+    node[rel, below, yshift=-2pt]{conditions / findings} (owner);
+
+  % Right leg: same bend direction on each arrow produces opposite arcs
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt]
+    (board) to[bend left=10]
+    node[rel, right, xshift=6pt]{conformity report} (reg);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt]
+    (reg) to[bend left=10]
+    node[rel, left, xshift=-6pt]{standard updates} (board);
+
+  % Left leg: same bend direction on each arrow produces opposite arcs
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt]
+    (owner) to[bend right=10]
+    node[rel, left, xshift=-6pt]{incidents, disclosures} (reg);
+  \draw[-{Stealth}, TNTealDeep, line width=0.7pt]
+    (reg) to[bend right=10]
+    node[rel, right, xshift=6pt]{registry obligations} (owner);
 \end{tikzpicture}%
 }
 \caption{The governance triangle. Each corner watches another; no single party runs the process alone.}
