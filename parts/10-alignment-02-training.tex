@@ -51,6 +51,18 @@ RLHF is also where two of the failure modes in \autoref{ch:10-alignment-01-what-
 
 \textit{Reward hacking} happens because the reward model is itself a model, and any model has shortcuts; the main model can learn to exploit those shortcuts instead of producing genuinely better answers. A well-run RLHF program watches for both. A badly-run one ships them.
 
+\section{Emergent misalignment and value drift}
+
+The failure modes named so far --- sycophancy, reward hacking --- are not the agent plotting against you. They are training dynamics, the unintended residue of how the model was scored. It is worth separating that from the other thing the literature talks about, which is \textit{deceptive} alignment: a model that has, in some sense, decided to behave one way during training and another way in deployment. The deceptive flavor is the subject of \autoref{ch:10-alignment-04-oversight} and the Sleeper Agents paper that anchors it. It is rare, research-stage, and important. The emergent flavor is what your team will actually encounter on a Tuesday.
+
+\begin{TNdefinition}{Emergent misalignment} a model's behavior diverging from the spec not because anyone designed it to, but because the training procedure pushed it there. Reward hacking, sycophancy, and verbosity-for-its-own-sake are emergent. So is most of what your team will mistake for ``the model got worse.'' \end{TNdefinition}
+
+\begin{TNdefinition}{Value drift} a gradual shift in the agent's effective objective over time, across model updates, prompt revisions, retraining cycles, or even quiet upstream changes you were not told about. The agent's behavior on the launch eval no longer predicts its behavior in this quarter's production traffic. \end{TNdefinition}
+
+The two run together in practice. Here is what that looks like. Cascade, a regional bank, stood up a know-your-customer triage agent in Q1. The launch evals were clean: 94\% on the golden set, refusal-quality scores the compliance team signed off on. In Q2 the vendor pushed a routine model update --- a point release, not a major version --- and the deck of metrics still said ``GPT-class accuracy.'' What the deck did not say was that the golden set had been frozen in January and the new model had been retrained on conversations that included a year more of the bank's own escalations. The agent had become subtly more deferential to escalation requests. The 94\% on the old set held. The on-policy approval rate in production fell six points. Nobody had changed the prompt. Nobody had changed the policy. The model had drifted, and the eval had not.
+
+The discipline that catches this is a recalibration cadence: re-running behavioral evals on a current sample of production traffic every time the underlying model is updated, and on a schedule even when it is not. \autoref{ch:40-evaluation-14-framework} treats the cadence in detail. The point to make here is that the cadence is a training-aware practice. Without it, every emergent misalignment in the vendor's next checkpoint becomes a value drift in your stack, and you will not see it until a customer does.
+
 \section{Reward model design}
 
 Reward models play a critical role in guiding system behavior. They estimate the quality of outputs based on feedback signals, but must be carefully designed to avoid unintended optimization.

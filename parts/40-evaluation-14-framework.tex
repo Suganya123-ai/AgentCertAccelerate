@@ -89,9 +89,9 @@ The framework lift for tool-use evaluation is mostly deterministic. Was the righ
 
 A framework only does work if it runs on a schedule. The default cadence for an enterprise agent has three layers. On every commit, the deterministic checks run as part of CI/CD (continuous integration / continuous delivery); if they fail, the build fails. On every release --- every prompt change, every model upgrade, every retrieval-index refresh --- the full offline evaluation runs, including the LLM-as-judge portion. On a fixed quarterly cadence (or whenever drift triggers it), the judges get recalibrated against the human-graded set, and a portion of the golden dataset gets refreshed from new production traffic.
 
-\begin{table*}[!ht]
-\centering
-\caption{Evaluation cadence reference card.}
+\stoptwocol
+\begin{center}
+\captionof{table}{Evaluation cadence reference card.}
 \small
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -104,7 +104,8 @@ Quarterly          & Refresh portion of golden dataset                 & Re-base
 On drift alert     & Targeted re-evaluation + recalibration            & Trigger recertification \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{center}
+\starttwocol
 
 The cadence is the difference between a framework that catches regressions and a framework that documents them. The teams that ship reliable agents have the cadence written down before they ship the first version. The teams that ship unreliable ones discover, six months in, that the framework has not been re-run since June and nobody is sure why.
 

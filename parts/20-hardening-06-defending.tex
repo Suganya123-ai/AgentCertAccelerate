@@ -97,23 +97,33 @@ Maintained by the OWASP GenAI Security Project, the list is the security-communi
 
 \begin{table*}[tb]
 \centering
+\small
 \caption{OWASP LLM Top 10 (2025) mapped to hardening layers.}
-\begin{tabular}{lll}
+\begin{tabularx}{\textwidth}{@{}p{0.27\textwidth}XX@{}}
 \toprule
 \textbf{OWASP risk} & \textbf{What it is} & \textbf{Layer it lands at} \\
 \midrule
 LLM01: Prompt Injection & Direct or indirect instruction override & Model / Data \& RAG \\
+\addlinespace
 LLM02: Sensitive Information Disclosure & Leaking secrets, PII, or proprietary context & Data \& RAG / Output validation \\
+\addlinespace
 LLM03: Supply Chain & Compromised models, plugins, datasets & Supply chain \\
+\addlinespace
 LLM04: Data and Model Poisoning & Adversarial training data or fine-tunes & Supply chain / Model \\
+\addlinespace
 LLM05: Improper Output Handling & Unvalidated agent output executed downstream & Output validation / Runtime \\
+\addlinespace
 LLM06: Excessive Agency & Agent has more authority than its task requires & Runtime / Orchestration \\
+\addlinespace
 LLM07: System Prompt Leakage & Disclosure of system instructions & Model \\
+\addlinespace
 LLM08: Vector and Embedding Weaknesses & RAG-index or embedding attacks & Data \& RAG \\
+\addlinespace
 LLM09: Misinformation & Confidently wrong agent output reaching action & Validation / Monitoring \\
+\addlinespace
 LLM10: Unbounded Consumption & Denial-of-Wallet, runaway loops & Runtime / Monitoring \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table*}
 
 The mapping is not a recipe. It is a guarantee that when your team builds the identity-and-access controls and the operational stack of the next two chapters, every one of the OWASP categories has a layer that is supposed to catch it. If the table has a blank row in your security review, that row is the one the auditor will find first.

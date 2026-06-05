@@ -61,6 +61,16 @@ Here is the practical version. A vendor shows you a benchmark where the agent pa
 
 Inner alignment is why ``the benchmark looks great'' is not an answer. The benchmark is your test on the model's home turf. Production is the away game.
 
+\section{Alignment as a system: three levels, three layers}
+
+The outer/inner split is one cut through the problem. There is a second cut, orthogonal to it, that you will need once more than one person is in the room. Call it macro, meso, micro. \textbf{Macro} is the world the agent is being aligned with: the values, regulations, professional norms, and social expectations that say what a legitimate customer-service interaction or a legitimate clinical recommendation looks like. \textbf{Meso} is your organization: the policies, the deployment context, the risk appetite, the things your firm has decided count as acceptable that the wider world has not opined on. \textbf{Micro} is the model in your stack: its weights, the system prompt you wrote, the tools you wired up, the guardrails sitting in front of it.
+
+The three temporal layers from the previous section --- training, runtime, oversight --- map onto these three levels, and the mapping is worth carrying with you. \textit{Oversight} is mostly macro-facing: the artifact the regulator, the auditor, and the public will eventually scrutinize is the record of what the agent did and whether the world accepts it. \textit{Runtime} is mostly meso-facing: the system prompt and the guardrails are where your organization's intent gets written down and enforced. \textit{Training} is mostly micro-facing: the question is whether the weights themselves behave the way the spec says.
+
+\begin{TNdefinition}{Macro, meso, micro alignment} macro is alignment with the world's values and rules; meso is alignment with your organization's policies and risk posture; micro is alignment of the model itself with the spec it was given. Every deployed agent has to clear all three. \end{TNdefinition}
+
+The temporal layers are how your engineers think about when to act. The macro/meso/micro levels are how your executives think about who decides. When the two vocabularies meet in the same room without translation, the meeting goes badly. Carry both.
+
 \section{Value specification: encoding what we actually want}
 
 Translating human values into formal objectives is the core challenge beneath outer alignment. Human values are implicit, context-dependent, and often conflicting. Several approaches have been proposed, and each carries its own limitations.

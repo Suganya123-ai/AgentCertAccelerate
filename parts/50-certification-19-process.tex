@@ -84,6 +84,42 @@ The whole meeting is ninety minutes. If it takes longer, the binder was not read
 
 The \textit{approved with conditions} outcome is the one teams underuse. A condition is a specific fix the team must complete and document before the certification is final. Conditions force the team to close real gaps without holding up a launch for one missing artifact. Used well, they raise the binder's quality over time. Used poorly, they become a way for the board to avoid saying no. The discipline is to make conditions concrete, dated, and signed off by the owner.
 
+\section{The certification decision rubric}
+
+The eight pre-cert artifacts from \autoref{ch:50-certification-18-pre-cert} tell the team \textit{what} evidence to put in the binder. They do not tell the review board \textit{how} to decide what to do with it. The rubric below is the bridge --- the structured judgment that turns a stack of artifacts into one of the three outcomes the previous section named: approved, approved with conditions, or denied.
+
+The rubric is mechanical at the artifact level. For each of the eight artifacts, the board records one of three states --- \textit{present and complete}, \textit{deficient}, or \textit{missing}. The mapping to outcomes follows from there. A binder where all eight are present and complete is an approved binder. A binder with one or more deficient artifacts is a candidate for approved with conditions, provided each deficiency comes with a remediation plan and a deadline the board accepts. A missing artifact is an automatic denial; so is a deficient artifact whose owner cannot produce a credible plan to close the gap. The discipline is to write the state of each artifact down before the vote, not after.
+
+\stoptwocol
+\begin{center}
+\captionof{table}{The certification decision rubric --- the eight pre-cert artifacts and what each state looks like at the review board.}
+\small
+\begin{tabular}{@{}p{3.4cm}p{5.6cm}p{5.6cm}@{}}
+\toprule
+\textbf{Artifact} & \textbf{Present and complete} & \textbf{Deficient} \\
+\midrule
+Model card & Current, signed by the named owner, matches the deployed model version. & Stale, unsigned, or describes a prior model revision. \\
+\addlinespace
+Threat model & Covers the agent's tools, data, and trust boundaries; reviewed in the last cycle. & Generic template, or omits a tool or data path the agent actually uses. \\
+\addlinespace
+Red-team report & Independent team, scoped to the agent's intended use, dated within the cycle. & Run by the build team, or scoped to the model rather than the deployed system. \\
+\addlinespace
+SBOM & Generated on the last deploy, lists every component including prompts and indices. & Out of date, or omits prompts, retrieval indices, or MCP-server tools. \\
+\addlinespace
+Eval report & Reproducible, versioned eval set, traces match production distribution. & Eval set drifts from production, or thresholds were set after the run. \\
+\addlinespace
+Behavior contract & Versioned, references the alignment specification, signed by product and risk. & Marketing copy, or silent on refusal and escalation behavior. \\
+\addlinespace
+Data lineage & Sources, licenses, retention, and processing steps recorded end to end. & Lineage breaks at a vendor boundary or a manual upload step. \\
+\addlinespace
+Owner sign-off & Current named owner has signed within the cycle and accepts accountability. & Signed by a prior owner, or signed without a documented handoff. \\
+\bottomrule
+\end{tabular}
+\end{center}
+\starttwocol
+
+The rubric is a floor, not a ceiling. Even when every artifact is present and complete, the board retains the authority to deny on substantive grounds --- a model card that is current and signed but documents a model the board considers unfit for the use case, an eval report that meets every threshold against an eval set the board does not believe reflects production. The artifacts let the board ask the right questions; they do not answer them. A serious review board uses the rubric to clear the procedural ground so it can spend its time on the questions that matter.
+
 \section{The governance triangle: owner, board, regulator}
 
 Certification works because three parties watch each other.
