@@ -100,6 +100,20 @@ The second: \textit{what does the cost look like at 10x volume?} The token-cost 
 
 The third: \textit{what does the cost look like in six months, if the model is upgraded twice?} The vendor pricing today is unlikely to be the vendor pricing in six months. The contract terms matter as much as the per-token cost.
 
+\begin{TNnew}
+\section{The other meter: people}
+
+Token cost is the meter every team learns to read. It is also the meter that under-reports the bill by roughly an order of magnitude. The agent's true unit cost is dominated by the humans you have to keep around to make sure the agent does not embarrass you on a Sunday night.
+
+The Google SRE book is the cleanest scaffold here, and the numbers transfer \citep{google-sre-book}. A service that runs 24/7 needs at least eight engineers on a single-site rotation to be on-call sustainably, or six per site for a two-site follow-the-sun. Below that, you are not running an on-call; you are running a burnout pipeline. Of an SRE's time, the workbook is explicit: at least 50\% goes to engineering, no more than 25\% to on-call, and the remainder to other operational work. A shift that absorbs more than two incidents is, by Google's own math, over capacity --- each incident is budgeted at roughly six hours of root cause, remediation, and postmortem.
+
+Layer the agent-specific overhead on top. Industry TCO writeups converge on a rule of thumb of \textbf{0.25 to 0.5 FTE of an AI engineer per non-trivial production agent} for prompt upkeep, eval refresh, and model-version churn --- the work \autoref{ch:10-alignment-04-oversight} called \textit{behaviour drift}. At a fully loaded \$300K, that is \$75K to \$150K per agent per year, before SRE, before the reviewer pool from \autoref{ch:10-alignment-04-oversight}, before vendor observability, before retraining inference cost.
+
+A working rule for a medium-tier agent, before tuning to your numbers: \textbf{0.5 SRE plus 0.25 AI engineer plus the reviewer pool that the escalation rate implies, with a 30\% on-cost for vacation, training, and bench}. A high-tier agent doubles the SRE share and adds a named on-call ML engineer. McKinsey's \textit{State of AI 2025} reports that high-performing companies allocate more than 20\% of their digital budget to AI, against 7\% for the rest \citep{mckinsey-state-of-ai-2025}; the gap is mostly people, not tokens.
+
+The CFO's question is not \textit{what does the agent cost per call}. It is \textit{what does the agent cost per call divided by the team it takes to keep it running}. Get both numbers before the budget conversation.
+\end{TNnew}
+
 \TNrule
 
 \stoptwocol

@@ -29,6 +29,26 @@ The mistake teams make with HITL is to install it as theatre. A ``review'' queue
 
 \begin{TNwarning} A guardrail that escalates to a downstream owner who does not exist is worse than no guardrail. The agent has been instructed to wait, the customer is waiting, nobody is coming. Before you install an escalation, build the queue, staff the queue, and measure the queue's clearance time. The escalation that nobody owns is the policy that nobody follows. \end{TNwarning}
 
+\begin{TNnew}
+\subsection*{Sizing the queue}
+
+The previous warning has a numerical companion. If you cannot work out how many humans the escalation queue will need, you have not designed the queue --- you have written a wish.
+
+The arithmetic is unforgiving but simple. Take the agent's projected daily volume, multiply by the escalation rate, and you have the queue's daily inflow. A customer-service agent doing 10{,}000 turns a day at a 2\% escalation rate puts \textbf{200 items} into a human queue every day. A clinical triage assistant doing 1{,}000 cases a day at a 10\% escalation rate puts 100 items in --- but each one is heavier.
+
+Reviewer throughput is domain-bound. The high-volume floor, set by content-moderation operations at scale, is around 200 simple decisions per reviewer per day (the publicly reported Facebook ratio is roughly 3 million flagged items against 15{,}000 moderators \citep{mit-tr-fb-moderators-2020}). For a regulated-domain agent --- claims adjudication, clinical review, financial-advice escalation --- the realistic ceiling is 40 to 80 cases per reviewer per day, because each case carries reading, a chart note, and a sign-off. Tonneau et al.'s HateDay study \citep{tonneau-hateday-2024} finds that even with best public classifiers, at least 10\% of daily content needs human review to meet the policy threshold regulators set --- a reminder that automation alone does not bring the queue to zero.
+
+A working formula:
+
+\begin{quote}
+Reviewers $=$ (daily volume $\times$ escalation rate) $/$ (cases per reviewer per day) $\times$ shift-coverage multiplier $\times$ bench factor.
+\end{quote}
+
+The shift-coverage multiplier is the part teams forget. A queue that operates 24/7 needs at least eight reviewers on a single site or six per site across two time zones, by the same on-call math the SRE book applies to engineering rotations \citep{google-sre-book} --- not because eight people are doing the work, but because fewer than eight cannot cover nights, weekends, vacation, and sickness. The bench factor is the additional 20 to 30\% you carry for training, leave, and the inevitable attrition in a job most people do not love.
+
+Plug in the numbers before the launch meeting. If the answer is ``we will figure it out,'' the answer is the warning above.
+\end{TNnew}
+
 The numerical question to ask of any HITL setup is the \textbf{escalation rate} --- the fraction of turns where the agent hands control to a person. Too low means the agent is exceeding its competence. Too high means the agent is not earning its cost; you may as well have kept the people doing the work. The right number is domain-specific, but it is a number, not a vibe, and your team should be reporting it monthly.
 
 \section{Approval gates and escalation mechanisms}
@@ -200,6 +220,14 @@ Aurora's customer-service agent is the textbook case. The agent summarizes ``wha
 \textbf{Multi-agent alignment.} In agent-to-agent systems --- A2A protocols, supervisor/worker decompositions, peer-to-peer negotiation --- alignment of each individual agent does not imply alignment of the collective. Two failure shapes are worth naming. The first is emergent collusion: agents optimizing a shared shortcut nobody specified, because the shortcut happens to score well in each agent's local view. A supervisor agent and its worker can both be perfectly aligned on ``close the ticket'' and together produce ticket-closing behavior nobody would endorse. The second is conflicting constraints: one agent's safety bound is another agent's blocker, and the resolution --- silent escalation, a local relaxation of the guardrail, a retry path that routes around the bound --- is invisible from any single agent's logs.
 
 \begin{TNwarning} Most enterprise oversight in 2026 instruments the model. It does not instrument the memory and it does not instrument the multi-agent topology. The model is the thing the vendor sold you and the thing your trace shows. The memory and the topology are the things your team built around it, and they are where the next class of incidents will come from. If your monitoring stack cannot answer ``what does this agent remember about this customer right now?'' and ``which other agent did this decision depend on?'' --- you have an oversight gap that no amount of model-level evaluation will close. \end{TNwarning}
+
+\begin{TNnew}
+The failure shape most multi-agent deployments hit first is not collusion or emergent loops. It is the quieter one: Agent A hallucinates a fact, Agent B accepts it as a premise, Agent C takes an action based on B's reasoning, and the audit trail at every hop looks locally coherent. The UC Berkeley MAST study \citep{cemri2025mast} ran more than 200 tasks through seven popular orchestration frameworks and catalogued fourteen distinct failure modes; the largest single category was inter-agent misalignment, and within it the dominant pattern was a downstream agent treating an upstream agent's output as ground truth without any provenance check.
+
+Two mechanisms make this worse than the single-agent case. The first is \textbf{compounding hallucination}: each hop adds a small probability of fabrication, and the joint probability of an end-to-end clean trajectory drops geometrically. A 5\% per-hop hallucination rate becomes a 23\% chance of a contaminated five-hop trajectory. The second is \textbf{conformity bias}: once one agent commits to a confident assertion, downstream agents preferentially align with it rather than challenge it, even when their own evidence contradicts. This is the multi-agent analogue of human anchoring, and it is observable in production traces.
+
+Three mitigations are doing real work in 2026 deployments. \textbf{Per-hop validation} --- each agent restates the upstream claim in its own words and the orchestrator checks for drift before allowing the next call. \textbf{Provenance tags on every assertion} --- outputs carry a structured \texttt{source: \{tool | retrieval | inference | prior-agent\}} field, and any agent acting on a chain that traces back to \texttt{inference} from another agent requires explicit elevation. \textbf{Cross-hop drift detection} --- sample trajectories offline, label the upstream claim, and measure how often the downstream agent's interpretation diverges from it; anything over a few percent is a tuning signal, not noise. None of this is free. All of it is cheaper than the first incident where Agent C wired money to a counterparty because Agent A misread an email.
+\end{TNnew}
 
 \section{Local policy overlays: stacking rules per BU and region}
 

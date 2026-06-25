@@ -140,6 +140,22 @@ The \textbf{public registry entry} is the EU AI Act's specific obligation for An
 \caption{The certification lifecycle. Certification is not a one-time stamp; an incident or material change loops the agent back through reassessment.}
 \end{figure*}
 
+\begin{TNnew}
+\section{Retiring the agent}
+
+Deprecation gets one paragraph in most playbooks. It deserves more, because the agent you retire in year three may have two years of users who built workflows around it, a binder that the regulator still wants to read, and a data residue that does not go away when the endpoint does.
+
+The cleanest public scaffold is the UK Government Service Manual's guidance on retiring a service \citep{gds-retiring-service}. It is short on AI-specific content and exactly right on the human posture. Three obligations carry over without modification.
+
+\textbf{Tell users three things, on a timeline they can act on.} What is changing and why, what they have to do to continue to have the need met, and what happens to their data. Internal B2B users typically need 60 to 90 days. External API users need longer --- Nordic APIs' sunset writeups and the major-vendor playbooks (Salesforce, Mulesoft) cluster on 6 to 12 months \citep{nordic-apis-sunset}, and the GOV.UK PaaS decommission ran 18 months. The number is set by the worst-case integrator, not the median one.
+
+\textbf{Keep the endpoints alive long enough that the transition is graceful.} The Service Manual asks for redirects to a successor for at least one year. The agent equivalent is a \textit{deprecation mode} --- the agent answers with a referral to the human or successor service, logs the call, and refuses the action --- for at least one full review-board cycle. The cost is small. The cost of cutting the cord on day one is the support queue you did not budget for.
+
+\textbf{The binder outlives the agent.} The NIST AI RMF Playbook for the Govern function \citep{nist-ai-rmf-playbook-govern} calls for retention of ``ancillary data or artefacts such as predictions, explanations, intermediate input feature representations, and credentials'' after decommissioning. The EU AI Act is more specific: Article 18 requires the technical documentation be kept available to competent authorities \textbf{for ten years} after the system was placed on the market \citep{euAIact2024}. Article 12's logging obligation runs from deployment through decommissioning, not just through the current release. Decide before you retire which records go to cold storage, who can pull them, and what the lawful basis is for keeping the personal data inside them.
+
+A retirement is a version event. It gets its own binder entry, its own review-board sign-off, and its own date on the public registry --- the same discipline the rest of the lifecycle taught.
+\end{TNnew}
+
 \section{Why the binder is also the playbook}
 
 The binder is something a certifier reads. It is also something your team can run on. Done well, the eight artifacts of the pre-cert binder, the recertification triggers, the trace-and-eval discipline, and the review-board cadence are not extra work on top of running an agent. They are the work of running an agent --- observably, accountably, with the ability to say what it does and why.

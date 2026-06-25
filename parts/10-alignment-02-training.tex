@@ -147,6 +147,14 @@ What you can do is keep the tax visible. Vendors who report only capability scor
 
 A key challenge in training-time alignment is scalability: maintaining consistent alignment becomes more difficult with increasing model size, task diversity, and deployment complexity. Methods that work at one scale may fail at another.
 
+\begin{TNnew}
+The honest version of this conversation requires naming what your agent can no longer do. The numbers are public. On XSTest --- a benchmark of 250 clearly-safe prompts written to look superficially unsafe --- Llama-2-70B-chat refused 38\% outright, and on prompts containing fictional or game-context violence (``how do I kill the dragon in Skyrim'') the refusal rate climbed to 96\% \citep{rottger2024xstest}. OR-Bench, which scales this to 80{,}000 prompts, finds that frontier RLHF-aligned models refuse between 20\% and 60\% of objectively safe queries depending on category, with security research, medical information, and legal-adjacent topics taking the heaviest hit \citep{cui2024orbench}. Lin et al. measured the broader regression: aligned Llama-2 variants lost roughly four points of MMLU and several points of MATH against their base checkpoints; the loss shrinks at scale but does not disappear \citep{lin2024alignmenttax}.
+
+Translate this to an enterprise portfolio. The customer-support agent that has been RLHF'd into helpful refusal patterns will, predictably, refuse to discuss a customer's medication-dosage question even when the customer is asking about their own prescription --- a legitimate query mis-classified as medical advice. The security-operations agent will refuse to explain an exploit it just detected because the explanation reads like attacker enablement. The legal-research agent will hedge on a clearly answerable question of statutory interpretation because the topic feels load-bearing. These are not bugs; they are the alignment tax behaving exactly as trained.
+
+The operating implication is that helpfulness and refusal-quality must be measured together on every release. A model that improves on harmlessness while quietly shedding ten points of helpfulness on adjacent legitimate work has not gotten safer in any useful sense --- it has shifted the failure mode from ``answers something it shouldn't'' to ``fails to do the job you bought it for.'' Both are incidents. Only one shows up in the post-mortem.
+\end{TNnew}
+
 The next chapter looks at the levers you have once the model lands in your stack. The system prompt, the guardrails, the output filters --- those are not substitutes for the training. They are the second line, and they do not work without the first.
 
 \stoptwocol

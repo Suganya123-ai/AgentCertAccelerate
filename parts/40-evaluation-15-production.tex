@@ -139,6 +139,18 @@ The metrics in this chapter feed the framework in \autoref{ch:40-evaluation-14-f
 
 These are the numbers Maya will hand to her audit committee in the certification chapters that follow. They are also the numbers that show, on a chart, whether the agent is getting better or worse over time. A serious agent program runs them weekly, charts them monthly, and notices when the trend bends before anyone outside the team does.
 
+\begin{TNnew}
+\section{Long-context evaluation}
+
+Modern agents routinely run with 200K to one-million-token context windows, and the alignment behaviour measured on 8K-token benchmarks does not survive the transition. Two failure shapes matter for Maya.
+
+The first is \textbf{position bias}. Liu et al.'s ``Lost in the Middle'' \citep{liu2023lostmiddle} established that LLMs recover information best from the start and end of the context and worst from the middle, producing a characteristic U-shaped accuracy curve. The effect was originally documented at 4K-to-32K windows; 2025 and 2026 replications confirm it persists at 128K and beyond. On multi-needle retrieval at one million tokens, frontier models show a 30-to-60-point accuracy drop relative to single-needle, and with only limited exceptions none of them perform at 1M as well as they perform at 200K. The operational consequence is that a system prompt's safety instructions, placed at the top of a 500K-token context, can be functionally ignored by the time the model is generating its response.
+
+The second is \textbf{hidden-instruction injection at scale}. A long context is not one document; it is a stream concatenating system prompt, user input, retrieved RAG passages, tool outputs, prior conversation, and memory. A malicious instruction buried in any one of these can override the system prompt --- and the larger the context, the more surface area to hide in. \textit{Context stuffing} attacks become reliably effective once adversarial content exceeds 60--70\% of the window. Adversarial-robustness studies have repeatedly found that attackers bypass published prompt-injection defences at high success rates given enough attempts --- a reminder that a long context is an attack surface, not just a capacity.
+
+Evaluation should reflect this. Needle-in-a-haystack alone is no longer adequate; the evaluation set Maya should fund includes \textbf{position-stratified safety probes} (does the agent refuse a harmful request when the safety instruction sits at 10\%, 50\%, 90\% of context depth?), \textbf{multi-needle retrieval at the actual production context length}, and \textbf{adversarial-injection tests at variable depths}. If the agent is going to run with 500K-token windows in production, it has to be evaluated at 500K-token windows. Anything less is a category error.
+\end{TNnew}
+
 \TNrule
 
 \stoptwocol

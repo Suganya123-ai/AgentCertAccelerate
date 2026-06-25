@@ -72,6 +72,32 @@
 %% on a near-white tint. The accent appears only as a 3pt left rule.
 \RequirePackage[most]{tcolorbox}
 
+%% ─── New-content highlight (for reviewer-facing edition) ───
+%% When \highlightnew is \def'd by the build pipeline (via pdflatex
+%% "\def\highlightnew{} \input{main}"), the TNnew env wraps content in
+%% a soft green panel. Otherwise it's a no-op.
+\newif\ifTNHighlightNew
+\ifdefined\highlightnew\TNHighlightNewtrue\fi
+
+\definecolor{TNNewBack}{HTML}{E8F5E9}
+\definecolor{TNNewRule}{HTML}{43A047}
+
+\newenvironment{TNnew}{%
+  \ifTNHighlightNew
+    \begin{tcolorbox}[
+      enhanced, breakable,
+      colback=TNNewBack, colframe=TNNewRule,
+      boxrule=0pt, leftrule=3pt,
+      arc=2pt, sharp corners=northeast,
+      left=8pt, right=8pt, top=4pt, bottom=4pt,
+      before skip=6pt, after skip=6pt,
+      parbox=false,
+    ]
+  \fi
+}{%
+  \ifTNHighlightNew\end{tcolorbox}\fi
+}
+
 \tcbset{
   TNbase/.style={
     enhanced,
@@ -265,35 +291,45 @@
 %% ─── Pillar page ─────────────────────────────────────────
 \newcounter{pillarpart}
 
+% Use eso-pic to paint the navy background directly into the shipout box.
+% This bypasses TikZ's "remember picture/overlay" two-pass coordinate
+% resolution, which was failing for the last two pillar pages (Cert,
+% Synthesis) and rendering them as a tiny navy strip at the top.
+\RequirePackage{eso-pic}
+
 \newcommand{\pillarpage}[2][TNNavy]{%
   \clearpage
   \refstepcounter{pillarpart}%
   \thispagestyle{empty}%
-  \begin{tikzpicture}[remember picture, overlay]
-    \fill[#1] (current page.south west) rectangle (current page.north east);
-    \fill[TNTeal]
-      ([yshift=-3.5cm]current page.north west)
-      rectangle ([yshift=-3.62cm]current page.north east);
-    \node[anchor=north west, text width=10cm]
-      at ([xshift=2.2cm, yshift=-2.6cm]current page.north west) {%
-        \fontsize{10}{12}\selectfont\sffamily\color{TNTeal}%
-        \MakeUppercase{ARIA Framework \textbullet\ Pillar}%
-      };
-    \node[anchor=west, text width=15cm]
-      at ([xshift=2.2cm, yshift=-0.5cm]current page.west) {%
-        \fontsize{13}{16}\selectfont\bfseries\sffamily\color{TNTeal}%
-        \MakeUppercase{Part \Roman{pillarpart}}\\[0.25em]%
-        \fontsize{56}{64}\selectfont\bfseries\sffamily\color{white}%
-        #2%
-      };
-    \node[anchor=south west, text width=15cm]
-      at ([xshift=2.2cm, yshift=2cm]current page.south west) {%
-        \fontsize{10}{14}\selectfont\sffamily\color{white!70}%
-        Infosys\textsuperscript{\textregistered}\ \textbar\ Knowledge Institute%
-      };
-  \end{tikzpicture}%
+  \AddToShipoutPictureBG*{%
+    \AtPageLowerLeft{%
+      \begin{tikzpicture}[remember picture, overlay]
+        \fill[#1] (0,0) rectangle (\paperwidth, \paperheight);
+        \fill[TNTeal]
+          (0, \paperheight-3.5cm)
+          rectangle (\paperwidth, \paperheight-3.62cm);
+        \node[anchor=north west, text width=10cm]
+          at (2.2cm, \paperheight-2.6cm) {%
+            \fontsize{10}{12}\selectfont\sffamily\color{TNTeal}%
+            \MakeUppercase{ARIA Framework \textbullet\ Pillar}%
+          };
+        \node[anchor=west, text width=15cm]
+          at (2.2cm, 0.5\paperheight) {%
+            \fontsize{13}{16}\selectfont\bfseries\sffamily\color{TNTeal}%
+            \MakeUppercase{Part \Roman{pillarpart}}\\[0.25em]%
+            \fontsize{56}{64}\selectfont\bfseries\sffamily\color{white}%
+            #2%
+          };
+        \node[anchor=south west, text width=15cm]
+          at (2.2cm, 2cm) {%
+            \fontsize{10}{14}\selectfont\sffamily\color{white!70}%
+            Infosys\textsuperscript{\textregistered}\ \textbar\ Knowledge Institute%
+          };
+      \end{tikzpicture}%
+    }%
+  }%
+  \null\newpage   % emit the page so the background gets shipped
   \addcontentsline{toc}{part}{\protect\textbf{Part \Roman{pillarpart}: #2}}%
-  \clearpage
 }
 
 %% ─── Image placeholder (kept for safety; should not appear in final) ─
