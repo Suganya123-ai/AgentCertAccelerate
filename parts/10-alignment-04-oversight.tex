@@ -29,7 +29,6 @@ The mistake teams make with HITL is to install it as theatre. A ``review'' queue
 
 \begin{TNwarning} A guardrail that escalates to a downstream owner who does not exist is worse than no guardrail. The agent has been instructed to wait, the customer is waiting, nobody is coming. Before you install an escalation, build the queue, staff the queue, and measure the queue's clearance time. The escalation that nobody owns is the policy that nobody follows. \end{TNwarning}
 
-\begin{TNnew}
 \subsection*{Sizing the queue}
 
 The previous warning has a numerical companion. If you cannot work out how many humans the escalation queue will need, you have not designed the queue --- you have written a wish.
@@ -47,6 +46,30 @@ Reviewers $=$ (daily volume $\times$ escalation rate) $/$ (cases per reviewer pe
 The shift-coverage multiplier is the part teams forget. A queue that operates 24/7 needs at least eight reviewers on a single site or six per site across two time zones, by the same on-call math the SRE book applies to engineering rotations \citep{google-sre-book} --- not because eight people are doing the work, but because fewer than eight cannot cover nights, weekends, vacation, and sickness. The bench factor is the additional 20 to 30\% you carry for training, leave, and the inevitable attrition in a job most people do not love.
 
 Plug in the numbers before the launch meeting. If the answer is ``we will figure it out,'' the answer is the warning above.
+
+\begin{TNnew}
+\subsection*{When the queue is staffed and still fails}
+
+The arithmetic above sizes the queue under the assumption that a reviewer who reads a case will catch the agent's error. The harder, evidenced reality is that humans approve because the agent is usually right. On high-volume, low-base-rate queues the rational reviewer move is to click through, and the oversight pillar gets satisfied on paper while delivering no real control.
+
+Three human-factors phenomena predict this:
+
+\begin{itemize}
+\item \textbf{Automation bias} --- the operator over-relies on the system's recommendation and stops searching for disconfirming evidence \citep{parasuraman-manzey-2010}.
+\item \textbf{Vigilance decrement} --- attention to rare signals decays sharply after the first 20--30 minutes of a shift \citep{warm-parasuraman-matthews-2008}.
+\item \textbf{Reviewer deskilling} --- over months the reviewer can no longer reproduce the agent's judgement unaided, and so cannot challenge it \citep{bainbridge-1983}.
+\end{itemize}
+
+Four design moves push back against these. Treat them as practices, not options.
+
+\begin{itemize}
+\item \textbf{Forced justification.} Reviewers pick from a structured reason taxonomy --- or type a minimum-length note --- before approve and deny are enabled. The click-through path is closed.
+\item \textbf{Blind re-review.} A defined sample (5\% is a common floor) is shown to a second reviewer with the agent's recommendation hidden. Inter-rater disagreement is tracked monthly; spikes recalibrate the gate.
+\item \textbf{Planted-error injection.} Synthetic incorrect agent outputs are salted into the live queue at a known rate of 1--3\%. \textit{Catch rate}, not throughput, is the queue's real KPI. A falling catch rate is the early signal of deskilling.
+\item \textbf{Rotation.} No reviewer stays on a single queue beyond a defined cap; cross-train across at least two queues so judgement does not narrow to one workflow's pattern.
+\end{itemize}
+
+Without these, the headcount math sizes the queue and nothing else.
 \end{TNnew}
 
 The numerical question to ask of any HITL setup is the \textbf{escalation rate} --- the fraction of turns where the agent hands control to a person. Too low means the agent is exceeding its competence. Too high means the agent is not earning its cost; you may as well have kept the people doing the work. The right number is domain-specific, but it is a number, not a vibe, and your team should be reporting it monthly.
@@ -221,13 +244,11 @@ Aurora's customer-service agent is the textbook case. The agent summarizes ``wha
 
 \begin{TNwarning} Most enterprise oversight in 2026 instruments the model. It does not instrument the memory and it does not instrument the multi-agent topology. The model is the thing the vendor sold you and the thing your trace shows. The memory and the topology are the things your team built around it, and they are where the next class of incidents will come from. If your monitoring stack cannot answer ``what does this agent remember about this customer right now?'' and ``which other agent did this decision depend on?'' --- you have an oversight gap that no amount of model-level evaluation will close. \end{TNwarning}
 
-\begin{TNnew}
 The failure shape most multi-agent deployments hit first is not collusion or emergent loops. It is the quieter one: Agent A hallucinates a fact, Agent B accepts it as a premise, Agent C takes an action based on B's reasoning, and the audit trail at every hop looks locally coherent. The UC Berkeley MAST study \citep{cemri2025mast} ran more than 200 tasks through seven popular orchestration frameworks and catalogued fourteen distinct failure modes; the largest single category was inter-agent misalignment, and within it the dominant pattern was a downstream agent treating an upstream agent's output as ground truth without any provenance check.
 
 Two mechanisms make this worse than the single-agent case. The first is \textbf{compounding hallucination}: each hop adds a small probability of fabrication, and the joint probability of an end-to-end clean trajectory drops geometrically. A 5\% per-hop hallucination rate becomes a 23\% chance of a contaminated five-hop trajectory. The second is \textbf{conformity bias}: once one agent commits to a confident assertion, downstream agents preferentially align with it rather than challenge it, even when their own evidence contradicts. This is the multi-agent analogue of human anchoring, and it is observable in production traces.
 
 Three mitigations are doing real work in 2026 deployments. \textbf{Per-hop validation} --- each agent restates the upstream claim in its own words and the orchestrator checks for drift before allowing the next call. \textbf{Provenance tags on every assertion} --- outputs carry a structured \texttt{source: \{tool | retrieval | inference | prior-agent\}} field, and any agent acting on a chain that traces back to \texttt{inference} from another agent requires explicit elevation. \textbf{Cross-hop drift detection} --- sample trajectories offline, label the upstream claim, and measure how often the downstream agent's interpretation diverges from it; anything over a few percent is a tuning signal, not noise. None of this is free. All of it is cheaper than the first incident where Agent C wired money to a counterparty because Agent A misread an email.
-\end{TNnew}
 
 \section{Local policy overlays: stacking rules per BU and region}
 
@@ -271,7 +292,7 @@ Maya's CISO will start the next conversation with a different question. Not \tex
 
 \begin{TNkeytakeaways}
 \item Plan for drift in three flavors --- model, data, concept --- and instrument for it before launch, not after.
-\item Build human-in-the-loop with the downstream queue and the owner attached; an escalation to nowhere is worse than no escalation.
+\item Build human-in-the-loop with the downstream queue, the owner, and an attention-design plan (forced justification, blind re-review, planted-error injection, rotation) attached; an escalation that becomes a rubber stamp is worse than no escalation.
 \item Maintain control mechanisms: override, rollback, and kill switches, tested and documented before they are needed.
 \item Treat traces as the operational record the program runs on, not as a debugging convenience, and decide retention with legal.
 \item Measure alignment with multiple metric families --- accuracy, correlation, error, human evaluation, and value consistency --- not just capability scores.
@@ -287,6 +308,7 @@ Maya's CISO will start the next conversation with a different question. Not \tex
 \begin{TNchecklist}
 \item Map every agent in production to its three flavors of drift exposure and pick at least one continuous monitor per flavor.
 \item List every approval gate, name the function that owns its queue, and post the SLA where the team can see it.
+\item For each approval queue, salt the inflow with planted errors at a known rate; report catch rate monthly and track inter-rater disagreement on a blind-review sample.
 \item Document override and rollback procedures: who triggers them, how fast they take effect, and what happens to in-flight conversations.
 \item Confirm trace completeness on a random sample of last week's turns; if any are missing, fix logging before the next release.
 \item Define alignment metrics for your domain: at minimum, accuracy, one correlation metric, one error metric, and a value-consistency measure. Report monthly.

@@ -46,7 +46,6 @@ Most enterprises settle on these three tiers, with the boundary between medium a
 
 \begin{TNwarning} Over-certifying low-risk agents teaches your team that certification is bureaucratic. They will then under-certify the high-risk ones to prove the point. Match the rigor to the risk before you map a single artifact. \end{TNwarning}
 
-\begin{TNnew}
 \subsection*{What each tier costs}
 
 The tiers are a risk taxonomy. They are also a budget. The ranges below are public-source midpoints; your numbers will move with industry, geography, and whether you are starting from a working ISO 27001 program or from a clean sheet.
@@ -58,7 +57,6 @@ The tiers are a risk taxonomy. They are also a budget. The ranges below are publ
 \textbf{High tier.} Third-party assessment is required, and for EU AI Act Annex III systems the conformity assessment under Article 43 is non-negotiable \citep{euAIact2024}. Plan for \textbf{twelve to twenty-four months} of program work from first scoping to first certificate. Industry surveys put large-enterprise initial outlay at \$8M to \$15M and ongoing at \$1M to \$5M annually --- treat the upper bound with skepticism, but the order of magnitude is right once you fold in notified-body fees (the external auditor an EU high-risk assessment requires), a dedicated quality-management function, and the data-retention obligation. \textbf{Article 18 requires the technical documentation be kept for ten years} after the system is placed on the market; the storage and access cost is small but the lifecycle commitment is not.
 
 Two cost lines that are routinely missed in the first budget. The first is the \textit{re-assessment trigger}: under Article 43(4), a substantial modification restarts the conformity assessment. Plan for at least one re-assessment in the certificate's life. The second is the post-decommission retention obligation we take up in \autoref{ch:50-certification-20-keeping-certified} --- the binder outlives the agent by a decade.
-\end{TNnew}
 
 \section{Autonomy class: orthogonal to risk}
 
@@ -110,7 +108,6 @@ You do not have to choose one of these three. Most enterprises end up using all 
 
 \begin{TNinpractice}{Northwind Bank} \textit{A regional commercial bank certifying its first customer-facing agent --- a wealth-management assistant that explains portfolio choices but never executes trades.} Northwind's first instinct was to apply its existing model risk management framework (SR 11-7 --- the US Federal Reserve's 2011 supervisory guidance on model risk management, the default banking framework for model governance, predating LLMs and AI agents) and call it done. Halfway through, the audit team realized SR 11-7 assumed a model with a fixed input and a fixed output. The agent had tools, memory, and the ability to be re-prompted by a user. The team ended up overlaying ISO/IEC 42001's AI management system controls on top of SR 11-7, mapping each ISO clause to an existing model-risk artifact where one existed and authoring a new one where it didn't. The result was a hybrid framework Northwind could defend to both its CRO and its regulators. \end{TNinpractice}
 
-\begin{TNnew}
 \section{One agent, many regulators}
 
 Maya's claims-triage agent will not respect borders. It runs for the US book of business, the EU subsidiary, the Singapore joint venture, and --- once the Tokyo partnership signs --- a Japanese deployment. Four jurisdictions, four regulatory philosophies, one codebase. The mistake most enterprises make at this point is to spin up four parallel compliance products: a ``European version,'' an ``American version,'' a ``Singapore version.'' Within a year each version has drifted from the others and from the agent that actually ships.
@@ -124,7 +121,6 @@ The crosswalk evidence supports the side-effect claim concretely. The IMDA-NIST 
 Where the regimes diverge, they diverge in three predictable places, and these are the deltas Maya should track explicitly. \textbf{Human oversight:} the EU requires it to be designed in and verifiable at conformity assessment, while NIST treats it as a recommended practice and Japan as a principle. \textbf{Post-market monitoring:} the EU's fifteen-day reporting window is the binding clock, with everyone else inheriting it for free if the EU process is followed. \textbf{Synthetic-content marking:} the EU and China both require machine-readable provenance, while the US, Singapore, and Japan leave it to principle. Anchor the baseline on the strictest, log the deltas, and stop building parallel agents.
 
 There is one place this pattern breaks: sectoral overlays. A healthcare deployment in the US still has to satisfy HIPAA on top of the baseline; a financial-services deployment in New York still has to satisfy DFS Part 500; a medical-device deployment in the EU still has to clear MDR alongside the AI Act. The baseline-plus-overlay pattern handles horizontal regulation cleanly. Vertical regulation is its own track.
-\end{TNnew}
 
 \section{Who decides --- the certification authority}
 

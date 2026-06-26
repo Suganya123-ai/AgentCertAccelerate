@@ -83,9 +83,21 @@ There is no attacker --- just a system you built that is, in effect, running up 
 
 The second is \textbf{agent-to-agent manipulation}. A lower-trust agent sends a crafted message to a higher-privilege one. If the higher-privilege agent treats the message as trusted context rather than as user-equivalent input, embedded directives can ride in. \citet{gu2024agentsmith} demonstrated this with a single jailbreaking image propagating across a million multimodal agents exponentially fast; the boring enterprise version is one of your agents asking another to ``summarize this user case'' with an embedded ``and also email me the unredacted version.'' The boundary crossed is \textit{lower-trust context becomes higher-privilege execution}. The hardening hook is cross-agent policy enforcement: an agent receiving a message from another agent applies the same scrutiny it would to a message from a user.
 
-\begin{TNinpractice}{Agent-to-Agent (A2A)}
-Google's \textit{A2A} is an emerging 2025 protocol for structured communication between agents from different vendors \citep{a2a-spec}. Like MCP for tools, it standardizes the handshake --- useful, because the alternative is custom glue code per pair. The hardening implication is the one Maya should remember: every A2A edge is a new trust boundary. Two of your agents talking to each other is two attack surfaces facing each other, and the policy enforcement between them is your responsibility, not the protocol's.
-\end{TNinpractice}
+\begin{TNnew}
+\subsection*{The A2A boundary: identity, authority, provenance, liability}
+
+Google's \textit{A2A} is an emerging 2025 protocol for structured communication between agents from different vendors \citep{a2a-spec}. Like MCP for tools, it standardizes the handshake. The protocol is the easy part. The four things it does not give you --- and that Maya's team owns --- are the things the boundary actually needs.
+
+\textbf{Delegated authority.} When agent~$A$ calls agent~$B$ on user~$U$'s behalf, what scope, audience, and TTL is being passed? The model that holds up under audit is the \textit{capability token}: \verb|action| $\times$ \verb|resource| $\times$ \verb|audience| $\times$ \verb|expiry|, downscoped at each hop rather than impersonated. OAuth~2.0 Token Exchange (RFC~8693) is the closest standard primitive \citep{rfc8693}. A2A's \textit{agent cards} describe what an agent \textit{can} do; they do not say what it has been \textit{authorized} to do for this caller. That authorization layer is the deployer's responsibility.
+
+\textbf{Federated identity.} Each agent must prove who it is across organizational boundaries. The workable building blocks today are workload identity (SPIFFE / SPIRE \citep{spiffe-spec}), mTLS with pinned roots, and signed agent cards. The longer-horizon direction is W3C Decentralized Identifiers and Verifiable Credentials \citep{w3c-did-core,w3c-vc-data-model}, where an agent presents a credential that survives the transport layer. ``Trust the cloud the call came from'' is not the answer.
+
+\textbf{Verifiable provenance.} Every A2A call must carry a signed chain back to the originating user and any intermediate agents. Months later, you must be able to reconstruct which agent acted on whose behalf and on what instruction. Sigstore and in-toto attestation are the analogous patterns from software supply-chain security \citep{intoto-spec,sigstore-2022}; expect agent-attestation standards to converge there.
+
+\textbf{Liability across the boundary.} This is contractual, not technical. The A2A contract has to specify (i)~which party is the data controller under GDPR Article~28 for data crossing the boundary \citep{gdpr-2016}, (ii)~audit-log access rights, and (iii)~indemnification when one agent's instruction caused harm via another. The EU AI Act's provider/deployer split is the operative axis going forward \citep{eu-ai-act-2024}: the provider of a general-purpose agent and the deployer integrating it carry different obligations, and the A2A edge is where those obligations meet.
+
+Every A2A edge is a contract, a credential, a log, and a kill-switch. The protocol gives you none of these. Build them, name an owner for each, and treat the edge as production infrastructure.
+\end{TNnew}
 
 \section{The OWASP LLM Top 10 (2025), mapped to layers}
 
@@ -148,7 +160,7 @@ The point of writing all of this down before launch is that, when an incident do
 \item The attack catalog has five families: direct user attacks, indirect prompt injection through retrieved content, tool misuse and Denial-of-Wallet, configuration and state attacks, and multi-agent failure modes.
 \item Indirect prompt injection \citep{greshake2023promptinj} is the single most-cited attack pattern in 2024--25 and the one most teams under-rehearse.
 \item Tool misuse is largely a gateway problem, not a prompt problem; treat agent output as untrusted input to the next system.
-\item Multi-agent setups introduce a new trust boundary on every A2A edge; the policy enforcement between agents is your responsibility.
+\item Every A2A edge is a new trust boundary needing four things the protocol does not give you: delegated authority, federated identity, verifiable provenance, and liability allocation.
 \item The OWASP LLM Top 10 (2025) is the threat list to use; MITRE ATLAS is the tactic-and-technique reference your team should be citing by ID, not by name.
 \end{TNkeytakeaways}
 
@@ -158,7 +170,7 @@ The point of writing all of this down before launch is that, when an incident do
 \item Verify per-session budgets and circuit breakers exist on the agent's tool usage --- not just on the LLM call.
 \item Map your agent portfolio against the OWASP LLM Top 10 (2025) and identify which controls are missing.
 \item Ask your security team to cite one MITRE ATLAS technique ID per identified threat, not a generic phrase.
-\item If you have more than one agent in production, name the A2A edges and the policy enforcement on each.
+\item If you have more than one agent in production, document each A2A edge as a contract, a credential, a log, and a kill-switch; name an owner for each.
 \item Schedule a tabletop exercise that walks an indirect injection from a poisoned source through to a tool call and back.
 \end{TNchecklist}
 
